@@ -1,0 +1,4 @@
+# Preserve CAD provenance hashes independently of checkout line-ending settings.
+Assets/THL300/*.igs binary
+Assets/THL300/*.mesh binary
+Assets/THL300/*.png binary

@@ -1,0 +1,263 @@
+{
+  "manufacturer": "Shibaura Machine (Toshiba Machine legacy robot brand)",
+  "model": "THL300",
+  "sourceFile": "THL300.igs",
+  "sourceBytes": 5071536,
+  "sourceSha256": "5852a524e1cb6e865ebea1f0173da6baa4b85183638f7c2bd4028a439c001946",
+  "sourceCadSystem": "Creo Parametric",
+  "sourceCadAssembly": "THL300_3D_ASM",
+  "sourceCadTimestamp": "2021-11-11T09:37:20",
+  "sourceArchive": "THL300.zip supplied by user",
+  "meshFile": "THL300.mesh",
+  "meshSha256": "0ff39d8ee888cde5712f0e62bc436660ee11e962c9f193ce5525d86b009f9d88",
+  "format": "THL300M1",
+  "units": "millimetres",
+  "meshTool": "OpenCascade 7.8.1 (cadquery-ocp 7.8.1.1)",
+  "chordDeflectionMm": 0.25,
+  "angularDeflectionDeg": 10,
+  "sectionCount": 16,
+  "parts": [
+    {
+      "groupId": 0,
+      "name": "base",
+      "sourceEntityIndex": 3006,
+      "sourceDirectoryEntry": 6011,
+      "faceCount": 457,
+      "sectionCount": 5,
+      "vertexCount": 49528,
+      "triangleCount": 65820,
+      "boundsMm": [
+        -162.0,
+        -70.0,
+        0.0,
+        56.0,
+        70.0,
+        390.1552429199219
+      ],
+      "colorsRgba": [
+        [
+          255,
+          255,
+          255,
+          255
+        ],
+        [
+          61,
+          66,
+          255,
+          255
+        ],
+        [
+          51,
+          51,
+          51,
+          255
+        ],
+        [
+          250,
+          74,
+          51,
+          255
+        ],
+        [
+          28,
+          28,
+          28,
+          255
+        ]
+      ]
+    },
+    {
+      "groupId": 1,
+      "name": "arm1",
+      "sourceEntityIndex": 3210,
+      "sourceDirectoryEntry": 6419,
+      "faceCount": 24,
+      "sectionCount": 3,
+      "vertexCount": 2624,
+      "triangleCount": 2588,
+      "boundsMm": [
+        -43.0,
+        -42.99885559082031,
+        138.0,
+        162.99978637695312,
+        42.99885559082031,
+        208.5
+      ],
+      "colorsRgba": [
+        [
+          255,
+          255,
+          255,
+          255
+        ],
+        [
+          200,
+          208,
+          214,
+          255
+        ],
+        [
+          28,
+          28,
+          28,
+          255
+        ]
+      ]
+    },
+    {
+      "groupId": 2,
+      "name": "arm2",
+      "sourceEntityIndex": 7410,
+      "sourceDirectoryEntry": 14819,
+      "faceCount": 639,
+      "sectionCount": 6,
+      "vertexCount": 79847,
+      "triangleCount": 121096,
+      "boundsMm": [
+        68.03621673583984,
+        -52.97932052612305,
+        152.0,
+        347.999267578125,
+        52.981876373291016,
+        506.6183776855469
+      ],
+      "colorsRgba": [
+        [
+          0,
+          102,
+          255,
+          255
+        ],
+        [
+          0,
+          255,
+          0,
+          255
+        ],
+        [
+          200,
+          208,
+          214,
+          255
+        ],
+        [
+          255,
+          255,
+          255,
+          255
+        ],
+        [
+          28,
+          28,
+          28,
+          255
+        ],
+        [
+          255,
+          0,
+          0,
+          255
+        ]
+      ]
+    },
+    {
+      "groupId": 3,
+      "name": "shaft",
+      "sourceEntityIndex": 7546,
+      "sourceDirectoryEntry": 15091,
+      "faceCount": 15,
+      "sectionCount": 2,
+      "vertexCount": 1876,
+      "triangleCount": 1856,
+      "boundsMm": [
+        282.5063781738281,
+        -17.5,
+        112.0,
+        317.4996337890625,
+        17.5,
+        442.0
+      ],
+      "colorsRgba": [
+        [
+          200,
+          208,
+          214,
+          255
+        ],
+        [
+          255,
+          255,
+          255,
+          255
+        ]
+      ]
+    }
+  ],
+  "triangleCount": 191360,
+  "vertexCount": 133875,
+  "discardedDegenerateTriangles": 32,
+  "correctedTriangleWinding": 219,
+  "canonicalTransform": {
+    "x": "-sourceX-40",
+    "y": "sourceZ",
+    "z": "sourceY",
+    "properRotationDeterminant": 1
+  },
+  "mountingPlaneZMm": 0,
+  "linkLengthsMm": [
+    125,
+    175
+  ],
+  "shoulderPivotMm": [
+    0,
+    0,
+    162.5
+  ],
+  "elbowPivotMm": [
+    125,
+    0,
+    185
+  ],
+  "toolPivotMm": [
+    300,
+    0,
+    112
+  ],
+  "referenceToolMm": [
+    300,
+    0,
+    112
+  ],
+  "referenceJointDegrees": [
+    0,
+    0,
+    0
+  ],
+  "referenceJoint3Mm": 160,
+  "axisZ": [
+    0,
+    0,
+    1
+  ],
+  "joint3Positive": "up",
+  "joint3RangeMm": [
+    0,
+    160
+  ],
+  "shaftTipPhysicalZFormula": "joint3Mm - 48",
+  "shaftTranslationZFormula": "joint3Mm - 160",
+  "jointHierarchy": {
+    "base": "fixed",
+    "arm1": "J1",
+    "arm2": "J1 > J2",
+    "shaft": "J1 > J2 > J3 translation > J4 rotation"
+  },
+  "geometryPolicy": "All triangles tessellate the four supplied manifold solids; no proxy robot geometry added.",
+  "colorPolicy": "Explicit IGES RGB and standard color ranks preserved; unspecified rank 0 uses neutral metal #C8D0D6.",
+  "binaryLayout": "little endian: magic8, sourceSha256[32], int32 sectionCount; per section int32 groupId, .NET 7bit-length UTF8 name, byte RGBA[4], int32 vertexCount, int32 indexCount, vertexCount*(float32 X Y Z NX NY NZ), indexCount*int32 index",
+  "manufacturerReference": [
+    "https://www.shibaura-machine.co.jp/documents/en/product/robot/download/th/pdf_new/S-2GA23-4-THL300-ENG.pdf",
+    "https://www.shibaura-machine.co.jp/en/product/robot/download.html"
+  ]
+}

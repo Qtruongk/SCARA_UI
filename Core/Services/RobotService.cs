@@ -11,6 +11,9 @@ namespace Test_1.Services
     {
         private TsRemoteS _robot;
         private readonly LoggingService _logger;
+        // Protect the two feedback reads from a concurrent disconnect/reconnect.
+        // Move* and STOP use the driver's own transport lock and remain independent.
+        private readonly object _feedbackLifecycle = new object();
         
         public RobotState State { get; private set; }
 
@@ -23,6 +26,14 @@ namespace Test_1.Services
         }
 
         public bool Connect(string ip = Constants.DefaultRobotIP, int port = Constants.DefaultRobotPort, int srcPort = Constants.DefaultSourcePort)
+        {
+            lock (_feedbackLifecycle)
+            {
+                return ConnectCore(ip, port, srcPort);
+            }
+        }
+
+        private bool ConnectCore(string ip, int port, int srcPort)
         {
             try
             {
@@ -72,6 +83,14 @@ namespace Test_1.Services
         }
 
         public void Disconnect()
+        {
+            lock (_feedbackLifecycle)
+            {
+                DisconnectCore();
+            }
+        }
+
+        private void DisconnectCore()
         {
             if (!State.IsConnected) return;
 
@@ -189,6 +208,14 @@ namespace Test_1.Services
 
         public void StartWatchdog()
         {
+            lock (_feedbackLifecycle)
+            {
+                StartWatchdogCore();
+            }
+        }
+
+        private void StartWatchdogCore()
+        {
             if (!State.IsConnected || _robot == null)
             {
                 _logger.Log("Cannot start Watchdog: Not connected.");
@@ -257,6 +284,14 @@ namespace Test_1.Services
         }
 
         public RobotPositionData GetCurrentPosition()
+        {
+            lock (_feedbackLifecycle)
+            {
+                return ReadCurrentPosition();
+            }
+        }
+
+        private RobotPositionData ReadCurrentPosition()
         {
             if (!State.IsConnected || _robot == null) return null;
 

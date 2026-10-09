@@ -20,6 +20,11 @@ Test_1/
 │   │   ├── MainForm.cs            # Event handlers and UI state updates
 │   │   ├── MainForm.Designer.cs   # Auto-generated VS designer code
 │   │   ├── MainForm.UI.cs         # Programmatic UI setup (InitializeModernUI)
+│   │   ├── MainForm.DigitalTwin.cs # Single-flight background feedback polling + lifecycle
+│   │   ├── ScaraDigitalTwinView.cs # WPF canvas, THL300 transforms, axis labels and actual WORLD/joint readouts
+│   │   ├── RobotCoordinateSystem.cs # Frozen XYZ axes and tick marks in mm
+│   │   ├── RobotGroundGrid.cs     # Full viewport open XY grid, projected with the camera
+│   │   ├── Thl300CadModel.cs       # Embedded manufacturer CAD meshes/materials
 │   │   └── MainForm.resx          # UI resources
 │   │
 │   └── Utilities/                 # Shared helpers
@@ -32,6 +37,8 @@ Test_1/
 │   └── TsRemoteLib.dll.config     
 │
 ├── Program.cs                     # Entrypoint: Application.Run(new MainForm())
+├── Assets/THL300/                 # Original IGES, embedded mesh and provenance
+├── Tools/THL300/                  # Reproducible CAD conversion + integrity checks
 └── Test_1.csproj                  # MSBuild project config & build targets
 ```
 
@@ -44,5 +51,7 @@ Test_1/
 | **Need to change default IP, Port, or default Speeds** | `Constants.cs` |
 | **Buttons don't update color, or UI event not firing** | `MainForm.cs`, `RobotService.cs` |
 | **Need to add a new UI control (TextBox, Chart, etc.)** | `MainForm.UI.cs`, `MainForm.cs` |
+| **3D twin is stale, frozen, or receives an old connection sample** | `MainForm.DigitalTwin.cs`, `RobotService.cs` |
+| **3D geometry, joint direction/zero, camera, or calibration is wrong** | `ScaraDigitalTwinView.cs`, `Thl300CadModel.cs`, `Assets/THL300/THL300.metadata.json` |
 | **Log messages are missing or format needs change** | `LoggingService.cs` |
 | **Adding a new data field to the robot state (e.g. Temp)** | `RobotState.cs`, `RobotService.cs` |

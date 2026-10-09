@@ -10,6 +10,8 @@ namespace Test_1.Utilities
 
         public const int WatchdogIntervalMs = 200;
         public const int WatchdogTimeoutMs = 3000;
+        public const int DigitalTwinRefreshMs = 100;
+        public const int DigitalTwinStaleMs = 1000;
 
         public const double DemoDistance = 150.0;
         public const double DemoVMax = 40.0;

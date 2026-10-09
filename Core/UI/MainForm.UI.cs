@@ -13,9 +13,6 @@ namespace Test_1.UI
     public partial class MainForm : Form
     {
 
-        // Expose parameters so main class can update them
-        private System.Collections.Generic.Dictionary<string, TextBox> paramBoxes = new System.Collections.Generic.Dictionary<string, TextBox>();
-        
         // Exposed controls for events
         private TrackBar tbSpeed;
         private Button btnGuideRun;
@@ -121,7 +118,8 @@ namespace Test_1.UI
             header.Controls.Add(lblAlarmValue);
 
             // Timer for real-time clock
-            System.Windows.Forms.Timer clockTimer = new System.Windows.Forms.Timer();
+            if (components == null) components = new System.ComponentModel.Container();
+            System.Windows.Forms.Timer clockTimer = new System.Windows.Forms.Timer(components);
             clockTimer.Interval = 1000;
             clockTimer.Tick += (s, e) => {
                 if (lblDateValue.IsDisposed) return;
@@ -237,7 +235,7 @@ namespace Test_1.UI
             rightPanel.Controls.Add(btnWatchdog);
 
             // 4. Bottom Panel (Console)
-            Panel bottomPanel = new Panel { Dock = DockStyle.Bottom, Height = 220, BackColor = lightBg };
+            Panel bottomPanel = new Panel { Dock = DockStyle.Bottom, Height = 140, BackColor = lightBg };
             bottomPanel.Paint += (s, e) => {
                 e.Graphics.DrawLine(new Pen(borderColor, 1), 0, 0, bottomPanel.Width, 0);
             };
@@ -245,26 +243,27 @@ namespace Test_1.UI
             bottomPanel.Controls.Add(lblConsoleTitle);
 
             txtLog.Location = new Point(20, 35);
-            txtLog.Height = 165;
+            txtLog.Height = 85;
             txtLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             txtLog.BorderStyle = BorderStyle.None;
             txtLog.BackColor = Color.FromArgb(250, 250, 250);
             txtLog.ForeColor = Color.FromArgb(60, 60, 60);
             txtLog.Font = new Font("Consolas", 9.5F);
             // Handle resizing for txtLog manually since Anchor needs a parent layout pass
-            bottomPanel.Resize += (s, e) => { txtLog.Width = bottomPanel.Width - 40; };
+            bottomPanel.Resize += (s, e) => {
+                txtLog.Width = Math.Max(1, bottomPanel.Width - 40);
+                txtLog.Height = Math.Max(1, bottomPanel.Height - 55);
+            };
             bottomPanel.Controls.Add(txtLog);
 
             // 5. Main Workspace
-            FlowLayoutPanel workspace = new FlowLayoutPanel { 
+            Panel workspace = new Panel {
                 Dock = DockStyle.Fill, 
                 BackColor = Color.FromArgb(245, 246, 250),
-                Padding = new Padding(20),
-                AutoScroll = true
+                Padding = new Padding(16)
             };
-            
-
-
+            workspace.Name = "workspaceHome";
+            workspace.Controls.Add(InitializeDigitalTwin());
             // Guide Key Workspace
             Panel workspaceGuide = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(245, 246, 250), Padding = new Padding(20), Visible = false };
             
@@ -330,12 +329,16 @@ namespace Test_1.UI
                 tb.Scroll += (s, e) => { val2.Text = tb.Value.ToString() + ".0"; };
                 
                 tb.MouseUp += (s, e) => { 
-                    if (_robotService.State.IsConnected) {
+                    if (_robotService.State.IsConnected && !_connectionChangePending && !_statusCommandPending) {
                         try {
-                            _robotService.EnsureWatchdogRunning();
-                            _robotService.SetSpeed(tbSpeed.Value);
+                            int speed = tbSpeed.Value;
+                            int target = tb.Value;
                             Task.Run(() => {
-                                try { _robotService.MoveJointAxis(axisNo, tb.Value); } catch { }
+                                try {
+                                    _robotService.EnsureWatchdogRunning();
+                                    _robotService.SetSpeed(speed);
+                                    _robotService.MoveJointAxis(axisNo, target);
+                                } catch { }
                             });
                         } catch { }
                     }
@@ -374,28 +377,32 @@ namespace Test_1.UI
 
             // Logic for Run
             btnGuideRun.Click += async (s, e) => {
+                if (_connectionChangePending || _statusCommandPending) return;
                 if (!_robotService.State.IsConnected) {
                     _logger.Log("[Guide] Cannot run: Robot is not connected.");
                     return;
                 }
                 try {
-                    _robotService.EnsureWatchdogRunning();
-                    _robotService.SetSpeed(tbSpeed.Value);
+                    int speed = tbSpeed.Value;
                     
                     if (pnlMode1.Visible || pnlMode2.Visible) {
                         _logger.Log($"[Guide] RUN Joint started at {tbSpeed.Value}% speed...");
                         bool isMode1 = pnlMode1.Visible;
+                        double[] targets = new double[4];
+                        for (int i = 0; i < 4; i++) {
+                            if (isMode1) {
+                                double.TryParse(txtAxes[i].Text.Replace(",", "."), System.Globalization.NumberStyles.Any,
+                                    System.Globalization.CultureInfo.InvariantCulture, out targets[i]);
+                            } else {
+                                targets[i] = tbAxes[i].Value;
+                            }
+                        }
                         
                         await Task.Run(() => {
+                            _robotService.EnsureWatchdogRunning();
+                            _robotService.SetSpeed(speed);
                             for (int i = 0; i < 4; i++) {
-                                double val = 0;
-                                if (isMode1) {
-                                    string textVal = txtAxes[i].Text.Replace(",", ".");
-                                    double.TryParse(textVal, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out val);
-                                } else {
-                                    val = tbAxes[i].Value;
-                                }
-                                _robotService.MoveJointAxis(i + 1, val);
+                                _robotService.MoveJointAxis(i + 1, targets[i]);
                             }
                         });
                     } else if (pnlMode3.Visible) {
@@ -407,6 +414,8 @@ namespace Test_1.UI
                         double.TryParse(txtCart[3].Text.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double c);
                         
                         await Task.Run(() => {
+                            _robotService.EnsureWatchdogRunning();
+                            _robotService.SetSpeed(speed);
                             _robotService.MoveCartesian(x, y, z, c);
                         });
                     }
@@ -415,8 +424,8 @@ namespace Test_1.UI
                 }
             };
             // Logic for Stop
-            btnGuideStop.Click += (s, e) => {
-                _robotService.StopMotion();
+            btnGuideStop.Click += async (s, e) => {
+                await Task.Run(() => _robotService.StopMotion());
             };
             // --- Motion Profile Workspace ---
             Panel workspaceMotion = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(245, 246, 250), Padding = new Padding(20), Visible = false };
@@ -477,6 +486,7 @@ namespace Test_1.UI
             workspaceMotion.Controls.Add(motionChart);
 
                         btnStartDemo.Click += async (s, e) => {
+                if (_connectionChangePending || _statusCommandPending) return;
                 btnStartDemo.Enabled = false;
                 btnStartTrap.Enabled = false;
                 sPos.Points.Clear();
@@ -484,13 +494,17 @@ namespace Test_1.UI
                 sAcc.Points.Clear();
                 motionChart.ChartAreas[0].AxisX.StripLines.Clear();
 
-                double startPos = _robotService.GetCurrentPosition()?.JointPosition.J1 ?? 0;
-                
-                _robotService.EnsureWatchdogRunning();
-                _robotService.SetSpeed((int)Constants.DemoVMax);
-                _robotService.MoveJointAxis(1, startPos + Constants.DemoDistance);
+                double startPos = await Task.Run(() => {
+                    double start = _robotService.GetCurrentPosition()?.JointPosition.J1 ?? 0;
+                    _robotService.EnsureWatchdogRunning();
+                    _robotService.SetSpeed((int)Constants.DemoVMax);
+                    _robotService.MoveJointAxis(1, start + Constants.DemoDistance);
+                    return start;
+                });
+                if (IsDisposed || Disposing) return;
 
                 var result = await _motionService.StartSCurveDemoAsync(startPos, Constants.DemoDistance, Constants.DemoVMax, Constants.DemoAMax, Constants.DemoJMax);
+                if (IsDisposed || Disposing) return;
                 
                 motionChart.ChartAreas[0].AxisX.Maximum = result.xAxisMax;
                 
@@ -516,6 +530,7 @@ namespace Test_1.UI
             };
 
             btnStartTrap.Click += async (s, e) => {
+                if (_connectionChangePending || _statusCommandPending) return;
                 btnStartDemo.Enabled = false;
                 btnStartTrap.Enabled = false;
                 sPos.Points.Clear();
@@ -523,13 +538,17 @@ namespace Test_1.UI
                 sAcc.Points.Clear();
                 motionChart.ChartAreas[0].AxisX.StripLines.Clear();
 
-                double startPos = _robotService.GetCurrentPosition()?.JointPosition.J1 ?? 0;
-                
-                _robotService.EnsureWatchdogRunning();
-                _robotService.SetSpeed((int)Constants.DemoVMax);
-                _robotService.MoveJointAxis(1, startPos + Constants.DemoDistance);
+                double startPos = await Task.Run(() => {
+                    double start = _robotService.GetCurrentPosition()?.JointPosition.J1 ?? 0;
+                    _robotService.EnsureWatchdogRunning();
+                    _robotService.SetSpeed((int)Constants.DemoVMax);
+                    _robotService.MoveJointAxis(1, start + Constants.DemoDistance);
+                    return start;
+                });
+                if (IsDisposed || Disposing) return;
 
                 var result = await _motionService.StartTrapezoidalDemoAsync(startPos, Constants.DemoDistance, Constants.DemoVMax, Constants.DemoAMax, Constants.DemoJMax);
+                if (IsDisposed || Disposing) return;
                 
                 motionChart.ChartAreas[0].AxisX.Maximum = result.xAxisMax;
                 
@@ -581,46 +600,27 @@ namespace Test_1.UI
             workspaceShapes.Controls.Add(pnlCircle);
 
             btnDrawSquare.Click += async (s, e) => {
+                if (_connectionChangePending || _statusCommandPending) return;
                 if (double.TryParse(txtSide.Text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double side)) {
                     btnDrawSquare.Enabled = false;
-                    await _robotService.DrawSquareAsync(side);
-                    btnDrawSquare.Enabled = true;
+                    await Task.Run(() => _robotService.DrawSquareAsync(side));
+                    if (!IsDisposed && !Disposing) btnDrawSquare.Enabled = true;
                 }
             };
             btnDrawCircle.Click += async (s, e) => {
+                if (_connectionChangePending || _statusCommandPending) return;
                 if (double.TryParse(txtRadius.Text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double rad)) {
                     btnDrawCircle.Enabled = false;
-                    await _robotService.DrawCircleAsync(rad);
-                    btnDrawCircle.Enabled = true;
+                    await Task.Run(() => _robotService.DrawCircleAsync(rad));
+                    if (!IsDisposed && !Disposing) btnDrawCircle.Enabled = true;
                 }
             };
 
             // Navigation Events
-            navBtns[0].Click += (s, e) => { workspace.Visible = true; workspaceGuide.Visible = false; workspaceMotion.Visible = false; workspaceShapes.Visible = false; activeIndicator.Location = new Point(0, 20); };
-            navBtns[1].Click += (s, e) => { workspace.Visible = false; workspaceGuide.Visible = true; workspaceMotion.Visible = false; workspaceShapes.Visible = false; activeIndicator.Location = new Point(0, 65); };
-            navBtns[2].Click += (s, e) => { workspace.Visible = false; workspaceGuide.Visible = false; workspaceMotion.Visible = true; workspaceShapes.Visible = false; activeIndicator.Location = new Point(0, 110); };
-            navBtns[3].Click += (s, e) => { workspace.Visible = false; workspaceGuide.Visible = false; workspaceMotion.Visible = false; workspaceShapes.Visible = true; activeIndicator.Location = new Point(0, 155); };
-
-            System.Windows.Forms.Timer dataTimer = new System.Windows.Forms.Timer();
-            dataTimer.Interval = 500;
-            dataTimer.Tick += (s, e) => {
-                if (_robotService.State.IsConnected) {
-                    try {
-                        TsPointS pos = _robotService.GetCurrentPosition()?.WorldPosition; 
-                        if (paramBoxes.ContainsKey("EEx:")) paramBoxes["EEx:"].Text = pos.X.ToString("F3");
-                        if (paramBoxes.ContainsKey("EEy:")) paramBoxes["EEy:"].Text = pos.Y.ToString("F3");
-                        if (paramBoxes.ContainsKey("EEz:")) paramBoxes["EEz:"].Text = pos.Z.ToString("F3");
-                    } catch { }
-                    try {
-                        TsJointS jpos = _robotService.GetCurrentPosition()?.JointPosition;
-                        if (paramBoxes.ContainsKey("Theta 1:")) paramBoxes["Theta 1:"].Text = jpos.J1.ToString("F3");
-                        if (paramBoxes.ContainsKey("Theta 2:")) paramBoxes["Theta 2:"].Text = jpos.J2.ToString("F3");
-                        if (paramBoxes.ContainsKey("Theta 3:")) paramBoxes["Theta 3:"].Text = jpos.J3.ToString("F3");
-                        if (paramBoxes.ContainsKey("Theta 4:")) paramBoxes["Theta 4:"].Text = jpos.J4.ToString("F3");
-                    } catch { }
-                }
-            };
-            dataTimer.Start();
+            navBtns[0].Click += (s, e) => { bottomPanel.Height = 140; workspace.Visible = true; workspaceGuide.Visible = false; workspaceMotion.Visible = false; workspaceShapes.Visible = false; activeIndicator.Location = new Point(0, 20); };
+            navBtns[1].Click += (s, e) => { bottomPanel.Height = 220; workspace.Visible = false; workspaceGuide.Visible = true; workspaceMotion.Visible = false; workspaceShapes.Visible = false; activeIndicator.Location = new Point(0, 65); };
+            navBtns[2].Click += (s, e) => { bottomPanel.Height = 220; workspace.Visible = false; workspaceGuide.Visible = false; workspaceMotion.Visible = true; workspaceShapes.Visible = false; activeIndicator.Location = new Point(0, 110); };
+            navBtns[3].Click += (s, e) => { bottomPanel.Height = 220; workspace.Visible = false; workspaceGuide.Visible = false; workspaceMotion.Visible = false; workspaceShapes.Visible = true; activeIndicator.Location = new Point(0, 155); };
 
             // Add everything to form
             this.Controls.Add(workspaceShapes);

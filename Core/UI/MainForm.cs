@@ -13,6 +13,8 @@ namespace Test_1.UI
         private readonly RobotService _robotService;
         private readonly LoggingService _logger;
         private readonly MotionService _motionService;
+        private bool _connectionChangePending;
+        private bool _statusCommandPending;
 
         public MainForm()
         {
@@ -36,9 +38,11 @@ namespace Test_1.UI
 
         private void LogMessage(string message)
         {
+            if (IsDisposed || Disposing || txtLog.IsDisposed) return;
             if (txtLog.InvokeRequired)
             {
-                txtLog.BeginInvoke(new Action(() => txtLog.AppendText(message)));
+                try { txtLog.BeginInvoke(new Action(() => LogMessage(message))); }
+                catch (InvalidOperationException) { /* The window closed while a worker was logging. */ }
             }
             else
             {
@@ -48,13 +52,17 @@ namespace Test_1.UI
 
         private void UpdateButtonStates()
         {
+            if (IsDisposed || Disposing) return;
             if (InvokeRequired)
             {
-                BeginInvoke(new Action(UpdateButtonStates));
+                try { BeginInvoke(new Action(UpdateButtonStates)); }
+                catch (InvalidOperationException) { /* The window closed while a driver event was queued. */ }
                 return;
             }
 
             var state = _robotService.State;
+            UpdateDigitalTwinConnection(state.IsConnected && !_connectionChangePending);
+            btnConnect.Enabled = !_connectionChangePending && !_statusCommandPending;
 
             Color brandOrange = Color.FromArgb(232, 93, 4);
             Color dangerRed = Color.FromArgb(220, 53, 69);
@@ -69,9 +77,9 @@ namespace Test_1.UI
                 btnConnect.BackColor = dangerRed;
                 btnConnect.ForeColor = Color.White;
 
-                btnServoOn.Enabled = true;
-                btnServoOff.Enabled = true;
-                btnWatchdog.Enabled = true;
+                btnServoOn.Enabled = !_connectionChangePending && !_statusCommandPending;
+                btnServoOff.Enabled = !_connectionChangePending && !_statusCommandPending;
+                btnWatchdog.Enabled = !_connectionChangePending && !_statusCommandPending;
 
                 btnServoOn.ForeColor = state.IsServoOn ? Color.White : textDark;
                 btnServoOn.BackColor = state.IsServoOn ? successGreen : lightGrayBg;
@@ -108,35 +116,61 @@ namespace Test_1.UI
             lblWatchdogStatus.ForeColor = state.IsWatchdogRunning ? Color.FromArgb(0, 123, 255) : textMuted;
         }
 
-        private void btnConnect_Click(object sender, EventArgs e)
+        private async void btnConnect_Click(object sender, EventArgs e)
         {
-            if (_robotService.State.IsConnected)
+            if (_connectionChangePending || _statusCommandPending) return;
+            _connectionChangePending = true;
+            UpdateButtonStates();
+            try
             {
-                _robotService.Disconnect();
+                if (_robotService.State.IsConnected)
+                    await Task.Run(() => _robotService.Disconnect());
+                else
+                    await Task.Run(() => _robotService.Connect());
             }
-            else
+            catch (Exception ex)
             {
-                _robotService.Connect();
+                _logger.Log("Connection change error: " + ex.Message);
+            }
+            finally
+            {
+                _connectionChangePending = false;
+                if (!IsDisposed && !Disposing) UpdateButtonStates();
             }
         }
 
-        private void btnServoOn_Click(object sender, EventArgs e)
+        private async void btnServoOn_Click(object sender, EventArgs e)
         {
-            _robotService.TurnServoOn();
+            await RunRobotStatusCommand(_robotService.TurnServoOn);
         }
 
-        private void btnServoOff_Click(object sender, EventArgs e)
+        private async void btnServoOff_Click(object sender, EventArgs e)
         {
-            _robotService.TurnServoOff();
+            await RunRobotStatusCommand(_robotService.TurnServoOff);
         }
 
-        private void btnWatchdog_Click(object sender, EventArgs e)
+        private async void btnWatchdog_Click(object sender, EventArgs e)
         {
-            _robotService.StartWatchdog();
+            await RunRobotStatusCommand(_robotService.StartWatchdog);
+        }
+
+        private async Task RunRobotStatusCommand(Action command)
+        {
+            if (_connectionChangePending || _statusCommandPending) return;
+            _statusCommandPending = true;
+            UpdateButtonStates();
+            try { await Task.Run(command); }
+            catch (Exception ex) { _logger.Log("Controller command error: " + ex.Message); }
+            finally
+            {
+                _statusCommandPending = false;
+                if (!IsDisposed && !Disposing) UpdateButtonStates();
+            }
         }
 
         private void MotionService_OnDemoStep(double t, double p, double v, double a)
         {
+            if (IsDisposed || Disposing) return;
             if (InvokeRequired)
             {
                 Invoke(new Action(() => MotionService_OnDemoStep(t, p, v, a)));
@@ -154,6 +188,7 @@ namespace Test_1.UI
 
         private void MotionService_OnDemoFinished()
         {
+            if (IsDisposed || Disposing) return;
             if (InvokeRequired)
             {
                 Invoke(new Action(MotionService_OnDemoFinished));
