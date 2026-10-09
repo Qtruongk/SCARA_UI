@@ -1,0 +1,759 @@
+=== PAGE 49 ===
+ 
+STE 80722 
+– 41 – 
+COMMUNICATION MANUAL series  Robot Controller  
+5.3 Commands 
+5.3.1 List of Commands 
+ 
+Commands which may be used with this communication protocol are shown in 
+Tables 5.1 and 5.2. 
+Table 5.1  List of commands (Host computer →  Controller) 
+ 
+No. Command Descriptions Details Text 
+1 RN Start Automatic operation RN 
+2 SP Stop  SP 
+3 BR Servo OFF  BR 
+4 SO Servo ON  SO 
+5 RS Reset Program reset RS, PRG 
+   Step reset RS, STP 
+   Cycle reset RS, CYC 
+   Output signal reset RS, SIG 
+   Select reset RS, SEL 
+   Alarm reset RS, ERR 
+6 SL Program selection  SL, File name 
+7 UL File name RAM file upload UL, File name 
+8 DL File name RAM file download DL, File name 
+9 CA Directory Directory request CA 
+10 SU Status Status request SU 
+11 EU Error information Error history upload EU 
+12 ER File erase  ER, File name 
+13 FL File  FL, File contents 
+14 OK Acknowledge  OK 
+15 NG Non-acknowledge  NG 
+16 EC* Internal command Internal command transmit EC, Internal command 
+17 MW Variable write Global-defined variable 
+write 
+MW, Flag Name, Type 
+Data 
+18 FD Feed hold Feed hold FD 
+19 SF System total status Request for fast-speed 
+status information 
+SF 
+20 MR Variable read Global-defined variable 
+read 
+MR, Name, Type 
+21 IW I/O write I/O forced-writing IW, Line No., Status 
+22 VR Version read Robot and software 
+version 
+VR 
+23 DO Execution of DO 
+statement 
+Execution of DO 
+statement 
+DO, Statement 
+24 AC Currently occurring alarm Currently occurring alarm 
+acquisition with message 
+AC 
+
+=== PAGE 50 ===
+ 
+STE 80722 
+– 42 – 
+COMMUNICATION MANUAL series  Robot Controller  
+No. Command Descriptions Details Text 
+25 MD Guide mode JOG setting request MD, 0 
+INCHING setting request MD, 1 
+26 RT Guide rate Slow speed setting 
+request 
+RT, 0 
+Mid speed setting request RT, 1 
+Fast speed setting 
+request 
+RT, 2 
+27 SC Guidance coordinate Joint coordinate setting 
+request 
+SC, 0 
+Tool coordinate setting 
+request 
+SC, 1 
+Work coordinate setting 
+request 
+SC, 2 
+World coordinate setting 
+request 
+SC, 3 
+28 JG JOG execution Plus direction JOG 
+execution request 
+JG, 1 + 
+Minus direction JOG 
+execution request 
+JG, 1 - 
+JOG stop request JG, 1 ! 
+29 ZS Coordinate setting Work coordinate setting 
+request 
+ZS, 1 coordinate 
+name coordinate 
+Tool coordinate setting 
+request 
+ZS, 2 coordinate 
+name coordinate 
+30 MP Teaching point movement Normal teaching point 
+movement execution 
+request 
+MP, 0 movement 
+position 
+Z axis current position 
+teaching point movement 
+execution request 
+MP, 1 movement 
+position 
+31 PS Current position Current position request PS 
+32 PR Individual current position Joint coordinate request PR, 0 
+World coordinate request PR, 1 
+Work coordinate request PR, 2 
+Joint feedback coordinate 
+request 
+PR, 3 
+World feedback 
+coordinate request 
+PR, 4 
+Work feedback coordinate 
+request 
+PR, 5 
+
+=== PAGE 51 ===
+ 
+STE 80722 
+– 43 – 
+COMMUNICATION MANUAL series  Robot Controller  
+No. Command Descriptions Details Text 
+33 MN Maintenance information Information request for 
+total rotational amount of 
+motor 
+MN, 1 
+Information request for 
+movement amount of joint 
+axis 
+MN, 2 
+Information request for 
+integrated amount of 
+motor torque 
+MN, 3 
+Information request for 
+integrated amount of 
+motor torque exceeding 
+rating 
+MN, 4 
+Peak torque information 
+request 
+*Cleared by 
+communication request. 
+MN, 5 
+3-second load factor 
+information request 
+MN, 6 
+1-minute load factor 
+information request 
+MN, 7 
+15-minute load factor 
+information request 
+MN, 8 
+2-hour load factor 
+information request 
+MN, 9 
+Total time information 
+request 
+MN, 10 
+Energizing time 
+information request 
+MN, 11 
+Power OFF time 
+information request 
+MN, 12 
+Motion time information 
+request 
+MN, 13 
+Fault time information 
+request 
+MN, 14 
+Servo information request 
+(servo OFF count) 
+MN, 15 
+Servo ON time 
+information request 
+MN, 16 
+Peak torque information 
+request 
+*Not cleared by 
+communication request. 
+MN, 17 
+
+=== PAGE 52 ===
+ 
+STE 80722 
+– 44 – 
+COMMUNICATION MANUAL series  Robot Controller  
+No. Command Descriptions Details Text 
+34 RM Maintenance information 
+reset 
+Reset request for total 
+rotational amount of motor 
+RM, 1 
+Reset request for 
+movement amount of joint 
+axis 
+RM, 2 
+Reset request for 
+integrated amount of 
+motor torque 
+RM, 3 
+Reset request for 
+integrated amount of 
+motor torque exceeding 
+rating 
+RM, 4 
+Peak torque reset request RM, 5 
+3-second load factor reset 
+request 
+RM, 6 
+1-minute load factor reset 
+request 
+RM, 7 
+15-minute load factor 
+reset request 
+RM, 8 
+2-hour load factor reset 
+request 
+RM, 9 
+Total time reset request RM, 10 
+Energizing time reset 
+request 
+RM, 11 
+Power OFF time reset 
+request 
+RM, 12 
+Motor time reset request RM, 13 
+Fault time reset request RM, 14 
+Servo information reset 
+request 
+(servo OFF count) 
+RM, 15 
+Servo ON time reset 
+request 
+RM, 16 
+35 IO IO information IO information request 
+*Field bus area extension 
+IO, 1 
+36 WD Watchdog Watchdog timer setting WD, time alarm level 
+37 AH Alarm history Alarm history message 
+acquisition 
+AH 
+38 HO Output signal write Hexadecimal-coding and 
+forced writing of output 
+signal 
+HO, signal name 
+signal length 
+expression 
+39 VL Robot tip speed 
+information 
+Robot tip speed 
+information request (joint) 
+VL, 0 
+Robot tip speed 
+information request 
+(world) 
+VL, 1 
+
+=== PAGE 53 ===
+ 
+STE 80722 
+– 45 – 
+COMMUNICATION MANUAL series  Robot Controller  
+No. Command Descriptions Details Text 
+40 SM Motion status Motion status information 
+acquisition 
+SM, version 
+41 HI Input signal read Hexadecimal-coding and 
+reading of Input signal 
+HI, signal name signal 
+length 
+42 ZC 3-axis origin position 
+change information 
+3-axis origin position 
+change information 
+request 
+ZC 
+43 EM Controller mode change EXT.SIG change request EM, 0 
+EXT.RS232C change 
+request 
+EM, 1 
+EXT.ETHER change 
+request 
+EM, 2 
+ * The internal commands executable by the EC command are as follows: 
+  (1) MODE 
+  (2) OVRD 
+  (3) BREAK 
+ 
+Table 5.2  List of commands (Controller →  Host computer) 
+ 
+No. Command Descriptions Details Text 
+1 FL* File  FL, File contents 
+2 OK Acknowledge  OK 
+3 NG Non-acknowledge  NG 
+ * The following files can be sent with the FL command. 
+  (1) RAM files 
+    User file (program and positional data) 
+    Parameter file 
+  (2) File directories 
+  (3) Status files 
+  (4) Error history files 
+  (5) System total status files 
+  (6) Version information files 
+  (7) Variable read data files 
+  (8) Currently occurring alarm 
+
+=== PAGE 54 ===
+ 
+STE 80722 
+– 46 – 
+COMMUNICATION MANUAL series  Robot Controller  
+5.3.2 Commands and Operation Modes 
+ 
+Tables 5.3 and 5.4 show the operation modes in which each command is operative.  
+The communications through the HOST port are effective irrespective of master 
+modes, but their function is limited by a master mode.  For details, see the following 
+table. 
+Table 5.3  HOST port (RS232C) commands and operation modes  
+  HOST port commands and operation modes 
+ 
+Master mode (Key switch) TEACHING INTERNAL 
+(TS3000) EXT 
+Parameter (EXTERNAL mode control right)   SIG RS-232C ETHER 
+Maximum speed of robot 250 
+mm/sec 100% 100% 100% 100% 
+Command Description      
+RN Automatic operation start X X X  X 
+SP Stop      
+BR Servo OFF      
+SO Servo ON X X X  X 
+RS Program reset X X X  X 
+SL Program selection      
+UL File upload      
+DL File download      
+CA Directory request      
+SU Status request      
+ER File erase      
+EU Error history upload      
+EC Internal command X X X  X 
+MW Variable write      
+FD Feed hold      
+SF System total status      
+MR Variable read      
+IW I/O write X X X  X 
+VR Version read      
+DO Execution of DO statement X X X  X 
+AC Currently occurring alarm 
+acquisition      
+MD Guide mode setting X X X  X 
+RT Guide rate setting X X X  X 
+SC Guidance coordinate setting X X X  X 
+JG JOG execution X X X  X 
+ZS Coordinate setting X X X  X 
+
+=== PAGE 55 ===
+ 
+STE 80722 
+– 47 – 
+COMMUNICATION MANUAL series  Robot Controller  
+MP Teaching point movement 
+execution X X X  X 
+PS Current position acquisition      
+PR Individual current information 
+acquisition      
+MN Maintenance information 
+acquisition      
+RM Maintenance information 
+reset execution      
+IO IO information acquisition      
+WD Watchdog execution      
+AH Alarm history acquisition      
+HO Output signal write X X X  X 
+VL Robot tip speed information 
+acquisition      
+SM Motion status acquisition      
+HI Input signal read X X X  X 
+ZC 3-axis origin position change 
+information acquisition      
+EM Controller mode change 
+execution X X X  X 
+: Valid, X: Invalid, : Valid when the robot is stopped  
+
+=== PAGE 56 ===
+ 
+STE 80722 
+– 48 – 
+COMMUNICATION MANUAL series  Robot Controller  
+The communications through the IP0 port are effective irrespective of master modes, 
+but their function is limited by a master mode.  For details, see the following table.  
+Table 5.4  IPO port (Ethernet) commands and operation modes  
+ 
+Master mode (Key switch) TEACHING INTERNAL 
+(TS3000) EXT 
+Parameter (EXTERNAL mode control right)   SIG RS-232C ETHER 
+Maximum speed of robot 250 
+mm/sec 100% 100% 100% 100% 
+Command Description      
+RN Automatic operation start  X X X X  
+SP Stop      
+BR Servo OFF      
+SO Servo ON X X X X  
+RS Program reset X X X X  
+SL Program selection      
+UL File upload      
+DL File download      
+CA Directory request      
+SU Status request      
+ER File erase      
+EU Error history upload      
+EC Internal command X X X X  
+MW Variable write      
+FD Feed hold      
+SF System total status      
+MR Variable read      
+IW I/O write X X X X  
+VR Version read      
+DO Execution of DO statement X X X X  
+AC Currently occurring alarm 
+acquisition 
+     
+MD Guide mode setting X X X X  
+RT Guide rate setting X X X X  
+SC Guidance coordinate setting X X X X  
+JG JOG execution X X X X  
+ZS Coordinate setting X X X X  
+MP Teaching point movement 
+execution 
+X X X X  
+PS Current position acquisition      
+PR Individual current position 
+acquisition 
+     
+MN Maintenance information 
+acquisition 
+     
+RM Maintenance information 
+reset execution 
+     
+
+=== PAGE 57 ===
+ 
+STE 80722 
+– 49 – 
+COMMUNICATION MANUAL series  Robot Controller  
+IO IO information acquisition      
+WD Watchdog execution      
+AH Alarm history acquisition      
+HO Output signal write X X X X  
+VL Robot tip speed information 
+acquisition 
+     
+SM Motion status acquisition      
+HI Input signal read X X X X  
+ZC 3-axis origin position change 
+information acquisition 
+     
+EM Controller mode change 
+execution 
+X X X X  
+: Valid, X: Invalid, : Valid when the robot is stopped  
+ 
+Commands transmitted from the host computer to the controller can be received by 
+the controller in the modes marked "". 
+Commands transmitted from the controller to the host computer can be transmitted 
+by the controller in the mode marked "". 
+Note: All external control input signals are also limited by a mater mode. 
+For details, see the Interface Manual. 
+
+=== PAGE 58 ===
+ 
+STE 80722 
+– 50 – 
+COMMUNICATION MANUAL series  Robot Controller  
+5.3.3 Details of Commands 
+ 
+: Automatic Operation Start (Host computer → Controller) RN 
+ 
+Format 
+ 
+  RN  CR  
+ 
+Description 
+The RN (Automatic Operation Start) command is a command given by the host 
+computer to the controller telling the controller to start up the program.  If, after 
+stopping the program with the SP (Automatic Operation Stop) command, one sends 
+the RN command again, the robot will start up from the step immediately following 
+the step at which it was stopped. 
+ 
+Protocol 
+ 
+Controller Host computer 
+ 
+ 
+(1) Normal operation 
+ OK   CR  
+ 
+ In automatic operation 
+ 
+(2) Error (Cannot receive request) 
+ NG   CR  
+ 
+ 
+ 
+ 
+RN   CR   (Automatic operation 
+start-up directive) 
+Normal response (Automatic 
+operation normal commencement) 
+ 
+ 
+ 
+Request not accepted (Servo OFF, 
+etc.) 
+The controller cannnot start. 
+ 
+
+=== PAGE 59 ===
+ 
+STE 80722 
+– 51 – 
+COMMUNICATION MANUAL series  Robot Controller  
+ 
+Note 
+ 
+If the power is turned on while the controller is set for the host mode, the operation 
+mode of the system will be the cycle operation mode.  If the controller is changed 
+over to the host mode from the internal automatic mode, the operation mode of the 
+system will be that in effect beforehand. 
+
+=== PAGE 60 ===
+ 
+STE 80722 
+– 52 – 
+COMMUNICATION MANUAL series  Robot Controller  
+: Automatic Operation Stop (Host computer → Controller) SP 
+ 
+Format 
+  SP  CR  
+ 
+Description 
+The SP (Automatic Operation Stop) command is given by the host computer to the 
+controller telling the controller to stop automatic operation.  Also, this command 
+informs the host computer when the controller is stopped.  Furthermore, should the 
+robot be stopped in accordance with any request other than that made by the host 
+computer, this command will automatically be sent from the controller to the host 
+computer. 
+ 
+Protocol 
+ 
+Controller Host 
+1. Automatic operation stop directive 
+ 
+(1) Normal operation 
+ OK   CR  
+ 
+(2) Error 
+ NG   CR  
+ 
+ 
+ 
+SP   CR   (Automatic operation 
+stop directive) 
+Normal response, program stop 
+ 
+ 
+Request not accepted 
+ 
+ 
+ 
+ 
+
+=== PAGE 61 ===
+ 
+STE 80722 
+– 53 – 
+COMMUNICATION MANUAL series  Robot Controller  
+: Servo OFF (Host computer → Controller) BR 
+ 
+Format 
+  BR  CR  
+ 
+Description 
+The BR (Servo OFF) command is given by the host computer to the controller telling 
+the controller to turn off the servo power. 
+ 
+Protocol 
+ 
+Controller Host computer 
+ 
+ 
+ 
+(1) Normal response 
+ OK   CR  
+ 
+(2) Error (Cannot receive request) 
+ NG   CR  
+ 
+ 
+BR   CR   (Servo power OFF)  
+ 
+ 
+Normal response 
+ 
+ 
+Request not accepted 
+ 
+ 
+
+=== PAGE 62 ===
+ 
+STE 80722 
+– 54 – 
+COMMUNICATION MANUAL series  Robot Controller  
+: Servo ON (Host computer → Controller) SO 
+ 
+Format 
+  SO  CR  
+ 
+Description 
+The servo ON command is given from the host computer to the controller to turn the 
+power on. 
+ 
+Protocol 
+ 
+Controller Host computer 
+ 
+ 
+ 
+(1) Normal response 
+ OK   CR  
+ 
+(2) Error (Cannot receive request) 
+ NG   CR  
+ 
+ 
+SO   CR   (Servo power ON)  
+ 
+ 
+Normal response 
+ 
+ 
+Request not accepted 
+ 
+
+=== PAGE 63 ===
+ 
+STE 80722 
+– 55 – 
+COMMUNICATION MANUAL series  Robot Controller  
+: Reset (Host computer → Controller) RS 
+ 
+Format 
+ RS, XXX  CR  
+ XXX : PRG Reset all program data (internal data) 
+ STP Reset the program back to Step 1.  All program data 
+remains unchanged. 
+ CYC Reset the program back to the step marked by the label 
+RCYCLE. 
+ SIG Turns off the digital output signals (DO1 to DO24) available 
+to the user. 
+ SEL Resets the execution file. 
+ ERR Rests an alarm. 
+ 
+Description 
+The RS command will not be accepted unless the system is in a stop mode. 
+ 
+(1) PRG 
+PRG will reset the program to Step 1.  All program data will be initialized.  
+ 
+(2) STP 
+STP will reset the program to Step 1.  All program data (such as variables) will 
+remain unchanged. 
+ 
+(3) CYC 
+CYC will specify step number to the specified label (RCYCLE).  All program 
+data will remain unchanged. 
+ 
+(4) SIG 
+SIG will put the digital outputs in the non-active state. 
+ 
+(5) SEL 
+SEL will reset the execution file. 
+ 
+(6) ERR 
+ERR will reset an alarm. 
+
+=== PAGE 64 ===
+ 
+STE 80722 
+– 56 – 
+COMMUNICATION MANUAL series  Robot Controller  
+ 
+Protocol 
+ 
+Controller Host computer 
+ 
+ 
+ 
+(1) Normal completion 
+ OK   CR  
+ 
+(2) Abnormal completion 
+ NG   CR  
+ 
+ 
+RS, PRG   CR  
+ 
+ 
+Normal completion 
+ 
+ 
+Request not accepted 
+ 
+
+=== PAGE 65 ===
+ 
+STE 80722 
+– 57 – 
+COMMUNICATION MANUAL series  Robot Controller  
+: Program Selection (Host computer → Controller) SL 
+ 
+Format 
+  SL, file name   CR  
+ 
+Description 
+The SL command selects a program to be executed under automatic operation.  
+ 
+Protocol 
+ 
+Controller Host computer 
+ 
+ 
+ 
+(1) Normal completion 
+ OK   CR  
+ 
+(2) Abnormal completion 
+ NG   CR  
+ 
+ 
+SL, file name   CR  
+ 
+ 
+Normal completion 
+ 
+ 
+Request not accepted 
+ 
+

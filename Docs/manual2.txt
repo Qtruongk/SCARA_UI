@@ -1,0 +1,5077 @@
+PAGE 0
+Manualslib.com
+ - The Global Manuals Library
+Manuals
+ 
+/ 
+Brands
+ 
+/ 
+Toshiba Manuals
+ 
+/ 
+Controller
+ 
+/ 
+TS3000 Series
+ 
+/ 
+Instruction manual
+ 
+/ 
+PDF
+TOSHIBA TS3000 SERIES INSTRUCTION
+MANUAL
+Quick Links
+Section 1 Overview
+Creating an Application Solution
+Section 2 Example of Application Development Using C
+Errorcode
+PAGE 1
+ 
+Table of Contents
+Table of Contents
+Creating an Application Solution
+Setting Application Execution File Output Destination
+2.3 Reference Setting of TsRemoteLib
+Calling TsRemoteS Interface
+Event Processing Performed Based on the Information from
+WatchDog of TsRemoteLib
+Outline of TsRemoteLib
+Classes That Are Defined in TsRemoteLib
+TsRemote
+TsRemoteS
+TsRemoteV
+TsPointS
+TsPointV
+ConfigVpart
+TsJointS
+TsJointV
+TsTransS
+TsTransV
+TsPayloadS
+TsPayloadV
+TsFileInfo
+TsVersion
+TsDIO
+TsStatus
+TsStatusAllS
+TsStatusAllV
+TsStatusMonitor
+TsRemoteSException
+3.3 Enumerations That Are Defined in TsRemoteLib
+ConfigS
+PAGE 2
+ConfigV
+Gain
+RunMode
+ErrorCode
+3.4 TsRemoteS Class Properties
+MvAccel
+MvDecel
+MvSpeed
+TsRemote Class Method
+Connect()
+DeleteFile()
+DirectDo()
+Disconnect()
+Dispose()
+GetAlarmHistory()
+GetCurrentAlarm()
+GetDIn()
+GetDIO()
+GetDir()
+GetDout()
+GetGlobalINT()
+GetGlobalREAL()
+GetHexIn()
+GetStatus()
+GetStatusMonitor()
+GetSystemVersion()
+ProgramBreak()
+ProgramRun()
+ProgramSelect()
+ProgramStop()
+ReceiveFile()
+ResetALARM()
+ResetCYCLE()
+ResetPRG()
+PAGE 3
+ResetMove()
+ResetSELECT()
+ResetSIGNAL()
+ResetSTEP()
+SendFile()
+ServoOff()
+ServoOn()
+SetComPort()
+SetDout()
+SetGlobalINT()
+SetGlobalREAL()
+SetHexOut()
+SetIPaddr()
+SetOVRD()
+SetRunMode()
+WatchDogStart()
+WatchDogStop()
+TsRemoteS Class property
+MvConfig
+MvTool
+MvWork
+TsRemoteS Class Method
+GetGlobalPOINT()
+GetGlobalPAYLOAD()
+GetGlobalTRANS()
+GetPsnCmdJoint()
+GetPsnCmdWork()
+GetPsnCmdWorld()
+GetPsnFbkJoint()
+GetPsnFbkWork()
+GetPsnFbkWorld()
+GetStatusAll()
+GetVelocJoint()
+GetVelocWorld()
+PAGE 4
+Move()
+Movea()
+Movej()
+Moves()
+SetGain()
+SetGlobalPOINT()
+SetGlobalPYLOAD()
+SetGlobalTRANS()
+SetPayload()
+SetTransTool()
+SetTransWork()
+TsRemoteV Class property
+MvConfig
+MvTool
+MvWork
+TsRemoteS Class Method
+GetGlobalPOINT()
+GetGlobalPAYLOAD()
+GetGlobalTRANS()
+GetPsnCmdJoint()
+GetPsnCmdWork()
+GetPsnCmdWorld()
+GetPsnFbkJoint()
+GetPsnFbkWork()
+GetPsnFbkWorld()
+GetStatusAll()
+GetVelocJoint()
+GetVelocWorld()
+Move()
+Movea()
+Moves()
+SetGain()
+SetGlobalPAYLOAD()
+SetGlobalPOINT()
+PAGE 5
+SetGlobalTRANS()
+SetPayload()
+SetTransTool()
+SetTransWork()
+Other ManualsLib Projects
+PAGE 6
+STE85409-1 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+INSTRUCTION MANUAL 
+TsRemoteLib.DLL MANUAL 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Notice 
+• Make sure that this instruction manual is delivered to the 
+final user of Toshiba Machine's industrial robot. 
+• Before operating the industrial robot, read through and 
+completely understand this manual. 
+• After reading through this manual, keep it nearby for future 
+reference. 
+ 
+ 
+ 
+ 
+TOSHIBA MACHINE CO., LTD. 
+ 
+TS3000  SCARA / LINEAR system
+TS3100  SCARA / LINEAR system 
+TSL3000 SCARA system 
+PAGE 7
+TsRemoteLib.DLL MANUAL 
+ 
+STE85409 
+- 1 -  
+series  Robot Controller 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Copyright 2013 by Toshiba Machine Co., Ltd. 
+All rights reserved. 
+No part of this document may be reproduced in any form without obtaining prior written 
+permission from Toshiba Machine Co., Ltd. 
+The information contained in this manual is subject to change without prior notice to effect 
+improvements. 
+PAGE 8
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 2 - 
+series  Robot Controller 
+ 
+Preface 
+ 
+The TS3000/TSL3000 controller has the HOST function to enable the remote control of the robot 
+by sending and receiving commands. 
+“ TsRemoteLibS.DLL” compiles the programs that send to and receive commands from 
+WindowsPC in a library to facilitate software development. 
+This manual explains how to use “ TsRemoteLibS.DLL”. 
+ 
+Microsoft Windows, Visual Studio, and other Microsoft product names that are described in this 
+manual are trademarks of Microsoft Corporation in the U.S.A. and other countries. 
+• Operator’s Manual 
+• Robot Language Manual 
+• Interface Manual 
+ 
+This manual is structured as follows: 
+ 
+Section 1: Overview… Outlines  the communication functions. 
+ 
+Section 2: Specification and Setting of the CO M1 Port and the Host Port… Describes the 
+hardware interface and communication mode of the RS-232C port. 
+ 
+Section 3: Specification and Setting of Ethernet… Describes the hardware interface and 
+communication mode of Ethernet. 
+ 
+Section 4: Non-procedure Co mmunication… Describes the pr ocedure for the communication 
+that only handles exchange between external devices and robot programs. 
+ 
+Section 5: Simple Procedure Communicati on … Describes the procedure computer, 
+commands and robot program files for the communication that targets a host. 
+ 
+Section 6: Robot Operation Sequence by External Communication … Shows examples of 
+operating the robot. 
+ 
+PAGE 9
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 3 - 
+series  Robot Controller 
+Table of Contents  
+ Page 
+Section 1 Overview .................................................................................... 8 
+Section 2 Example of Application Development Using C# ......................... 9 
+2.1 Creating an Application Solution ................................................................................... 9 
+2.2 Setting Application Execution File Output Destination ................................................. 11 
+2.3 Reference Setting of TsRemoteLib .............................................................................. 13 
+2.4 Calling TsRemoteS Interface ....................................................................................... 14 
+2.5 Event Processing Performed Based on the Information 
+ from WatchDog of TsRemoteLib ................................................................................ 16 
+PAGE 10
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 4 - 
+series  Robot Controller 
+ 
+Section 3 Reference ................................................................................. 17 
+3.1 Outline of TsRemoteLib ............................................................................................... 17 
+3.2 Classes That Are Defined in TsRemoteLib .................................................................. 18 
+TsRemote  ............................................................................................ 18 
+TsRemoteS  ............................................................................................ 18 
+TsRemoteV  ............................................................................................ 18 
+TsPointS  ............................................................................................ 18 
+TsPointV  ............................................................................................ 19 
+ConfigVpart  ............................................................................................ 19 
+TsJointS  ............................................................................................ 20 
+TsJointV  ............................................................................................ 20 
+TsTransS  ............................................................................................ 20 
+TsTransV  ............................................................................................ 20 
+TsPayloadS  ............................................................................................ 21 
+TsPayloadV  ............................................................................................ 21 
+TsFileInfo  ............................................................................................ 21 
+TsVersion  ............................................................................................ 21 
+TsDIO  ............................................................................................ 22 
+TsStatus  ............................................................................................ 23 
+TsStatusAllS   ............................................................................................ 24 
+TsStatusAllV   ............................................................................................ 26 
+TsStatusMonitor  ............................................................................................ 28  
+TsRemoteSException  ............................................................................................ 30 
+3.3 Enumerations That Are Defined in TsRemoteLib ......................................................... 31 
+ConfigS  ............................................................................................ 31 
+ConfigV  ............................................................................................ 31 
+Gain  ............................................................................................ 32 
+RunMode  ............................................................................................ 32 
+ErrorCode  ............................................................................................ 33 
+3.4 TsRemoteS Class Properties ...................................................................................... 34 
+MvAccel  ............................................................................................ 34 
+MvDecel  ............................................................................................ 34 
+MvSpeed  ............................................................................................ 35 
+PAGE 11
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 5 - 
+series  Robot Controller 
+ 
+3.5 TsRemote Class Method ............................................................................................. 36 
+Connect()  ............................................................................................ 36 
+DeleteFile()  ............................................................................................ 37 
+DirectDo()  ............................................................................................ 38 
+Disconnect()  ............................................................................................ 39 
+Dispose()  ............................................................................................ 40 
+GetAlarmHistory()  ............................................................................................ 41 
+GetCurrentAlarm()  ............................................................................................ 42 
+GetDIn()  ............................................................................................ 43 
+GetDIO()  ............................................................................................ 44 
+GetDir()  ............................................................................................ 45 
+GetDout()  ............................................................................................ 46 
+GetGlobalINT()  ............................................................................................ 47 
+GetGlobalREAL()  ............................................................................................ 48 
+GetHexIn()  ............................................................................................ 49 
+GetStatus()  ............................................................................................ 50 
+GetStatusMonitor()  ............................................................................................ 51 
+GetSystemVersion()  ............................................................................................ 52 
+ProgramBreak()  ............................................................................................ 53 
+ProgramRun()  ............................................................................................ 54 
+ProgramSelect()  ............................................................................................ 55 
+ProgramStop()  ............................................................................................ 56 
+ReceiveFile()  ............................................................................................ 57 
+ResetALARM()  ............................................................................................ 58 
+ResetCYCLE()  ............................................................................................ 59 
+ResetPRG()  ............................................................................................ 60 
+ResetMove()  ............................................................................................ 61 
+ResetSELECT()  ............................................................................................ 62 
+ResetSIGNAL()  ............................................................................................ 63 
+ResetSTEP()  ............................................................................................ 64 
+SendFile()  ............................................................................................ 65 
+ServoOff()  ............................................................................................ 66 
+ServoOn()  ............................................................................................ 67 
+SetComPort()  ............................................................................................ 68 
+SetDout()  ............................................................................................ 69 
+SetGlobalINT()  ............................................................................................ 70 
+SetGlobalREAL()  ............................................................................................ 71 
+SetHexOut()  ............................................................................................ 72 
+SetIPaddr()  ............................................................................................ 73 
+SetOVRD()  ............................................................................................ 74 
+SetRunMode()  ............................................................................................ 75 
+WatchDogStart()  ............................................................................................ 76 
+WatchDogStop()  ............................................................................................ 77 
+PAGE 12
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 6 - 
+series  Robot Controller 
+3.6 TsRemoteS Class property .......................................................................................... 78 
+MvConfig  ............................................................................................ 78 
+MvTool  ............................................................................................ 78 
+MvWork  ............................................................................................ 78 
+3.7 TsRemoteS Class Method ........................................................................................... 79 
+GetGlobalPOINT()  ............................................................................................ 79 
+GetGlobalPAYLOAD()  ............................................................................................ 80 
+GetGlobalTRANS()  ............................................................................................ 81 
+GetPsnCmdJoint()  ............................................................................................ 82 
+GetPsnCmdWork()  ............................................................................................ 83 
+GetPsnCmdWorld()  ............................................................................................ 84 
+GetPsnFbkJoint()  ............................................................................................ 85 
+GetPsnFbkWork()  ............................................................................................ 86 
+GetPsnFbkWorld()  ............................................................................................ 87 
+GetStatusAll()  ............................................................................................ 88 
+GetVelocJoint()  ............................................................................................ 89 
+GetVelocWorld()  ............................................................................................ 90 
+Move()  ............................................................................................ 91 
+Movea()  ............................................................................................ 92 
+Movej()  ............................................................................................ 93 
+Moves()  ............................................................................................ 94 
+SetGain()  ............................................................................................ 95 
+SetGlobalPOINT()  ............................................................................................ 96 
+SetGlobalPYLOAD()  ............................................................................................ 97 
+SetGlobalTRANS()  ............................................................................................ 98 
+SetPayload()  ............................................................................................ 99 
+SetTransTool()  .......................................................................................... 100 
+SetTransWork()  .......................................................................................... 101 
+PAGE 13
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 7 - 
+series  Robot Controller 
+ 
+3.8 TsRemoteV Class property ........................................................................................ 102 
+MvConfig  .......................................................................................... 102 
+MvTool  .......................................................................................... 102 
+MvWork  .......................................................................................... 102 
+3.9 TsRemoteS Class Method ......................................................................................... 103 
+GetGlobalPOINT()  .......................................................................................... 103 
+GetGlobalPAYLOAD()  .......................................................................................... 104 
+GetGlobalTRANS()  .......................................................................................... 105 
+GetPsnCmdJoint()  .......................................................................................... 106 
+GetPsnCmdWork()  .......................................................................................... 107 
+GetPsnCmdWorld()  .......................................................................................... 108 
+GetPsnFbkJoint()  .......................................................................................... 109 
+GetPsnFbkWork()  ........................................................................................... 110 
+GetPsnFbkWorld()  ........................................................................................... 111 
+GetStatusAll()  ........................................................................................... 112 
+GetVelocJoint()  ........................................................................................... 113 
+GetVelocWorld()  ........................................................................................... 114 
+Move()  ........................................................................................... 115 
+Movea()  ........................................................................................... 116 
+Moves()  ........................................................................................... 117 
+SetGain()  ........................................................................................... 118 
+SetGlobalPAYLOAD()  ........................................................................................... 119 
+SetGlobalPOINT()  .......................................................................................... 120 
+SetGlobalTRANS()  .......................................................................................... 121 
+SetPayload()  .......................................................................................... 122 
+SetTransTool()  .......................................................................................... 123 
+SetTransWork()  .......................................................................................... 124 
+PAGE 14
+TsRemoteLib.DLL MANUAL 
+ 
+STE85409 
+- 8 -  
+series  Robot Controller 
+Section 1  Overview 
+ 
+To control the robot in remote mode through communication with the TS3000/TSL3000 series robot 
+controller, commands are sent to and received from the controller.“ TsRemoteLib.DLL” compiles in DLL 
+(Dynamic Link Library) the method groups for remote control of the robot in a simple manner without 
+coding communication programs. “TsRemoteLib.DLL” runs under Windows .Net 2.0/3.0/3.5 and the 
+applications are developed using VB/C++/C# of Microsoft Visual Studio. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+The following diagram shows a coding example of a simple application for a robot operation command 
+and stop on the buttons that are assigned in the form. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Hardware 
+Windows 
+Microsoft.Net framework 
+TsRemoteLib.DLL 
+Customer application TS3000/TSL3000
+IP0 
+Robot operation processing
+TCP/IP 
+Fig. 1.1  TsRemoteLibS.DLL 
+RUN STOP
+TS3000 
+TSL3000 
+RunButton_click() 
+{ 
+MOVE(P1) 
+MOVE(P2) 
+MOVE(P3) 
+………. 
+………. 
+} 
+StopButton_click()
+{ 
+ProgramStop() 
+ 
+………. 
+} 
+Customer application TsRemoteLib.DLL 
+MOVE() 
+{ 
+  Command creation 
+Transmission processing 
+Response confirmation 
+ 
+Operation completion 
+checking 
+ 
+} 
+ProgramStop() 
+{ 
+  Command creation 
+Transmission processing 
+Response confirmation 
+ 
+ 
+} 
+MOVE 
+operation
+Stop 
+processing
+ 
+Figure 1.2  Outline of the app lication development using DLL 
+PAGE 15
+TsRemoteLib.DLL MANUAL 
+ 
+STE85409 
+- 9 -  
+series  Robot Controller 
+ 
+Section 2  Example of Application Development Using C# 
+ 
+This section describes the procedure for reference setting of TsRemoteLib for the application for 
+controlling the SCARA robot. As the precondition, Visual Studio 2008 (referred to as VS2008 henceforth) 
+must have been installed in the application creation environment. The file called TsRemoteLib.DLL is 
+stored in the same folder as that of the application execution file. 
+ 
+ 
+2.1   Creating an Application Solution 
+(1) Select File -> New -> Project. 
+ 
+ 
+ 
+ 
+ 
+PAGE 16
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 10 - 
+series  Robot Controller 
+(2) Enter a project name. 
+1 Select Windows Forms Application as the template. 
+2 Enter a project name and the location. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+2
+1
+PAGE 17
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 11 - 
+series  Robot Controller 
+2.2   Setting Application Execu tion File Output Destination 
+(1) Set the mouse cursor on the required item with the Solution Explorer and click the right button. 
+(2) Add the context menu that is displayed -> Select New folder. 
+ 
+ 
+ 
+(3) Set EXE as the new folder name. (Assign any name.) 
+ 
+ 
+ 
+ 
+Click the right mouse button.
+PAGE 18
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 12 - 
+series  Robot Controller 
+(4) Set the execution file output destination to the EXE folder that was created on the Properties screen 
+of the TsRemoteLibSample project. 
+ 
+ 
+ 
+ 
+(5) Copy TsRemoteLib.DLL into the EXE folder that was created. 
+ (TsRemoteLib.DLL and the application that is created by the customer (EXE file) must be stored in 
+the same directory.) 
+ 
+PAGE 19
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 13 - 
+series  Robot Controller 
+ 
+2.3  Reference Setting of TsRemoteLib 
+(1) Select Reference -> Add Reference. 
+ 
+ 
+ 
+(2) Select TsRemoteLib.DLL that is copied from the EXE folder and press OK. 
+ TsRemoteLib can be used by setting reference. 
+ 
+ 
+ 
+ 
+ 
+PAGE 20
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 14 - 
+series  Robot Controller 
+ 
+2.4   Calling TsRemoteS Interface 
+(1) Opening TsRemoteLibSample.cs 
+ Form1 is used as the default name immediately after creation of a project. In this explanation, the 
+form name is changed to TsRemoteLibSample. 
+ 
+(2) Declaring TsRemoteLib 
+ Enter the following command in TsRemoteLibSample.cs. 
+ using TsRemoteLib; 
+ 
+ 
+(3) Calling the interface 
+ Assume that the form contains the buttons that are shown below. The procedure for calling the 
+interface is described in the source of each click event handler. 
+ 
+ 
+PAGE 21
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 15 - 
+series  Robot Controller 
+ 
+1 Install connection button processing. 
+ Use the instance name of class TsRemoteS for the Robot. 
+ (In the case of 6-axis,Use the instance name of class TsRemoteV) 
+ Sample IP address and port number are used. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+2 Start Watch Dog. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+private void btnStartWatchDog_Click(object sender, EventArgs e) 
+{ 
+     try 
+     { 
+          if (Robot != null) 
+          { 
+              Robot.WatchDogStart(100, 0, new 
+TsRemoteS.TSStatusEvent(testTSStatusEvent)); 
+           } 
+      } 
+       catch (TsRemoteSException ex) 
+       { 
+                //Error processing   } 
+} 
+Status monitoring 
+interval 
+Event handler name 
+イベントハンドラ名 
+private void btnConnect_Click(object sender, EventArgs e) 
+{ 
+     try 
+     { 
+        if (Robot == null) 
+        { 
+              Robot = new TsRemoteS(); 
+              Robot.SetIPaddr(0, "192.168.0.124", 1000); 
+         } 
+         Robot.Connect(1); 
+         //Connected successfully 
+      } 
+      catch (TsRemoteSException ex) 
+      { 
+              //Error processing 
+      } 
+ } 
+Connection 
+destination IP 
+address 
+Connection 
+destination port 
+number 
+PAGE 22
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 16 - 
+series  Robot Controller 
+ 
+2.5   Event Processing Performed Based on the Information from WatchDog of 
+TsRemoteLib 
+Through WatchDog monitoring, information such as emergency stop, safety switch, mode, and Run 
+status is acquired periodically. When the acquired information changes, an event occurs. Since the 
+application basically runs in a different thread from that of WatchDog, create the handler for 
+processing events from WatchDog as follows. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Event occurrence factors handled by WatchDog are listed below. Refer to the TsStatusMonitor 
+class for the details. 
+• Emergency Stop request 
+• Safety switch stop request 
+• Various mode statuses 
+• Override 
+• Alarm 
+• Servo status 
+• WatchDog error 
+• Ethernet communication error 
+ 
+public void testTSStatusEvent(TsStatusMonitor para) 
+{ 
+    if (InvokeRequired) 
+    { 
+        BeginInvoke( new TsRemoteS.TSStatusEvent(testTSStatusEvent),para); 
+    } 
+    else 
+    { 
+ //Evaluate the value of TsStatusMonitor and perform event processing. 
+if (para.EmergencyStop == 1) 
+                { 
+                    //Processing when the Emergency Stop button is pressed. 
+     ・・・・・・・・・・・・・・・・ 
+                } 
+        if (para.SafetyStop == 1) 
+                { 
+                    / / P r o c e s s i n g  w h e n  t h e  s a f e t y  s w i t c h  i s  p r e s s e d .  
+     ・・・・・・・・・・・・・・・・ 
+                } 
+        ・・・・・・・・・・・・・・・・ 
+ ・・・・・・・・・・・・・・・・ 
+ 
+    } 
+} 
+PAGE 23
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 17 - 
+series  Robot Controller 
+ 
+Section 3  Reference 
+ 
+3.1   Outline of TsRemoteLib 
+The following classes are installed in TSRemoteLib for remote control of the robot and information 
+acquisition. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+class 
+TsRemoteLib.DLL 
+ 
+TSJointS ・・・・・ SCARA robot joint type data storage
+TsPointS ・・・・・ SCARA robot position data storage
+TsPayloadS ・・・・・ SCARA robot load data storage
+TsTransS ・・・・・ SCARA robot coordinate data storage
+TsStatusAllS・・・・・SCARA robot all status storage
+TsFileInfo ・・・・・ File information storage
+TsAlarm ・・・・・ Alarm information storage
+TsVersion ・・・・・ System version information storage
+TsDIO  ・・・・・ IO information storage
+TsStatus ・・・・・ Status storage
+TsRemoteS ・・・・・SCARA robot control/information acquisition 
+TsRemoteV ・・・・・6-AXIS robot control/information acquisition 
+TsRemote ・・・・・Robott control/information acquisition (Super class) 
+TSJointV ・・・・・ 6-AXIS robot joint type data storage
+TsPointV ・・・・・ 6-AXIS robot position data storage
+TsPayloadV ・・・・・ 6-AXIS robot load data storage
+TsTransV ・・・・・ 6-AXIS robot coordinate data storage
+TsStatusAllV・・・・・6-AXIS robot all status storage
+PAGE 24
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 18 - 
+series  Robot Controller 
+ 
+3.2   Classes That Are Defined in TsRemoteLib 
+ 
+T s R e m o t e         class 
+Classes for remote-controlling the SCARA and 6-AXIS robot 
+ 
+TsRemote class is super class of the TsRemoteS/TsRemoteV class 
+In the case of SCARA robot, make the instance of the TsRemoteS class. 
+In the case of 6-AXIS robot, make the instance of the TsRemoteV class. 
+ 
+ 
+T s R e m o t e S         class 
+Classes for remote-controlling the SCARA and 6-AXIS robot 
+ 
+In the case of SCARA robot, make the instance of the TsRemoteS class. 
+Please refer to Clause “3.4 TsRemoteS Class Properties”. 
+Please refer to Clause ”3.5 TsRemoteS Class Method”. 
+ 
+ 
+T s R e m o t e V         class 
+Classes for remote-controlling the 6-AXIS robot 
+ 
+In the case of 6-AXIS robot, make the instance of the TsRemoteV class. 
+Please refer to Clause “3.4 TsRemoteV Class Properties”. 
+Please refer to Clause ”3.5 TsRemoteV Class Method”. 
+ 
+ 
+T s P o i n t S         class 
+Class for storing Point data of SCARA robot 
+ 
+Property 
+double  X X point/speed 
+double  Y Y point/speed 
+double  Z Z point/speed 
+double  C C point/speed 
+double  T T point/speed 
+enum  ConfigS Configuration (posture) 
+ 
+See also 
+GetGlobalPoint(),GetPsnCmdWorld(),SetPsnCmdWorld(),Move(),Moves(),Movej() 
+ 
+PAGE 25
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 19 - 
+series  Robot Controller 
+ 
+T s P o i n t V         class 
+Class for storing Point data of 6-AXIS robot 
+ 
+Property 
+double  X X point/speed 
+double  Y Y point/speed 
+double  Z Z point/speed 
+double  A A point/speed 
+double  B B point/speed 
+double  C C point/speed 
+double  U U point/speed 
+double  V V point/speed 
+ConfigVpart Config Configuration (posture) 
+ 
+See also 
+GetGlobalPoint(),GetPsnCmdWorld(),SetPsnCmdWorld(),Move(),Moves(),Movej() 
+ 
+ 
+C o n f i g V p a r t        class 
+Class for for storing configuration (posture) of 6-AXIS robot 
+ 
+Property 
+TvSholder  Sholder  Sholder configuration(enum 0:Free / 1:Lefty / 2:Righty) 
+TvElbow  Elbow  Elbow configuration(enum 0:Free / 1:Above / 2Below) 
+TvWrist  Wrist  Wrist configuration(enum 0:Free / 1:Nflip / 2Flip) 
+TvRot4  Rot4  4th axis configuration(enum 0:Free / 1:Single4 / 2:Double4) 
+TvRot6  Rot6  6 th axis configuration(enum 0:Free / 1:Single6 / 2:Double6) 
+ConfigV All  (enum configV) 
+ 
+About Config 
+config of the 6-Axis robot is decided by the combination of five elements of Sholder, Elbow, Wrist, 
+ Rot4 and Rot6. 
+"All property "can set five elements by a lump. (enum ConfigV) 
+ 
+See also 
+TsPointV 
+ 
+PAGE 26
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 20 - 
+series  Robot Controller 
+ 
+T s J o i n t S         class 
+Class for storing Joint data of SCARA robot 
+ 
+Property 
+double J1 1st joint position 
+double J 2 2nd joint position 
+double J3 3rd joint position 
+double J4 4th joint position 
+double J5 5th joint position 
+ 
+See also 
+TsStatusAllS, GetPsnCmdJoint(), GetPsnFbkJoint(), GetVelocJoint() 
+ 
+ 
+T s J o i n t V         class 
+Class for storing Joint data of 6-AXIS robot 
+ 
+Property 
+double J1 1st joint position 
+double J 2 2nd joint position 
+double J3 3rd joint position 
+double J4 4th joint position 
+double J5 5th joint position 
+double J6 6th joint position 
+double J7 7th joint position 
+double J8 8th joint position 
+ 
+See also 
+TsStatusAllV, GetPsnCmdJoint(), GetPsnFbkJoint(), GetVelocJoint() 
+ 
+ 
+T s T r a n s S         class 
+Class for storing coordinate data of SCARA robot 
+ 
+Property 
+double  X X coordinate 
+double  Y Y coordinate 
+double  Z Z coordinate 
+double  C C coordinate 
+    
+See also 
+GetGlobalTRANS(), SetGlobalTRANS(), SetTransTool(), SetTransWork() 
+ 
+ 
+T s T r a n s V         class 
+Class for storing coordinate data of 6-AXIS robot 
+ 
+Property 
+double  X X coordinate 
+double  Y Y coordinate 
+double  Z Z coordinate 
+double  A A coordinate 
+double  B B coordinate 
+double  C C coordinate 
+    
+See also 
+GetGlobalTRANS(), SetGlobalTRANS(), SetTransTool(), SetTransWork() 
+PAGE 27
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 21 - 
+series  Robot Controller 
+ 
+T s P a y l o a d S         class 
+Class for storing point data of SCARA robot 
+ 
+Property 
+double M Weight (kg) 
+double L Offset of the center of gravity (mm) 
+ 
+See also 
+SetGlobalPYLOAD(), GetGlobalPAYLOAD, SetPYLOAD() 
+ 
+ 
+T s P a y l o a d V         class 
+Class for storing point data of 6-AXIS robot 
+ 
+Property 
+double M Weight (kg) 
+double Lx Offset of the center of gravity (mm) 
+double Ly Offset of the center of gravity (mm) 
+double Lz Offset of the center of gravity (mm) 
+double Gx Work size(mm) 
+double Gy Work size(mm) 
+double Gz Work size(mm) 
+ 
+See also 
+SetGlobalPYLOAD(), GetGlobalPAYLOAD, SetPYLOAD() 
+ 
+ 
+T s F i l e I n f o         class 
+Class for storing file information that is stored in the controller 
+ 
+Property 
+string name File name 
+int size Size 
+ 
+See also 
+GetDir() 
+ 
+ 
+T s V e r s i o n         class 
+Class for storing a controller system version 
+ 
+Property 
+string SystemName System name 
+DateTime Date System creation date and time 
+string Sum Check Sum (maximum number of characters) 
+ 
+See also 
+GetSystemVersion() 
+ 
+PAGE 28
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 22 - 
+series  Robot Controller 
+ 
+T s D I O          class 
+Class for storing input/output status of the controller 
+ 
+Property 
+Int16 Din[20] Input signal status 
+  Handling bits of Din data and input signals 
+  Din[0] : DIN1 ~ DIN16  Standard input 
+  Din[1] : DIN17  ~ DIN32  Standard input 
+  Din[2] : DIN33  ~ DIN48  Standard input 
+  Din[3] : DIN49  ~ DIN64  Standard input 
+  Din[4] : DIN101  ~ DIN116  Extended input 
+  Din[5] : DIN117  ~ DIN132  Extended input 
+  Din[6] : DIN133  ~ DIN148 Extended input 
+  Din[7] : DIN149  ~ DIN164  Extended input 
+  Din[8] : DIN201  ~ DIN216 System input 
+  Din[9] : DIN217  ~ DIN232 System input 
+  Din[10]: DIN233 ~ DIN248  System input 
+  Din[11]: DIN249 ~ DIN264 System input 
+  Din[12]: DIN301 ~ DIN316 Field bus input 
+  Din[13]: DIN317 ~ DIN332 Field bus input 
+  Din[14]: DIN333 ~ DIN348 Field bus input 
+  Din[15]: DIN349 ~ DIN364 Field bus input 
+  Din[16]: DIN401 ~ DIN416 Field bus input 
+  Din[17]: DIN417 ~ DIN432 Field bus input 
+  Din[18]: DIN433 ~ DIN448 Field bus input 
+  Din[19]: DIN449 ~ DIN464  Field bus input 
+ 
+Int16 Dout[20] Output signal status 
+  Handling bits of Dout data and output signals 
+  Dout[0] : DOUT1 ~ DOUT16 Standard output 
+  Dout[1] : DOUT17 ~ DOUT32  Standard output 
+  Dout[2] : DOUT33 ~ DOUT48  Standard output 
+  Dout[3] : DOUT49 ~ DOUT64  Standard output 
+  Dout[4] : DOUT101 ~ DOUT116 Extended output 
+  Dout[5] : DOUT117 ~ DOUT132 Extended output 
+  Dout[6] : DOUT133 ~ DOUT148 Extended output 
+  Dout[7] : DOUT149 ~ DOUT164 Extended output 
+  Dout[8] : DOUT201 ~ DOUT216 System output 
+  Dout[9] : DOUT217 ~ DOUT232 System output 
+  Dout[10]: DOUT233 ~ DOUT248 System output 
+  Dout[11]: DOUT249 ~ DOUT264 System output 
+  Dout[12]: DOUT301 ~ DOUT316 Field bus output 
+  Dout[13]: DOUT317 ~ DOUT332 Field bus output 
+  Dout[14]: DOUT333 ~ DOUT348 Field bus output 
+  Dout[15]: DOUT349 ~ DOUT364 Field bus output 
+  Dout[16]: DOUT401 ~ DOUT416 Field bus output 
+  Dout[17]: DOUT417 ~ DOUT432 Field bus output 
+  Dout[18]: DOUT433 ~ DOUT448 Field bus output 
+  Dout[19]: DOUT449 ~ DOUT464 Field bus output 
+ 
+See also 
+GetDIO() 
+PAGE 29
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 23 - 
+series  Robot Controller 
+ 
+TsStatus         class 
+Class for storing Robot statuses 
+ 
+Property 
+int MasterMode Master mode status  
+  0:Teaching 
+  1:Internal 
+  2:Ext.Sig  
+  3:Ext.Host 
+  4:Ext.232C 
+  5:Ext.Ether 
+ 
+int RunMode Run mode status  
+  0:CONT 
+  1:CYCLE 
+  2:STEP 
+  3:SEGMENT 
+ 
+string SelectFile Name of the program that is cu rrently selected by the controller 
+ 
+int ovrd Current override value 
+  Value range: 1%~100% 
+ 
+int MachineLock Reserved (currently not used) Always set to 1 
+ 
+int RunStatus Run status 
+  0:STOP(RESET) 
+  1:RUN 
+  2:STOP(RETRY) 
+  3:STOP(CONT) 
+ 
+ 
+See also 
+GetStatus() 
+ 
+ 
+PAGE 30
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 24 - 
+series  Robot Controller 
+ 
+T s S t a t u s A l l S         class 
+Class for storing all the statuses of SCARA robot 
+ 
+Property 
+int ServoStatus Servo status 
+  0:OFF 
+  1:ON 
+ 
+int EmergencySwitch Emergency Stop switch status  
+  0:OFF 
+  1:ON 
+ 
+int RunStatus Run status 
+  0:STOP(RESET) 
+  1:RUN 
+  2:STOP(RETRY) 
+  3:STOP(CONT) 
+ 
+int SUCommandReq Command request 
+  0:None 
+  1:Request occured 
+ 
+string AlarmNo[10]  Current alarm (max. 10) 
+ Stored in a character string format such as“8-014”.  When there is no 
+alarm, all the 10 items are set to null. 
+ 
+int ProgramExeLine Program line number that is currently being executed 
+ 
+int ProgramAnalyzeLine Program line number that is currently being analyzed 
+ 
+int ProgramExeTaskNo Task number that is currently being executed 
+ 
+int ProgramAnalyzeTask Task number that is currently being analyzed 
+ 
+int FeedHold Feed Hold status 
+  0:OFF 
+  1:ON 
+ 
+int JogCoordnate JOG-guided coordinate selection status 
+  0:Joint 
+  1:Tool 
+  2:Work 
+  3:World  
+ 
+int JogSpeed JOG-guided guiding speed setting status 
+  0:Low 
+  1:Medium 
+  2:High 
+ 
+ 
+int JogRemote JOG-guided guiding mode setting status 
+  0:Jog 
+  1:Inching 
+  2:Free 
+ 
+int MasterMode Master mode status  
+  0:Teaching 
+  1:Internal 
+  2:Ext.Sig  
+  3:Ext.Host(Ext.232C/ExtEther) 
+PAGE 31
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 25 - 
+series  Robot Controller 
+TsStatusAllS property(continued) 
+ 
+int PowerOnTime Power On time (min)  
+ 
+int ProgramExecTime Program execution time (min) 
+ 
+Int16 Din[16] Input signal status 
+  Handling bits of Din data and input signals 
+  Din[0] : DIN1 ~ DIN16 Standard input 
+  Din[1] : DIN17 ~ DIN32  Standard input 
+  Din[2] : DIN33 ~ DIN48  Standard input 
+  Din[3] : DIN49 ~ DIN64  Standard input 
+  Din[4] : DIN101 ~ DIN116 Extended input 
+  Din[5] : DIN117 ~ DIN132  Extended input 
+  Din[6] : DIN133 ~ DIN148  Extended input 
+  Din[7] : DIN149 ~ DIN164  Extended input 
+  Din[8] : DIN201 ~ DIN216 System input 
+  Din[9] : DIN217 ~ DIN232 System input 
+  Din[10]: DIN233 ~ DIN248 System input 
+  Din[11]: DIN249 ~ DIN264 System input 
+  Din[12]: DIN301 ~ DIN316 Field bus input 
+  Din[13]: DIN317 ~ DIN332 Field bus input 
+  Din[14]: DIN333 ~ DIN348 Field bus input 
+  Din[15]: DIN349 ~ DIN364 Field bus input 
+ 
+Int16 Dout[16] Output signal status 
+  Handling bits of Dout data and output signals 
+  Dout[0] : DOUT1 ~ DOUT16 Standard output 
+  Dout[1] : DOUT17 ~ DOUT32  Standard output 
+  Dout[2] : DOUT33 ~ DOUT48  Standard output 
+  Dout[3] : DOUT49 ~ DOUT64  Standard output 
+  Dout[4] : DOUT101 ~ DOUT116 Extended output 
+  Dout[5] : DOUT117 ~ DOUT132 Extended output 
+  Dout[6] : DOUT133 ~ DOUT148 Extended output 
+  Dout[7] : DOUT149 ~ DOUT164 Extended output 
+  Dout[8] : DOUT201 ~ DOUT216 System output 
+  Dout[9] : DOUT217 ~ DOUT232 System output 
+  Dout[10]: DOUT233 ~ DOUT248 System output 
+  Dout[11]: DOUT249 ~ DOUT264 System output 
+  Dout[12]: DOUT301 ~ DOUT316 Field bus output 
+  Dout[13]: DOUT317 ~ DOUT332 Field bus output 
+  Dout[14]: DOUT333 ~ DOUT348  Field bus output 
+  Dout[15]: DOUT349 ~ DOUT364 Field bus output 
+ 
+TsJointS  JointPosition  SCARA Robot current joint position 
+ 
+TsPointS  WorldPosition  Current position of the SCARA robot world coordinate system 
+ 
+TsPointS WorkPosition   Current position of the SCARA robot work coordinate system 
+ 
+string WorkName    Name of the work coordinate system that is currently selected 
+ 
+string ToolName    Name of the tool coordinate system that is currently selected 
+ 
+string BaseName    Name of the base coordinate system that is currently selected 
+   
+See also 
+GetStatusAll() 
+ 
+PAGE 32
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 26 - 
+series  Robot Controller 
+ 
+T s S t a t u s A l l V         class 
+Class for storing all the statuses of 6-AXIS robot 
+ 
+Property 
+int ServoStatus Servo status 
+  0:OFF 
+  1:ON 
+ 
+int EmergencySwitch Emergency Stop switch status  
+  0:OFF 
+  1:ON 
+ 
+int RunStatus Run status 
+  0:STOP(RESET) 
+  1:RUN 
+  2:STOP(RETRY) 
+  3:STOP(CONT) 
+ 
+int SUCommandReq Command request 
+  0:None 
+  1:Request occured 
+ 
+string AlarmNo[10]  Current alarm (max. 10) 
+ Stored in a character string format such as“8-014”.  When there is no 
+alarm, all the 10 items are set to null. 
+ 
+int ProgramExeLine Program line number that is currently being executed 
+ 
+int ProgramAnalyzeLine Program line number that is currently being analyzed 
+ 
+int ProgramExeTaskNo Task number that is currently being executed 
+ 
+int ProgramAnalyzeTask Task number that is currently being analyzed 
+ 
+int FeedHold Feed Hold status 
+  0:OFF 
+  1:ON 
+ 
+int JogCoordnate JOG-guided coordinate selection status 
+  0:Joint 
+  1:Tool 
+  2:Work 
+  3:World  
+ 
+int JogSpeed JOG-guided guiding speed setting status 
+  0:Low 
+  1:Medium 
+  2:High 
+ 
+ 
+int JogRemote JOG-guided guiding mode setting status 
+  0:Jog 
+  1:Inching 
+  2:Free 
+ 
+int MasterMode Master mode status  
+  0:Teaching 
+  1:Internal 
+  2:Ext.Sig  
+  3:Ext.Host(Ext.232C/ExtEther) 
+PAGE 33
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 27 - 
+series  Robot Controller 
+TsStatusAllS property(continued) 
+ 
+int PowerOnTime Power On time (min)  
+ 
+int ProgramExecTime Program execution time (min) 
+ 
+Int16 Din[16] Input signal status 
+  Handling bits of Din data and input signals 
+  Din[0] : DIN1 ~ DIN16 Standard input 
+  Din[1] : DIN17 ~ DIN32  Standard input 
+  Din[2] : DIN33 ~ DIN48  Standard input 
+  Din[3] : DIN49 ~ DIN64  Standard input 
+  Din[4] : DIN101 ~ DIN116 Extended input 
+  Din[5] : DIN117 ~ DIN132  Extended input 
+  Din[6] : DIN133 ~ DIN148  Extended input 
+  Din[7] : DIN149 ~ DIN164  Extended input 
+  Din[8] : DIN201 ~ DIN216 System input 
+  Din[9] : DIN217 ~ DIN232 System input 
+  Din[10]: DIN233 ~ DIN248 System input 
+  Din[11]: DIN249 ~ DIN264 System input 
+  Din[12]: DIN301 ~ DIN316 Field bus input 
+  Din[13]: DIN317 ~ DIN332 Field bus input 
+  Din[14]: DIN333 ~ DIN348 Field bus input 
+  Din[15]: DIN349 ~ DIN364 Field bus input 
+ 
+Int16 Dout[16] Output signal status 
+  Handling bits of Dout data and output signals 
+  Dout[0] : DOUT1 ~ DOUT16 Standard output 
+  Dout[1] : DOUT17 ~ DOUT32  Standard output 
+  Dout[2] : DOUT33 ~ DOUT48  Standard output 
+  Dout[3] : DOUT49 ~ DOUT64  Standard output 
+  Dout[4] : DOUT101 ~ DOUT116 Extended output 
+  Dout[5] : DOUT117 ~ DOUT132 Extended output 
+  Dout[6] : DOUT133 ~ DOUT148 Extended output 
+  Dout[7] : DOUT149 ~ DOUT164 Extended output 
+  Dout[8] : DOUT201 ~ DOUT216 System output 
+  Dout[9] : DOUT217 ~ DOUT232 System output 
+  Dout[10]: DOUT233 ~ DOUT248 System output 
+  Dout[11]: DOUT249 ~ DOUT264 System output 
+  Dout[12]: DOUT301 ~ DOUT316 Field bus output 
+  Dout[13]: DOUT317 ~ DOUT332 Field bus output 
+  Dout[14]: DOUT333 ~ DOUT348  Field bus output 
+  Dout[15]: DOUT349 ~ DOUT364 Field bus output 
+ 
+TsJointV  JointPosition  6-AXIS Robot current joint position 
+ 
+TsPointV  WorldPosition  Current position of the 6-AXIS robot world coordinate system 
+ 
+TsPointV WorkPosition   Current position of the 6-AXIS robot work coordinate system 
+ 
+string WorkName    Name of the work coordinate system that is currently selected 
+ 
+string ToolName    Name of the tool coordinate system that is currently selected 
+ 
+string BaseName    Name of the base coordinate system that is currently selected 
+   
+See also 
+GetStatusAll() 
+ 
+ 
+PAGE 34
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 28 - 
+series  Robot Controller 
+ 
+TsStatus Monitor      class 
+Class for storing the cause of the event that occurs under WatchDog status monitoring 
+ 
+ 
+Property 
+int AlarmLevel Indicates the alarm level that is currently occurring. When the alarm 
+level changes, an event occurs. 
+  0: No alarm 
+  1: Level 1 alarm occurred. 
+  2: Level 2 alarm occurred. 
+  4: Level 4 alarm occurred. 
+  8: Level 8 alarm occurred. 
+  
+ 
+int BreakCommand Indicates that a BREAK request occu rred to the controller during the 
+period from the previous WatchDog monitoring request to the current 
+monitoring request. 
+  0:None 
+  1:BREAK request occurred. 
+  
+int EmergencyStop Indicates that an Emergency Stop request occurred to the controller 
+during the period from the previous WatchDog monitoring request to the 
+current monitoring request. When this flag is set to 1, an event occurs.  
+  0: None 
+  1: Emergency Stop request occurred. 
+ 
+int EmergencySwitch Indicates the current Emergency Stop  status. When the status changes, 
+an event occurs. Since WatchDog monitoring is performed at a specified 
+interval, check the EmergencyStop pr operty to capture the Emergency 
+Stop request without fail. 
+  0:OFF (The circuit is closed.) 
+  1:ON (The circuit is opened.) 
+  
+ 
+int EtherNetConnection Indicates the Ethernet connection status. When an error occurs due to 
+disconnection or so on, an event occurs. 
+  0:  No error 
+ 1: An error occurred in the Ethernet communication processing of 
+Windows. 
+ 
+int MasterMode Indicates the master mode status . When the status changes, an event 
+occurs. 
+  0:Teaching 
+  1:Internal 
+  2:Ext.Sig 
+  3:Reservation 
+  4:Ext232C 
+  5:ExtEther 
+ 
+int Override Indicates the override status (1 -100%). When the value changes, an 
+event occurs. 
+ 
+PAGE 35
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 29 - 
+series  Robot Controller 
+ 
+int RunMode Indicates the robot run mode. When the mode changes, an event occurs. 
+  0:CONT 
+  1:CYCLE 
+  2:STEP   
+  3:SEGMENT 
+ 
+int RunStatus Indicates the robot run status. When the status changes, an event occurs. 
+  0: STOP(RESET) 
+  1: RUN 
+  2: STOP(RETRY) 
+  3: STOP(CONT) 
+ 
+int SafetyStop Indicates that a stop request occurred to the controller due to the Safety 
+switch ON state during the period fr om the previous WatchDog monitoring 
+request to the current monitoring request.  
+  0: None 
+ 1:  A stop request occurred to the controller due to the Safety switch ON 
+state. 
+ 
+int SafetySwitch Indicates the status of the Safety switch. Since WatchDog monitoring is 
+performed at the specified interval, check the SafetyStop property to capture 
+the Stop request by the Safety switch without fail. 
+  0: OFF (The circuit is closed.) 
+  1: ON (The circuit is open.) 
+ 
+int ServoStatus Indicates the current Servo status. 
+  0: Servo OFF 
+  1:Servo ON 
+ 
+int StopCommand Indicates that a Stop request occurred to the controller during the period 
+from the previous WatchDog monitori ng request to the current monitoring 
+request. When this flag is set to 1, an event occurs. 
+  0: None 
+  1: STOP request occurred. 
+ 
+int WatchDogErr Indicates the occurrence of a timeout error by WatchDog monitoring.  
+  0: None 
+  1: Timeout error occurred. 
+ 
+ 
+See also 
+GetStatusAll() 
+ 
+ 
+ 
+PAGE 36
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 30 - 
+series  Robot Controller 
+ 
+TsRemoteSException     class 
+Class for deriving the Application Exception class th at occurs at execution of each method of the 
+TsRemoteS and TsRemoteV class 
+ 
+Property 
+ErrorCode errorCode  Stores the error code that wa s handled. Refer to the ErrorCode enumeration 
+for the details of the error code. 
+  
+See also 
+ErrorCode 
+ 
+PAGE 37
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 31 - 
+series  Robot Controller 
+ 
+3.3  Enumerations That Are Defined in TsRemoteLib 
+ 
+C o n f i g S            enum 
+Enumeration for defining the SCARA robot configuration (posture) 
+ 
+Format 
+enum ConfigS 
+ 
+Value 
+FREE 0: Indicates that the robot configuration (posture) is FREE. 
+LEFTY 1 : Indicates that the robot configuration (posture) is LEFTY . 
+RIGHTY 2:  Indicates that the robot configuration (posture) is RIGHTY. 
+ 
+See also 
+MvConfig, Move(), Moves(), Movej(), Movea() 
+ 
+ 
+ 
+C o n f i g V            enum 
+Enumeration for defining the 6-Axis robot configuration (posture) 
+ 
+Format 
+enum ConfigV 
+ 
+Value 
+ConfigV can be set by string.(Ex. “xxxxx”,”LANSS”,”RBxSx”) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+See also 
+MvConfig, Move(), Moves(), Movej(), Movea() 
+ 
+ 
+ 
+Sholder Elbow Wrist Rot4 Rot6 
+x:Free(0)
+L:Lefty(1) 
+R:Righty(2) 
+x:Free(0)
+A:Above(1) 
+B:Below(2) 
+x:Free(0)
+N:Nflip(1) 
+F:Flip(2) 
+x:Free(0)
+S:Single4(1) 
+D:Double4(2) 
+x:Free(0) 
+S:Single6(1) 
+D:Double6(2) 
+PAGE 38
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 32 - 
+series  Robot Controller 
+ 
+ 
+G a i n             enum 
+Enumeration for defining of robot motor status “GAIN” 
+ 
+Format 
+enum Gain 
+ 
+Value 
+OFF 0:off 
+ON 1 :on 
+ 
+See also 
+MvConfig, Move(), Movea(), Moves(), Movej() 
+ 
+ 
+R u n M o d e           enum 
+Enumeration for defining the robot run status 
+ 
+Format 
+enum RunMode 
+ 
+Value 
+CONT 0 : Indicates that the robot operation mode is CONT. 
+CYCLE 1 : Indicates that the robot operation mode is CYCLE. 
+STEP 2 : Indicates that the robot operation mode is STEP. 
+SEGMENT 3 : Indicates that the robot operation mode is SEGMENT. 
+ 
+See also 
+ 
+PAGE 39
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 33 - 
+series  Robot Controller 
+ 
+ 
+E r r o r C o d e           enum 
+Enumeration for defining the exception occurrence factor by exceptions 
+ 
+Format 
+enum ErrorCode 
+ 
+Value 
+ControllerNG  1 : The controller returned “NG”. 
+CommunicationError  2 : Communication error occurred. 
+NoCommand  3 : The command parameter is invalid. 
+NoSerialportData  4 : Data has not reached the serial port. 
+NoIP_PORTData  5 : Data has not reached the Ethernet port. 
+TCPConnectTimeout  6 : Timeout occurred in the Connect() method. 
+TCPError 7 : Exception occurred in the internal processing of the Connect() 
+method. 
+TCPDisConnect  8 : The Ethernet port was disconnected. 
+TCPNotConnect  9 : The Ethernet port is not connected. 
+TCPReadError 10 : Exception occurred in the DDL internal NetworkStream.Read method. 
+TCPWriteError 11 : Exception occurred in the DLL internal NetworkStream.Write method. 
+TCPNoData 12 : Data could not be received. 
+TCPReceiveTimeout 13 : Timeout occurred in the transmission/reception processing of TCP 
+communication. 
+IllegalIPAddresss  14 : IP address setting error 
+IllegalStopbit  15 : Stop bit setting error 
+IllegalDatabits  16 : Data length setting error 
+IllegalCommType  17 : Connection destination setting error 
+IllegalParam  18 : The parameter specified in the argument is incorrect. 
+IllegalBps  19 : Baud rate setting error 
+IllegalPortNo  20 : Port number setting error 
+IllegalWatchDogInterval 21: WatchDog setting error 
+IllegalAlarmLevel  22 : Alarm level setting error 
+CannotStartWatchdog 23 : Move*() or DirectDo() was executed without WatchDog monitoring. 
+NotfoundDirectory  24 : The specified directory does not exist in the PC. 
+NotFondFile  25 : The specified file does not exist. 
+MoveStop   26 : Move*() stopped in response to the STOP signal.  
+        The Move*() method was executed while internal flag MoveStop is ON.  
+MoveBreak   27 : Move*() stopped in response to the BREAK signal.  
+MoveTimeout   28 : Move*() was terminated due to timeout. 
+CannotDoMove   29 : Move*() or DirectDo() was executed without WatchDog monitoring. 
+ 
+ 
+See also 
+PAGE 40
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 34 - 
+series  Robot Controller 
+ 
+3.4  TsRemoteS Class Properties 
+ 
+TsRemote class is base class of the TsRemoteS and TsRemoteV class. 
+The property of TsRemote class is succeeded to by TSRemoteS class /TSRemoteV class. 
+ 
+MvAccel       TsRemote.property 
+Specifies/acquires the acceleration sp eed of the operation that  is instructed by Move(), Moves(), Movej(), 
+and Movea(). 
+ 
+Format 
+MvAccel 
+ 
+Value 
+double 1.0~100000.0%(initial value:100) 
+ 
+Notice 
+If MvAccel is set to a value exceeding 100%, a motor overload alarm may occur for the operation 
+that involves significant movement distance. 
+ 
+See also 
+MvDecel, MvSpeed, MvConfig, Move(), Moves(), Movej(), Movea() 
+ 
+ 
+MvDecel       TsRemote.property 
+Specifies/acquires the deceleration speed of the operation that is instru cted by Move(), Moves(), Movej(), 
+and Movea(). 
+ 
+Format 
+MvDecel 
+ 
+Value 
+double 1.0~100000.0%(initial value: 100.0) 
+ 
+Notice 
+If MvDecel is set to a value exceeding 100%, a motor overload alarm may occur for the operation 
+that involves significant movements. 
+ 
+ 
+See also 
+MvAccel, MvSpeed, MvConfig, Move(), Moves(), Movej(), Movea() 
+ 
+PAGE 41
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 35 - 
+series  Robot Controller 
+ 
+M v S p e e d       TsRemote.property 
+Specifies/acquires the speed of the operation that is instructed by Move(), Moves(), Movej(), and Movea(). 
+ 
+Format 
+MvSpeed 
+ 
+Value 
+double 1.0~100.0%(initial value: 100) 
+ 
+Notice 
+ 
+See also 
+MvAccel, MvSpeed, MvConfig, Move(), Moves(), Movej(), Movea() 
+ 
+ 
+PAGE 42
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 36 - 
+series  Robot Controller 
+ 
+3.5   TsRemote Class Method 
+ 
+TsRemote class is base class of the TsRemoteS and TsRemoteV class. 
+The method of TsRemote class is succeeded to by TSRemoteS class /TSRemoteV class. 
+ 
+C o n n e c t ( )        TsRemote.method 
+Connects to the controller. 
+ 
+Format 
+bool Connect(int type) 
+ 
+Argument 
+int type  Specify a connection type. 
+  0:RS-232C(function not yet installed) 
+  1:TCP/IP 
+ 
+Return value 
+bool   true:Connect successful 
+  false:Connect failed 
+ 
+Exceptions 
+TCPConnectTimeout Timeout occurred in the Connect() method. 
+NoIP_PORTData  The IP address or port for TCP/IP has not been set  
+IllegalCommType  Illegal connection type.Sh ould be 0 for SerialPort,or 1 for TCP/IP  
+NoSerialportData  The datas for serial communication have not been set  
+TCPError  The error has occurred in the network  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter 
+ 
+Notice 
+Connection under RS-232C(COM) is not supported. 
+ 
+See also 
+Disconnect() 
+ 
+PAGE 43
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 37 - 
+series  Robot Controller 
+ 
+DeleteFile()      TsRemote.method 
+Deletes the file that is stored in the robot controller. 
+ 
+Format 
+void DeleteFile(string filename) 
+ 
+Argument 
+string filename  File name to be delet ed from the robot controller 
+ 
+Return value 
+                 N o n e  
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  
+ 
+Notice 
+DeleteFile deletes the file in the controller unconditionally. When confirmation is necessary, display 
+a conformation message by using an application. 
+ 
+ 
+See also 
+GetDir() 
+ 
+PAGE 44
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 38 - 
+series  Robot Controller 
+ 
+DirectDo()      TsRemote.method 
+Executes one line of program by using the direct execution function. 
+ 
+Format 
+void DirectDo(string command) 
+ 
+Argument 
+string command  Program to be executed 
+ 
+Return value 
+                 N o n e  
+ 
+Exceptions 
+MoveStop  STOP signal during the Move command  
+CannotDoMove  Move command can not be ex ecuted, because of watch dog not running  
+ 
+Notice 
+DirectDo() cannot be executed unless monitoring is executed by the WatchDogStart() method. 
+Execution of DirectDo() is completed at the commencement of the execution of the program after 
+the controller receives the command. Completion of program operation cannot be checked. Use 
+the Move*() method to execute an operation command such as MOVE. 
+When an event occurs due to the execution of  EmergencyStop, SafetyStop, StopCommand, or 
+BreakCommand, the DLL internal flag (MoveStop) is set to ON. 
+If the DirectDo() method is executed while the internal flag (MoveStop) is ON, MoveStop 
+exception occurs, thereby restraining the robot operation. ResetMove()resets the internal flag, 
+enabling the robot operation. Rese t the operation after checking with the user through a dialog 
+and so on. 
+ 
+ 
+See also 
+WatchDogStart(), ResetMove() 
+ 
+ 
+PAGE 45
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 39 - 
+series  Robot Controller 
+ 
+Disconnect()     TsRemote.method 
+Disconnects communication with the controller. 
+ 
+Format 
+bool Disconnect() 
+ 
+Argument 
+                 N o n e  
+ 
+Return value 
+                 N o n e  
+ 
+Exceptions 
+                 N o n e  
+ 
+Notice 
+To terminate a customer-created application, terminate application after disconnecting the 
+communication with the controller by executing Disconnect(). 
+ 
+See also 
+Connect() 
+ 
+ 
+PAGE 46
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 40 - 
+series  Robot Controller 
+ 
+Dispose()      TsRemote.method 
+Disposes of the TsRemoteS object. 
+ 
+Format 
+void Dispose() 
+ 
+Argument 
+ None 
+ 
+Return value 
+                 N o n e  
+ 
+Exceptions 
+                 N o n e  
+ 
+Notice 
+ 
+ 
+See also 
+ 
+ 
+PAGE 47
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 41 - 
+series  Robot Controller 
+ 
+GetAlarmHistory()    TsRemote.method 
+Acquires alarm history. 
+ 
+Format 
+List<TsAlarm>  GetAlarmHistory() 
+ 
+Argument 
+  None 
+ 
+Return value 
+List<TsAlarm>  Stores alarm history in the array of the TsAlarm object. 
+ 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+TsAlarm, GetCurrentAlarm() 
+ 
+ 
+PAGE 48
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 42 - 
+series  Robot Controller 
+ 
+GetCurrentAlarm()    TsRemote.method 
+Acquires the alarm that is currently occurring in the controller. 
+ 
+Format 
+List<TsAlarm>  GetCurrentAlarm() 
+ 
+Argument 
+  None 
+ 
+Return value 
+List<TsAlarm>  Stores the alarm that is currently occurri ng in the controller in the array of the 
+TsALarm object. 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller 
+ 
+Notice 
+ 
+ 
+See also 
+TsAlarm 
+ 
+PAGE 49
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 43 - 
+series  Robot Controller 
+ 
+G e t D I n ( )        TsRemote.method 
+Acquires the status of the specified input (Din). 
+ 
+Format 
+int GetDin(int dino) 
+ 
+Argument 
+int dino  Specify a DIN number. 
+  1~64: Standard input 
+  101~164: Extended input 
+  201~264: System input 
+  301~364: FieldBus input 
+  401~464: FieldBus input 
+ 
+Return value 
+int  Input status 
+  0:OFF 
+  1:ON 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller 
+ 
+Notice 
+ 
+ 
+See also 
+GetDIO() 
+ 
+PAGE 50
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 44 - 
+series  Robot Controller 
+ 
+GetDIO()      TsRemote.method 
+Acquires the input/output status of the controller. 
+ 
+Format 
+TsDIO GetDIO() 
+ 
+Argument 
+  None 
+ 
+Return value 
+TsDIO  Acquires the input (DIN) and output (D OUT) statuses of the controller. 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller 
+ 
+Notice 
+ 
+ 
+See also 
+TsDIO,  
+ 
+PAGE 51
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 45 - 
+series  Robot Controller 
+ 
+GetDir()       TsRemote.method 
+Acquires the information of the files that are stored in the TS controller. 
+ 
+Format 
+List<TsFileInfo> GetDir() 
+ 
+Argument 
+  None 
+ 
+Return value 
+List<TsFileInfo>  Stores the information of t he file that is stored in the controller in the array of 
+TsFileInfo object. 
+ 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller 
+ 
+Notice 
+ 
+ 
+See also 
+TsFileInfo 
+ 
+PAGE 52
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 46 - 
+series  Robot Controller 
+ 
+GetDout()      TsRemote.method 
+Acquires the alarm that is currently occurring in the TS controller. 
+ 
+Format 
+int GetDout(int dino) 
+ 
+Argument 
+int dino  Specify a DOUT number. 
+  1~64: Standard output 
+  101~164: Extended output 
+  201~264: System output 
+  301~364: FileBus output 
+  401~464: FileBus output 
+ 
+Return value 
+int  Output status 
+  0:OFF 
+  1:ON 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller 
+ 
+Notice 
+ 
+ 
+See also 
+GetDIn(), SetDout() 
+ 
+PAGE 53
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 47 - 
+series  Robot Controller 
+ 
+GetGlobalINT()     TsRemote.method 
+References the value of the integer type global variable of the program that is currently selected. 
+ 
+Format 
+int GetGlobalINT(string name) 
+ 
+Argument 
+string name Name of the global variable 
+ For an array variable, specify including the element number. 
+ 
+Return value 
+int  Value of the integer type global variable that was obtained 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter  
+ 
+Notice 
+ 
+ 
+See also 
+SetGlobalINT(), GetGlobalPoint(), GetGlobalPAYLOAD(), GetGlobalREAL(), GetGlobalTRANS() 
+ 
+PAGE 54
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 48 - 
+series  Robot Controller 
+ 
+GetGlobalREAL()    TsRemote.method 
+References the value of the real number type global variable of the program that is currently selected. 
+ 
+Format 
+float GetGlobalREAL(string name) 
+ 
+Argument 
+string name Name of the real number type global variable 
+ For an array variable, specify the element. 
+ 
+Return value 
+float  Value of the real number type global variable that was acquired 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter 
+ 
+Notice 
+ 
+ 
+See also 
+GetGlobalINT(), GetGlobalPoint(), GetGlobalPAYLOAD(), SetGlobalREAL(), GetGlobalTRANS() 
+ 
+ 
+ 
+PAGE 55
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 49 - 
+series  Robot Controller 
+ 
+GetHexIn()      TsRemote.method 
+Acquires the status of input (DIN) with consecutive values from the specified output number. 
+ 
+Format 
+uint GetHexIn(int dino,int length) 
+ 
+Argument 
+Int dino First DIN number to be fetched consecutively 
+Int length         Bit length for consecutive fetching 
+ 
+Return value 
+uint  Value of DIN that was acquired 
+ Example: DIN1=1,DIN2=0,DIN3=1,DIN4=0 
+  The result of GetHexIn(1,4) is 5. 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter 
+ 
+Notice 
+ 
+ 
+See also 
+GetDin(), SetHexOut() 
+ 
+PAGE 56
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 50 - 
+series  Robot Controller 
+ 
+GetStatus()      TsRemote.method 
+Acquires the robot status. 
+ 
+Format 
+TsStatus GetStatus() 
+ 
+Argument 
+ None 
+ 
+Return value 
+TsStatus Acquired status 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+TsStatus, GetStatusAll() 
+ 
+PAGE 57
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 51 - 
+series  Robot Controller 
+ 
+GetStatusMonitor()    TsRemote.method 
+Acquires the status monitor value of the robot. 
+ 
+Format 
+TsStatusMonitor GetStatusMonitor() 
+ 
+Argument 
+                 N o n e  
+ 
+Return value 
+TsStatusMonitor Acquired monitor value 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+Use this command to acquire the status when WatchDog is inactive. 
+In the normal DLL use, acquire t he status through the event by performing mutual monitoring by 
+WatchDogStart(). 
+Even if this command is issued, the controller status by the event cannot be acquired. 
+ 
+See also 
+WatchDocStart() 
+ 
+PAGE 58
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 52 - 
+series  Robot Controller 
+ 
+GetSystemVersion()   TsRemote.method 
+Acquires the system version of the TS controller. 
+ 
+Format 
+List<TsVersion> GetCTRLversion() 
+ 
+Argument 
+  None 
+ 
+Return value 
+List<TsVersion>  Stores the controller system version in the array of the TsVersion object. 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller 
+ 
+Notice 
+ 
+ 
+See also 
+TsVersion 
+ 
+PAGE 59
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 53 - 
+series  Robot Controller 
+ 
+ProgramBreak()     TsRemote.method 
+Stops the program execution for the robot immediately by BREAK. 
+ 
+Format 
+void ProgramBreak() 
+ 
+Argument 
+ None 
+ 
+Return value 
+ None 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller 
+ 
+Notice 
+To detect ProgramBreak (stopping the operation) during execution of the Move*() method, perform 
+exception processing by using try-catch for the Move() method. 
+ 
+ 
+See also 
+ProgramStop() 
+ 
+ 
+ 
+ 
+PAGE 60
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 54 - 
+series  Robot Controller 
+ 
+ProgramRun()     TsRemote.method 
+Executes the selected program. 
+ 
+Format 
+void ProgramRun() 
+ 
+Argument 
+ None 
+ 
+Return value 
+ None 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller 
+ 
+Notice 
+ 
+ 
+See also 
+ProgramStop(), ProgramBreak() 
+ 
+ 
+ 
+PAGE 61
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 55 - 
+series  Robot Controller 
+ 
+ProgramSelect()    TsRemote.method 
+Selects a program. 
+ 
+Format 
+void ProgramSelect(string filename) 
+ 
+Argument 
+string filename Name of the file to be selected 
+ 
+Return value 
+ None 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller 
+ 
+Notice 
+ 
+ 
+See also 
+GetDir(), ProgramRun() 
+ 
+ 
+ 
+ 
+PAGE 62
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 56 - 
+series  Robot Controller 
+ 
+ProgramStop()     TsRemote.method 
+Stops the program that is being executed. 
+ 
+Format 
+void ProgramStop() 
+ 
+ 
+Argument 
+ None 
+ 
+Return value 
+ None 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller 
+ 
+Notice 
+To detect ProgramStop (stopping the operation) du ring execution of the Move*() method, perform 
+exception processing by using try-catch for the Move() method. 
+ 
+ 
+ 
+ 
+See also 
+ProgramRun(), ProgramBreak() 
+ 
+ 
+ 
+ 
+PAGE 63
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 57 - 
+series  Robot Controller 
+ 
+ReceiveFile()     TsRemote.method 
+Receives the file in the robot controller in the personal computer. 
+ 
+Format 
+void ReceiveFile(string filename, string fullpass) 
+ 
+Argument 
+string filename Name of the file to be received 
+string fullpass File storage location and name und er which the received file is stored 
+ 
+Return value 
+  None 
+ 
+Exceptions 
+NotfoundDirectory  Directory is not found in PC  
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter  
+ 
+Notice 
+ 
+ 
+See also 
+SendFile(), GetDir() 
+ 
+ 
+ 
+PAGE 64
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 58 - 
+series  Robot Controller 
+ 
+ResetALARM()     TsRemote.method 
+Performs alarm reset. 
+ 
+Format 
+void ResetAlarm() 
+ 
+Argument 
+ None 
+ 
+Return value 
+  None 
+ 
+Exceptions 
+TCPNotConnect Network is not connected  
+CommunicationError Communication Error  
+ControllerNG Command not accepted by controller 
+ 
+Notice 
+ 
+ 
+See also 
+ResetCYCLE(), ResetPRG(), ResetMove(), ResetSELECT(), ResetSIGNAL(), ResetSTEP() 
+ 
+ 
+ 
+ 
+ 
+PAGE 65
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 59 - 
+series  Robot Controller 
+ 
+ResetCYCLE()     TsRemote.method 
+Sets the program to the executable state from the RCYCLE by resetting the execution environment except 
+for the global variables of the selected program. 
+ 
+Format 
+void ResetCYCLE() 
+ 
+Argument 
+ None 
+ 
+Return value 
+  None 
+ 
+Exceptions 
+TCPNotConnect Network is not connected  
+CommunicationError Communication Error  
+ControllerNG Command not accepted by controller 
+ 
+Notice 
+ 
+ 
+See also 
+ResetALARM(), ResetPRG(), ResetMove(), ResetSELECT(), ResetSIGNAL(), ResetSTEP() 
+ 
+ 
+ 
+ 
+ 
+PAGE 66
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 60 - 
+series  Robot Controller 
+ 
+ResetPRG()      TsRemote.method 
+Resets the execution environment of the selected program. 
+ 
+Format 
+void ResetPRG() 
+ 
+Argument 
+ None 
+ 
+Return value 
+  None 
+ 
+Exceptions 
+TCPNotConnect Network is not connected  
+CommunicationError Communication Error  
+ControllerNG Command not accepted by controller 
+ 
+Notice 
+ 
+ 
+See also 
+ResetALARM(), ResetCYCLE(), ResetMove(), ResetSELECT(), ResetSIGNAL(), ResetSTEP() 
+ 
+ 
+ 
+ 
+PAGE 67
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 61 - 
+series  Robot Controller 
+ 
+ResetMove()     TsRemote.method 
+Enables the operation of the Move*() method by clearing the DLL internal flag (Move Stop) for the stopping of 
+the robot operation, 
+ 
+Format 
+void ResetMove() 
+ 
+Argument 
+ None 
+ 
+Return value 
+  None 
+ 
+Exceptions 
+                 N o n e  
+ 
+Notice 
+When an event occurs due to the EmergencyStop, SafetyStop, StopCommand, or 
+BreakCommand during the mutual monitoring by WatchDogStart(), the DLL internal flag (MoveStop) 
+is set to ON. 
+If the Move*() or DirectDo() method is executed while the internal flag (MoveStop) is ON, MoveStop 
+exception occurs, thereby inhibiting the robot operation. ResetMove() enables the robot operation 
+by resetting the internal flag. Reset the state by checking with the user through a dialog and so on. 
+ 
+See also 
+WatchDocStart(), TsStatusMonitor, Move(), Movea(), Movej(), Moves(),  
+ 
+ 
+ 
+ 
+PAGE 68
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 62 - 
+series  Robot Controller 
+ 
+ResetSELECT()     TsRemote.method 
+Resets the program selection. 
+ 
+Format 
+void ResetSELECT() 
+ 
+Argument 
+ None 
+ 
+Return value 
+  None 
+ 
+Exceptions 
+TCPNotConnect Network is not connected  
+CommunicationError Communication Error  
+ControllerNG Command not accepted by controller 
+ 
+Notice 
+ 
+ 
+See also 
+ResetALARM(), ResetCYCLE(), ResetPRG(), ResetMove(), ResetSIGNAL(), ResetSTEP() 
+ 
+ 
+ 
+ 
+PAGE 69
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 63 - 
+series  Robot Controller 
+ 
+ResetSIGNAL()     TsRemote.method 
+Resets the output signal of the robot. 
+ 
+Format 
+void ResetSIGNAL() 
+ 
+Argument 
+ None 
+ 
+Return value 
+  None 
+ 
+Exceptions 
+TCPNotConnect Network is not connected  
+CommunicationError Communication Error  
+ControllerNG Command not accepted by controller 
+ 
+Notice 
+ 
+ 
+See also 
+ResetALARM(), ResetCYCLE(), ResetPRG(), ResetMove(), ResetSIGNAL(), ResetSTEP() 
+ 
+ 
+ 
+ 
+PAGE 70
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 64 - 
+series  Robot Controller 
+ 
+ResetSTEP()     TsRemote.method 
+Enables execution of the selected program by resetti ng the execution environm ent except for the global 
+variables of the program. 
+ 
+Format 
+void ResetSTEP() 
+ 
+Argument 
+ None 
+ 
+Return value 
+  None 
+ 
+Exceptions 
+TCPNotConnect Network is not connected  
+CommunicationError Communication Error  
+ControllerNG Command not accepted by controller 
+ 
+Notice 
+ 
+ 
+See also 
+ResetALARM(), ResetCYCLE(), ResetPRG(), ResetMove(), ResetSELECT(), ResetSIGNAL() 
+ 
+ 
+PAGE 71
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 65 - 
+series  Robot Controller 
+ 
+S e n d F i l e ( )       TsRemote.method 
+Sends the file in the personal computer to the robot controller. 
+ 
+Format 
+void SendFile(string filename, string fullpass) 
+ 
+Argument 
+string filename Name under which the file that is  sent is to be stored in the controller 
+string fullpass  Directory and file name to be sent 
+ 
+Return value 
+  None 
+ 
+Exceptions 
+NotFondFile  File is not found  
+TCPNotConnect Network is not connected 
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter 
+ 
+Notice 
+ 
+ 
+See also 
+ReceiveFile() 
+ 
+ 
+ 
+ 
+PAGE 72
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 66 - 
+series  Robot Controller 
+ 
+ServoOff()      TsRemote.method 
+Sets the servo to OFF. 
+ 
+Format 
+void ServoOff() 
+ 
+Argument 
+ None 
+ 
+Return value 
+  None 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+ServoOn() 
+ 
+ 
+ 
+PAGE 73
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 67 - 
+series  Robot Controller 
+ 
+ServoOn()      TsRemote.method 
+Sets the servo to ON. 
+ 
+Format 
+void ServoOn() 
+ 
+Argument 
+ None 
+ 
+Return value 
+  None 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+ServoOff() 
+ 
+ 
+ 
+ 
+PAGE 74
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 68 - 
+series  Robot Controller 
+ 
+SetComPort()     TsRemote.method 
+Sets the parameters of the COM port. 
+ 
+Format 
+bool SetComPort(string portNo,int bps,int bit, int parity,int stop) 
+ 
+Argument 
+string portNo COM port number 
+int32 bps Transfer speed 
+int bit Number of bits per character (7 or 8) 
+int parity Parity (0: None, 1: Even number, 2: Odd number) 
+int stop Stop bit (1: Stop bit 1) 
+ 
+Return value 
+bool  true: Successful 
+ false: Failed 
+ 
+Exceptions 
+IllegalStopbit  Illegal stop bits.Should be 0,1,or 2  
+IllegalDatabits  Illegal databits.Should be 7 or 8  
+IllegalBps  Illegal baud rate. Should be between 1200 to 115200  
+IllegalPortNo  Illegal port No.  
+ 
+Notice 
+SetComPort() is used for function extension and currently the function has not been installed. 
+ 
+See also 
+ 
+ 
+ 
+PAGE 75
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 69 - 
+series  Robot Controller 
+ 
+SetDout()      TsRemote.method 
+Acquires the input (DOUT) status. 
+ 
+Format 
+void SetDOut(int dono, int setdata) 
+ 
+Argument 
+Int dono DOUT number 
+Int setdata 0:OFF 
+1:ON 
+ 
+Return value 
+  None 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter  
+ 
+Notice 
+ 
+ 
+See also 
+GetDout() 
+ 
+ 
+ 
+PAGE 76
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 70 - 
+series  Robot Controller 
+ 
+SetGlobalINT()     TsRemote.method 
+Sets the value of the integer type global variable of the program that is currently selected. 
+ 
+Format 
+void SetGlobalINT(string name, int restore,int val ) 
+ 
+Argument 
+string name Name of the global variable 
+ When specifying an array variable, include the element number also. 
+Int restore Set whether RESTORE (change of the initial value of the program file) is 
+performed or not. 
+  0: Not performed 
+   1: Performed 
+Int val Value to be set 
+ 
+ 
+Return value 
+                 N o n e  
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller   
+ 
+Notice 
+ 
+ 
+See also 
+GetGlobalINT(), SetGlobalPoint(), SetGlobalPAYLOAD(), SetGlobalREAL(), SetGlobalTRANS() 
+ 
+PAGE 77
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 71 - 
+series  Robot Controller 
+ 
+SetGlobalREAL()    TsRemote.method 
+Sets the value of the program real number type global variable of the program that is currently selected. 
+ 
+Format 
+void SetGlobalREAL(string name,int restore,double val ) 
+ 
+Argument 
+string name Name of the global variable 
+ When specifying an array variable, include the element number also. 
+Int restore Set whether RESTORE (change of the initial value of the program file) is 
+performed or not. 
+  0: Not performed 
+   1: Performed 
+double val Value to be set 
+ 
+ 
+Return value 
+                 N o n e  
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller   
+ 
+Notice 
+ 
+ 
+See also 
+SetGlobalINT(), SetGlobalPoint(), SetGlobalPAYLOAD(), GetGlobalREAL(), SetGlobalTRANS() 
+ 
+ 
+PAGE 78
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 72 - 
+series  Robot Controller 
+ 
+SetHexOut()      TsRemote.method 
+Sets consecutive numbers starting from the specified output numbers. 
+ 
+Format 
+void SetHexOut(int dono,int length,uint value) 
+ 
+Argument 
+Int dino First DOUT number to be set consecutively 
+Int length Bit length to be fetched consecutively (1~32) 
+Int value Set value 
+ Example: The result of SetHexOu t(1,4,5) is DOUT1=1, DOUT2=0,  
+ DOUT3=1, DOUT4=0. 
+ 
+ 
+Return value 
+ None 
+  
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter 
+ 
+Notice 
+ 
+ 
+See also 
+GetHexIn() 
+ 
+ 
+PAGE 79
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 73 - 
+series  Robot Controller 
+ 
+SetIPaddr()      TsRemote.method 
+Sets Ethernet connection. 
+ 
+Format 
+bool SetIPaddr(int openmode,string destAddr,int destPort,int srcPort) 
+ 
+Argument 
+Int openmode 0:Server(not installed) 
+ 1: Client 
+ 
+string destAddr IP address of the connection destination (robot controller) 
+ Use a character string such as “192.168.0.100”. 
+ 
+Int destPort Port number of the connec tion destination (robot controller) 
+ 
+ 
+Int srcPort Port number of the connec tion source (personal computer) 
+ 
+ 
+Return value 
+bool  true: Successful 
+ false: Failed 
+ 
+Exceptions 
+IllegalIPAddress Illegal IP Address 
+ 
+Notice 
+The Server function is not currently supported. 
+ 
+See also 
+Connect() 
+ 
+ 
+ 
+PAGE 80
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 74 - 
+series  Robot Controller 
+ 
+SetOVRD()      TsRemote.method 
+Sets override. 
+ 
+Format 
+void SetOVRD(int override ) 
+ 
+Argument 
+Int override Override setting value (1 to 100) 
+ 
+ 
+Return value 
+ None 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter  
+ 
+Notice 
+The override that is set is inherited even if the master mode is changed. 
+ 
+ 
+See also 
+GetOVRD() 
+ 
+ 
+PAGE 81
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 75 - 
+series  Robot Controller 
+ 
+SetRunMode()     TsRemote.method 
+Sets RUNMODE (run mode). 
+ 
+Format 
+void SetRunMode(RunMode mode) 
+void SetRunMode(int mode) 
+ 
+Argument 
+RunMode mode Specify RUNMODE with RunMode enumeration. 
+ 
+Int mode Set RUNMODE using one of the following values. 
+  0: The robot operation mode is CONT. 
+  1: The robot operation mode is CYCLE. 
+  2: The robot operation mode is STEP. 
+  3: The robot operation mode is SEGMENT. 
+ 
+ 
+Return value 
+ None 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter  
+ 
+Notice 
+ 
+ 
+See also 
+ 
+ 
+ 
+ 
+ 
+ 
+PAGE 82
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 76 - 
+series  Robot Controller 
+ 
+WatchDogStart()    TsRemote.method 
+Starts mutual monitoring between the controller and PC. 
+ 
+Format 
+void WatchDogStart(int intervalTime,int timeOut,int alarmLevel ) 
+ 
+Argument 
+Int intervalTime Communication interval of  mutual monitoring (100 to 1000msec) 
+Int timeOut Time to produce time-out alarm in mutual monitoring 
+(Set time more than twice intervalTime) 
+Int alarmLevel Alarm that is issued when a problem occurs in mutual monitoring 
+  0: No alarm 
+ 
+  1:1-200 Host Port Time Out 
+    Message only (The robot does not stop) 
+  2:2-137 Host Port Time Out 
+    Stops when the operation that is cu rrently performed reaches the target point. 
+  8:8-352 Host Port Time Out 
+    Stops immediately. 
+Return value 
+ None 
+ 
+Exceptions 
+IllegalWatchDogInterval Illegal watchdog monitoring interval.Should be between 0 to 9999 
+IllegalAlarmLevel  Illegal alarm level.Should be 0 or 1 or 2 or 8  
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+To execute Move(), Movea(), Movej(), Moves() and DirectDo() method, mutual monitoring must be 
+enabled. 
+ 
+See also 
+WatchDogStop() 
+ 
+ 
+ 
+PAGE 83
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 77 - 
+series  Robot Controller 
+ 
+WatchDogStop()    TsRemote.method 
+Stops mutual monitoring between the controller and PC. 
+ 
+Format 
+void WatchDogStop() 
+ 
+Argument 
+ None 
+ 
+Return value 
+ None 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller 
+ 
+Notice 
+ 
+ 
+See also 
+WatchDogStart() 
+ 
+ 
+ 
+PAGE 84
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 78 - 
+series  Robot Controller 
+ 
+3.6   TsRemoteS Class property 
+ 
+ 
+M v C o n f i g       TsRemoteS.property 
+Specifies/acquires the configurati on (posture) of the SCARA robot operat ion that is instructed by Move(), 
+Moves(), Movej(), and Movea(). 
+ 
+Format 
+MvConfigS 
+ 
+Value 
+enum ConfigS ConfigS.FREE: Sets the configuration (posture) of SCARA robot to FREE. 
+ ConfigS.LEFTY:  Sets the configuration (posture) of SCARA robot to LEFTY . 
+ ConfigS.RIGHTY: Sets the configurat ion (posture) of SCARA robot to 
+RIGHTY. 
+Notice 
+The MvConfig property value has t he priority over the configuration that is specified in the Move*() 
+method. 
+To specify configuration in the Move*() operation instruction, set the MvConfig property value to 
+FREE. 
+ 
+See also 
+ 
+ 
+M v T o o l        TsRemoteS.property 
+Tool coordinate of the SCARA robot operation that is instructed by Move(), Moves(), Movej(), and Movea(). 
+ 
+Format 
+MvTool 
+ 
+Value 
+TsTransS Specify the set value with TsTransS. 
+ 
+Notice 
+ 
+ 
+See also 
+MvAccel,MvSpeed,MvConfig,Move(),Moves(),Movej(),Movea() 
+ 
+ 
+ 
+M v W o r k        TsRemoteS.property 
+Work coordinate of the SCARA robot operation that is instructed by Move(), Moves(), Movej(), and Movea(). 
+ 
+Format 
+MvWork 
+ 
+Value 
+TsTransS Specify the set value with TsTransS. 
+ 
+Notice 
+ 
+ 
+See also 
+MvAccel,MvSpeed,MvConfig,Move(),Moves(),Movej(),Movea() 
+ 
+ 
+PAGE 85
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 79 - 
+series  Robot Controller 
+ 
+3.7   TsRemoteS Class Method 
+ 
+GetGlobalPOINT()    TsRemoteS.method 
+References the value of the point type global variable of the program that is currently selected. 
+ 
+Format 
+TsPointS GetGlobalPOINT(string name) 
+ 
+Argument 
+string name Name of the point type global variable (teaching point) 
+ For an array variable, specify the element. 
+   
+Return value 
+TsPointS  Value of the point type global variable that was acquired 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter 
+ 
+Notice 
+ 
+ 
+See also 
+TsPointS, GetGlobalINT(), SetGlobalPoint(), GetGlobalPAYLOAD(),GetGlobalREAL(),  
+GetGlobalTRANS() 
+ 
+ 
+PAGE 86
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 80 - 
+series  Robot Controller 
+ 
+ 
+GetGlobalPAYLOAD()   TsRemoteS.method 
+References the value of the load type global variable of the program that is currently selected. 
+ 
+Format 
+TsPayloadS GetGlobalPAYLOAD(string name) 
+ 
+Argument 
+string name Name of the load type global variable 
+ For an array variable, specify the element. 
+   
+Return value 
+TsPayloadS  Value of the load type global variable that was acquired 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter 
+ 
+Notice 
+ 
+ 
+See also 
+TsPayload, GetGlobalINT(), GetGlobalPoint(), SetGlobalPAYLOAD(), GetGlobalREAL(),  
+GetGlobalTRANS() 
+ 
+ 
+PAGE 87
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 81 - 
+series  Robot Controller 
+ 
+GetGlobalTRANS()    TsRemoteS.method 
+References the value of the coordinate type global variable of the program that is currently selected. 
+ 
+Format 
+TsTransS GetGlobalTRANS(string name) 
+ 
+Argument 
+string name Name of the standard type global variable 
+ For an array variable, specify the element. 
+   
+Return value 
+TsTransS  Value of the coordinate type gl obal variable that was acquired 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter 
+ 
+Notice 
+ 
+ 
+See also 
+TsTransS, GetGlobalINT(), GetGlobalPoint(), GetGlobalPAYLOAD(), GetGlobalREAL(),  
+SetGlobalTRANS() 
+ 
+ 
+ 
+PAGE 88
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 82 - 
+series  Robot Controller 
+ 
+GetPsnCmdJoint()    TsRemoteS.method 
+Acquires the current robot position (command) in terms of the joint angle. 
+ 
+Format 
+TsJointS GetPsnCmdJoint()l 
+ 
+Argument 
+  None 
+ 
+Return value 
+TsJointS  Joint angle of SCARA robot 
+ 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+GetPsnCmdWork(), GetPsnCmdWorld(), GetPsnFbkJoint(), GetPsnFbkWork(), GetPsnFbkWorld()
+  
+ 
+PAGE 89
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 83 - 
+series  Robot Controller 
+ 
+GetPsnCmdWork()    TsRemoteS.method 
+Acquires the current robot position (command position) in terms of the work coordinate position. 
+ 
+Format 
+TsPointS GetPsnCmdWork() 
+ 
+Argument 
+  None 
+ 
+Return value 
+TsPointS Work coordinate point of SCARA robot 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+TsPointS, GetPsnCmdJoint(), GetPsnCmdWorld(), GetPsnFbkJoint(), GetPsnFbkWork() 
+GetPsnFbkWorld() 
+ 
+PAGE 90
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 84 - 
+series  Robot Controller 
+ 
+GetPsnCmdWorld()    TsRemoteS.method 
+Acquires the current robot point (command position) in terms of the world coordinate position. 
+ 
+Format 
+TsPointS GetPsnCmdWorld() 
+ 
+Argument 
+  None 
+ 
+Return value 
+TsPointS World coordinate position of SCARA robot 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+TsPointS, GetPsnCmdJoint(), GetPsnCmdWork(), GetPsnFbkJoint(), GetPsnFbkWork() 
+GetPsnFbkWorld() 
+ 
+ 
+PAGE 91
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 85 - 
+series  Robot Controller 
+ 
+GetPsnFbkJoint()    TsRemoteS.method 
+Acquires the current robot position (feedback) in terms of the joint angle. 
+ 
+ 
+Format 
+TsJointS GetPsnFbkJoint() 
+ 
+Argument 
+  None 
+ 
+Return value 
+TsJointS  Joint angle of SCARA robot (calculated from the motor angle) 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+TsJointS, GetPsnCmdJoint(), GetPsnCmdWork(), GetPsnCmdWorld(), GetPsnFbkWork() 
+GetPsnFbkWorld() 
+ 
+ 
+PAGE 92
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 86 - 
+series  Robot Controller 
+ 
+GetPsnFbkWork()    TsRemoteS.method 
+Acquires the current robot position (feedback) in terms of the work coordinate position. 
+ 
+Format 
+TsPointS GetPsnFbkWork() 
+ 
+Argument 
+  None 
+ 
+Return value 
+TsPointS Work coordinate position of SCARA robot  (calculated from the motor angle) 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+TsPointS, GetPsnCmdJoint(), GetPsnCmdWork(), GetPsnCmdWorld(), GetPsnFbkJoint() 
+GetPsnFbkWorld() 
+ 
+ 
+PAGE 93
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 87 - 
+series  Robot Controller 
+ 
+GetPsnFbkWorld()    TsRemoteS.method 
+Acquires the current robot position (feedback) in terms of the world coordinate position. 
+ 
+Format 
+TsPointS GetPsnFbkWorld() 
+ 
+Argument 
+  None 
+ 
+Return value 
+TsPointS World coordinate position of SCARA r obot (calculated from the motor angle) 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+TsPointS, GetPsnCmdJoint(), GetPsnCmdWork(), GetPsnCmdWorld(), GetPsnFbkJoint() 
+GetPsnFbkWork() 
+ 
+PAGE 94
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 88 - 
+series  Robot Controller 
+ 
+GetStatusAll()     TsRemoteS.method 
+Acquires all the statuses of the SCARA robot. 
+ 
+Format 
+TsStatusAllS  GetStatusAll() 
+ 
+Argument 
+                 N o n e  
+ 
+Return value 
+TsStatusAllS   Acquired statuses of SCARA robot 
+  
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+TsStatusAllS , GetStatus() 
+ 
+PAGE 95
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 89 - 
+series  Robot Controller 
+ 
+GetVelocJoint()     TsRemoteS.method 
+Acquires the current robot command speed in terms of the joint angle. 
+ 
+Format 
+TsJointS GetVelocJoint() 
+ 
+Argument 
+                 N o n e  
+ 
+Return value 
+TsJointS Speed of each joint of SCARA robot 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+TsJoint, GetVelocWorld() 
+ 
+PAGE 96
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 90 - 
+series  Robot Controller 
+ 
+GetVelocWorld()    TsRemoteS.method 
+Acquires the current command speed of the robot in terms of the speed of the world coordinate elements. 
+ 
+Format 
+TsPointS GetVelocWorld() 
+ 
+Argument 
+                 N o n e  
+ 
+Return value 
+TsPointS Speed of SCARA robot (calculated bas ed on the X, Y, Z, and C components) 
+  
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+TsPointS, GetVelocJoint()  
+ 
+PAGE 97
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 91 - 
+series  Robot Controller 
+ 
+Move()       TsRemoteS.method 
+Moves the SCARA robot to the specified point. 
+ 
+Format 
+Move(double x, double y, double z, double c, double t, int config) 
+Move(TsPointS point) 
+Move(TsPointS point,double px, double py, double pz, double pc, double pt) 
+Move(TsPointS point,TsPointS offset) 
+Move(string pointName) 
+Move(string pointName,double px, double py, double pz, double pc, double pt) 
+Move(string pointName,TsPointS offset) 
+ 
+Argument 
+double x X coordinate target point 
+double y Y coordinate target point 
+double z Z coordinate target point 
+double c C coordinate target point 
+double t T coordinate target point 
+TsPointS point   Target point 
+double px Offset value to be added to  the X coordinate target point 
+double py Offset value to be added to the Y coordinate target point 
+double pz Offset value to be added to the Z coordinate target point 
+double pc Offset value to be added to  the C coordinate target point 
+double pt Offset value to be added to  the T coordinate target point 
+TsPointS offset   Offset value to be added to the target point 
+string pointName   Name of the point that is r egistered in the selected program 
+ 
+Return value 
+                 N o n e  
+ 
+Exceptions 
+MoveStop  STOP signal during the Move command  
+MoveBreak  BREAK signal during the Move command  
+MoveTimeout  Move command execution timed out  
+CannotDoMove  Move command can not be ex ecuted, because of watch dog not running  
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter  
+ 
+Notice 
+Move() cannot be executed unless monitoring is performed by the WatchDogStart() method. 
+To detect BREAK or STOP (stopping the operation) during execution of Move(), perform exception 
+processing by using try-catch. 
+ 
+See also 
+WatchDogStart(), ResetMove(), Movea(), Movej(), Moves(), TsPoint 
+ 
+PAGE 98
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 92 - 
+series  Robot Controller 
+ 
+M o v e a ( )        TsRemoteS.method 
+Moves the joint axis of the SCARA robot to the specified position. 
+ 
+Format 
+void Movea(int joint_no,double position) 
+ 
+Argument 
+int joint_no  Joint number(1-5) to be moved 
+double position Target position (angle) 
+ 
+Return value 
+                 N o n e  
+ 
+Exceptions 
+MoveStop  STOP signal during the Move command  
+MoveBreak  BREAK signal during the Move command  
+MoveTimeout  Move command execution timed out  
+CannotDoMove  Move command can not be ex ecuted, because of watch dog not running  
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter  
+ 
+Notice 
+Move() cannot be executed unless monitoring is performed by the WatchDogStart() method. 
+To detect BREAK or STOP (stopping the operation) during execution of Move(), perform exception 
+processing by using try-catch. 
+ 
+See also 
+WatchDogStart(), ResetMove(), Movea(), Movej(), Moves() 
+ 
+PAGE 99
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 93 - 
+series  Robot Controller 
+ 
+M o v e j ( )        TsRemoteS.method 
+Moves the SCARA robot to the specified point with an arch motion. 
+ 
+Format 
+void Movej(double x, double y, double z, double c, double t, int config, 
+double l1,double l2,double l3) 
+void Movej(TsPointS point,double l1,double l2 double l3) 
+void Movej(TsPointS point,TsPointS offset,double l1,double l2 double l3)  
+void Movej(string pointName,double l1,double l2 double l3) 
+void Movej(string pointName,TsPointS offset,double l1,double l2 double l3) 
+ 
+Argument 
+double x X coordinate target point 
+double y Y coordinate target point 
+double z Z coordinate target point 
+double c C coordinate target point 
+double t T coordinate target point 
+TsPointS point   Target point 
+double l1 Refuge movement distance 
+double l2 Single-axis movement distance 1 
+double l3 Single-axis movement distance 2 
+TsPointS offset   Offset value to be added to the target point 
+string pointName   Name of the point that is r egistered in the selected program 
+ 
+Return value 
+                 N o n e  
+ 
+Exceptions 
+MoveStop  STOP signal during the Move command  
+MoveBreak  BREAK signal during the Move command  
+MoveTimeout  Move command execution timed out  
+CannotDoMove  Move command can not be ex ecuted, because of watch dog not running  
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter  
+ 
+Notice 
+Move() cannot be executed unless monitoring is performed by the WatchDogStart() method. 
+To detect BREAK or STOP (stopping the operation) during execution of Move(), perform exception 
+processing by using try-catch. 
+ 
+See also 
+WatchDogStart(), Move(), ResetMove(), Movea(), Moves(), TsPointS 
+ 
+ 
+PAGE 100
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 94 - 
+series  Robot Controller 
+ 
+M o v e s ( )        TsRemoteS.method 
+Moves the SCARA robot to the specified point with linear interpolation. 
+ 
+Format 
+void Moves(double x, double y, double z, double c, double t, int config) 
+void Moves(TsPointS point) 
+void Moves(TsPointS point,double px, double py, double pz, double pc, double pt) 
+void Moves(TsPointS point,tsPointS offset) 
+void Moves(string pointName) 
+void Moves(string pointName,double px, double py, double pz, double pc, double pt) 
+void Moves(string pointName,TsPointS offset) 
+ 
+Argument 
+double x X coordinate target point 
+double y Y coordinate target point 
+double z Z coordinate target point 
+double c C coordinate target point 
+double t T coordinate target point 
+TsPointS point   Target point 
+double px Offset value to be added to  the X coordinate target point 
+double py Offset value to be added to the Y coordinate target point 
+double pz Offset value to be added to the Z coordinate target point 
+double pc Offset value to be added to  the C coordinate target point 
+double pt Offset value to be added to  the T coordinate target point 
+TsPointS offset   Offset value to be added to the target point 
+string pointName   Name of the point that is r egistered in the selected program 
+ 
+Return value 
+                N o n e  
+ 
+Exceptions 
+MoveStop  STOP signal during the Move command  
+MoveBreak  BREAK signal during the Move command  
+MoveTimeout  Move command execution timed out  
+CannotDoMove  Move command can not be ex ecuted, because of watch dog not running  
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter  
+ 
+Notice 
+Move() cannot be executed unless monitoring is performed by the WatchDogStart() method. 
+To detect BREAK or STOP (stopping the operation) during execution of Move(), perform exception 
+processing by using try-catch. 
+ 
+See also 
+WatchDogStart(), Move(), ResetMove(), Movea(), Movej(), TsPointS 
+ 
+PAGE 101
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 95 - 
+series  Robot Controller 
+ 
+S e t G a i n ( )       TsRemoteS.method 
+Sets the gain of each axis of the robot (servo control) to ON/OFF. 
+ 
+Format 
+void SetGain(int j1,int j2, int j3, int j4, int j5) 
+ 
+Argument 
+Int j1 Servo gain of the 1 st joint (0:OFF 1:ON) 
+Int j2 Servo gain of the 2 nd joint (0:OFF 1:ON) 
+Int j3 Servo gain of the 3 rd joint (0:OFF 1:ON) 
+Int j4 Servo gain of the 4 th joint (0:OFF 1:ON) 
+Int j5 Servo gain of the 5 th joint (0:OFF 1:ON) 
+ 
+Return value 
+ None 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter  
+ 
+Notice 
+SetGain() changes the gain at the following operation (Move*()). 
+ 
+See also 
+ 
+PAGE 102
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 96 - 
+series  Robot Controller 
+ 
+SetGlobalPOINT()    TsRemoteS.method 
+Sets the value of the program point type global variable of the program that is currently selected. 
+ 
+Format 
+void SetGlobalPoint(string name,int restore,double x, double y, double z, 
+                    double c, double t, ConfigS config) 
+voidSetGlobalPoint(string name,int restore,TsPointS point) 
+ 
+Argument 
+string name Name of the global variable 
+ When specifying an array variable, include the element number also. 
+Int restore Set whether RESTORE (change of the initial value of the program file) is 
+performed or not. 
+  0: Not performed 
+   1: Performed 
+double x Value set for X 
+double y Value set for Y 
+double z Value set for Z 
+double c Value set for C 
+double t Value set for T 
+ConfigS config Value set for Config 
+  FREE: Free 
+  LEFTY: Left hand system 
+  RIGHTY: Right hand system   
+TsPointS point   Specify the set value with TsPointS. 
+ 
+Return value 
+                 N o n e  
+ 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller   
+ 
+Notice 
+ 
+ 
+See also 
+TsPointS, SetGlobalINT(), GetGlobalPoint(), SetGlobalPAYLOAD(), SetGlobalREAL() 
+SetGlobalTRANS() 
+ 
+PAGE 103
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 97 - 
+series  Robot Controller 
+ 
+SetGlobalPYLOAD()   TsRemoteS.method 
+Sets the value of the program load type global variable of the program that is currently selected. 
+ 
+Format 
+SetGlobalPYLOAD(string name,int restore,double m,double l) 
+SetGlobalPYLOAD(string name,int restore,TsPayloadS payload) 
+ 
+Argument 
+string name Name of the global variable 
+ When specifying an array variable, include the element number also. 
+ 
+Int restore Set whether RESTORE (change of the initial value of the program file) is 
+performed or not. 
+  0: Not performed 
+   1: Performed 
+double m Weight to be set(Kg) 
+double l Offset value to be set(mm) 
+TsPayloadS payload Specify the set value with TsPayLoadS. 
+ 
+ 
+Return value 
+                 N o n e  
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller   
+ 
+Notice 
+ 
+ 
+See also 
+SetGlobalINT(), SetGlobalPoint(), GetGlobalPAYLOAD(), SetGlobalREAL(), SetGlobalTRANS() 
+ 
+PAGE 104
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 98 - 
+series  Robot Controller 
+ 
+SetGlobalTRANS()    TsRemoteS.method 
+Sets the value of the coordinate type global variable of the program that is currently selected. 
+ 
+Format 
+void SetGlobalTRANS(string name,int restore,double x,double y,double z,double c) 
+void SetGlobalTRANS(string name,int restore,TsTransS trans) 
+ 
+Argument 
+string name Name of the coordinate type global variable 
+ When specifying an array variable, include the element number also. 
+Int restore Set whether RESTORE (change of the initial value of the program file) is 
+performed or not. 
+  0: Not performed 
+   1: Performed 
+double x Value set for X 
+double y Value set for Y 
+double z Value set for Z 
+double c Value set for C 
+TsTransS trans   Specify the set value with TsTransS. 
+ 
+ 
+Return value 
+                 N o n e  
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller   
+ 
+Notice 
+ 
+ 
+See also 
+SetGlobalINT(), SetGlobalPoint(), SetGlobalPAYLOAD(), SetGlobalREAL(), GetGlobalTRANS() 
+ 
+ 
+ 
+PAGE 105
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 99 - 
+series  Robot Controller 
+ 
+SetPayload()     TsRemoteS.method 
+Sets the load data of the SCARA robot. 
+ 
+Format 
+void SetPayload(double m, double l) 
+void SetPayload(TsPayloadS payload) 
+ 
+Argument 
+double m Load data (Weight Kg) 
+double l Load data (Offset of center of gravity mm) 
+TsPayloadS payload Specify the set value with TsPayLoadS. 
+ 
+ 
+Return value 
+ None 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter  
+ 
+Notice 
+The load information that is set is inherited even if the master mode is changed. 
+To clear load data, specify SetPayload(0,0). 
+ 
+See also 
+ 
+ 
+ 
+ 
+ 
+ 
+PAGE 106
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 100 - 
+series  Robot Controller 
+ 
+SetTransTool()     TsRemoteS.method 
+Sets the tool coordinate. 
+ 
+Format 
+void SetTransTool(string name) *1 
+void SetTransTool(string name,double x,double y,double z,double c) *2 
+void SetTransTool(string name,TsTransS tool) *2 
+ 
+Format 
+string name *1 Specify the name of the coordinate type variable that is registered in the 
+program file that is selected by the controller. 
+ *2  Names for the x,y,z, and c values that are set for convenience (displayed 
+in TP) 
+double x X set value 
+double y Y set value 
+double z Z set value 
+double c C set value 
+TsTransS tool Specify the set value with TsTrans. 
+ 
+Return value 
+ None 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter 
+ 
+Notice 
+The tool coordinate that is set is inherited even if the master mode is changed. 
+ 
+ 
+See also 
+ 
+ 
+ 
+PAGE 107
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 101 - 
+series  Robot Controller 
+ 
+SetTransWork()     TsRemoteS.method 
+Sets the work coordinate. 
+ 
+Format 
+void SetTransWork(string name) *1 
+void SetTransWork(string name,double x,double y,double z,double c) *2 
+void SetTransWork(string name,TsTransS work) *2 
+ 
+Argument 
+string name *1 Specify the name of the coordinate ty pe variable that is registered in the 
+program file that is selected by the controller. 
+ *2 Names for the x,y,z, and c values that are set for convenience (displayed 
+in TP) 
+double x X set value 
+double y Y set value 
+double z Z set value 
+double c C set value 
+TsTransS work Specify the set value with TsTrans. 
+ 
+Return value 
+ None 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter 
+ 
+Notice 
+The work coordinate that is set is inherited even if the master mode is changed. 
+ 
+ 
+See also 
+ 
+ 
+ 
+ 
+PAGE 108
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 102 - 
+series  Robot Controller 
+ 
+3.8   TsRemoteV Class property 
+ 
+ 
+M v C o n f i g       TsRemoteV.property 
+Specifies/acquires the conf iguration (posture) of the 6-AXIS robot operation that is instructed by Move(), 
+Moves(), Movej(), and Movea(). 
+ 
+Format 
+MvConfig 
+ 
+Value 
+enum ConfigV 6-Axis robot configuration. 
+ 
+Notice 
+The MvConfig property value has t he priority over the configuration that is specified in the Move*() 
+method. 
+To specify configuration in the Move*() operation instruction, set the MvConfig property value to 
+“xxxxxx”(0). 
+ 
+See also 
+enum CongigV 
+ 
+ 
+M v T o o l        TsRemoteV.property 
+Tool coordinate of the 6-AXIS robot operation that is instructed by Move(), Moves(), Movej(), and Movea(). 
+ 
+Format 
+MvTool 
+ 
+Value 
+TsTransV Specify the set value with TsTransV. 
+ 
+Notice 
+ 
+ 
+See also 
+MvAccel,MvSpeed,MvConfig,Move(),Moves(),Movej(),Movea() 
+ 
+ 
+ 
+M v W o r k        TsRemoteV.property 
+Work coordinate of the 6-AXIS robot operation that is instructed by Move(), Moves(), Movej(), and Movea(). 
+ 
+Format 
+MvWork 
+ 
+Value 
+TsTransV Specify the set value with TsTransV. 
+ 
+Notice 
+ 
+ 
+See also 
+MvAccel,MvSpeed,MvConfig,Move(),Moves(),Movej(),Movea() 
+ 
+ 
+PAGE 109
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 103 - 
+series  Robot Controller 
+ 
+3.9   TsRemoteS Class Method 
+ 
+GetGlobalPOINT()    TsRemoteV.method 
+References the value of the point type global variable of the program that is currently selected. 
+ 
+Format 
+TsPointV  GetGlobalPOINT(string name) 
+ 
+Argument 
+string name Name of the point type global variable (teaching point) 
+ For an array variable, specify the element. 
+   
+Return value 
+TsPointV  Value of the point type global variable that was acquired 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter 
+ 
+Notice 
+ 
+ 
+See also 
+TsPointS, GetGlobalINT(), SetGlobalPoint(), GetGlobalPAYLOAD(),GetGlobalREAL(),  
+GetGlobalTRANS() 
+ 
+ 
+PAGE 110
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 104 - 
+series  Robot Controller 
+ 
+ 
+GetGlobalPAYLOAD()   TsRemoteV.method 
+References the value of the load type global variable of the program that is currently selected. 
+ 
+Format 
+TsPayloadV GetGlobalPAYLOAD(string name) 
+ 
+Argument 
+string name Name of the load type global variable 
+ For an array variable, specify the element. 
+   
+Return value 
+TsPayloadV  Value of the load type global variable that was acquired 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter 
+ 
+Notice 
+ 
+ 
+See also 
+TsPayload, GetGlobalINT(), GetGlobalPoint(), SetGlobalPAYLOAD(), GetGlobalREAL(),  
+GetGlobalTRANS() 
+ 
+ 
+PAGE 111
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 105 - 
+series  Robot Controller 
+ 
+GetGlobalTRANS()    TsRemoteV.method 
+References the value of the coordinate type global variable of the program that is currently selected. 
+ 
+Format 
+TsTransV GetGlobalTRANS(string name) 
+ 
+Argument 
+string name Name of the standard type global variable 
+ For an array variable, specify the element. 
+   
+Return value 
+TsTransS  Value of the coordinate type gl obal variable that was acquired 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter 
+ 
+Notice 
+ 
+ 
+See also 
+TsTransV, GetGlobalINT(), GetGlobalPoint(), GetGlobalPAYLOAD(), GetGlobalREAL(),  
+SetGlobalTRANS() 
+ 
+ 
+ 
+PAGE 112
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 106 - 
+series  Robot Controller 
+ 
+GetPsnCmdJoint()    TsRemoteV.method 
+Acquires the current robot position (command) in terms of the joint angle. 
+ 
+Format 
+TsJointS GetPsnCmdJoint()l 
+ 
+Argument 
+  None 
+ 
+Return value 
+TsJointV  Joint angle of 6-AXIS robot 
+ 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+GetPsnCmdWork(), GetPsnCmdWorld(), GetPsnFbkJoint(), GetPsnFbkWork(), GetPsnFbkWorld()
+  
+ 
+PAGE 113
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 107 - 
+series  Robot Controller 
+ 
+GetPsnCmdWork()    TsRemoteV.method 
+Acquires the current robot position (command position) in terms of the work coordinate position. 
+ 
+Format 
+TsPointV GetPsnCmdWork() 
+ 
+Argument 
+  None 
+ 
+Return value 
+TsPointV Work coordinate point of 6-AXIS robot 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+TsPointV, GetPsnCmdJoint(), GetPsnCmdWorld(), GetPsnFbkJoint(), GetPsnFbkWork() 
+GetPsnFbkWorld() 
+ 
+PAGE 114
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 108 - 
+series  Robot Controller 
+ 
+GetPsnCmdWorld()    TsRemoteV.method 
+Acquires the current robot point (command position) in terms of the world coordinate position. 
+ 
+Format 
+TsPointV GetPsnCmdWorld() 
+ 
+Argument 
+  None 
+ 
+Return value 
+TsPointV World coordinate position of 6-AXIS robot 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+TsPointV, GetPsnCmdJoint(), GetPsnCmdWork(), GetPsnFbkJoint(), GetPsnFbkWork() 
+GetPsnFbkWorld() 
+ 
+ 
+PAGE 115
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 109 - 
+series  Robot Controller 
+ 
+GetPsnFbkJoint()    TsRemoteV.method 
+Acquires the current robot position (feedback) in terms of the joint angle. 
+ 
+ 
+Format 
+TsJointV GetPsnFbkJoint() 
+ 
+Argument 
+  None 
+ 
+Return value 
+TsJointV  Joint angle of 6-AXIS robot (calculated from the motor angle) 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+TsJointV, GetPsnCmdJoint(), GetPsnCmdWork(), GetPsnCmdWorld(), GetPsnFbkWork() 
+GetPsnFbkWorld() 
+ 
+ 
+PAGE 116
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 110 - 
+series  Robot Controller 
+ 
+GetPsnFbkWork()    TsRemoteV.method 
+Acquires the current robot position (feedback) in terms of the work coordinate position. 
+ 
+Format 
+TsPointV GetPsnFbkWork() 
+ 
+Argument 
+  None 
+ 
+Return value 
+TsPointV Work coordinate position of 6-AXIS robot (calculated from the motor angle) 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+TsPointV, GetPsnCmdJoint(), GetPsnCmdWork(), GetPsnCmdWorld(), GetPsnFbkJoint() 
+GetPsnFbkWorld() 
+ 
+ 
+PAGE 117
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 111 - 
+series  Robot Controller 
+ 
+GetPsnFbkWorld()    TsRemoteV.method 
+Acquires the current robot position (feedback) in terms of the world coordinate position. 
+ 
+Format 
+TsPointV GetPsnFbkWorld() 
+ 
+Argument 
+  None 
+ 
+Return value 
+TsPointV World coordinate position of 6-AXIS ro bot (calculated from the motor angle) 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+TsPointV, GetPsnCmdJoint(), GetPsnCmdWork(), GetPsnCmdWorld(), GetPsnFbkJoint() 
+GetPsnFbkWork() 
+ 
+PAGE 118
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 112 - 
+series  Robot Controller 
+ 
+GetStatusAll()     TsRemoteV.method 
+Acquires all the statuses of the 6-AXIS robot. 
+ 
+Format 
+TsStatusAllV  GetStatusAll() 
+ 
+Argument 
+                 N o n e  
+ 
+Return value 
+TsStatusAllV   Acquired statuses(6-AXIS) 
+  
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+TsStatusAllV , GetStatus() 
+ 
+PAGE 119
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 113 - 
+series  Robot Controller 
+ 
+GetVelocJoint()     TsRemoteV.method 
+Acquires the current robot command speed in terms of the joint angle. 
+ 
+Format 
+TsJointV GetVelocJoint() 
+ 
+Argument 
+                 N o n e  
+ 
+Return value 
+TsJointV Speed of each joint of 6-AXIS robot 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+TsJoint, GetVelocWorld() 
+ 
+PAGE 120
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 114 - 
+series  Robot Controller 
+ 
+GetVelocWorld()    TsRemoteV.method 
+Acquires the current command speed of the robot in terms of the speed of the world coordinate elements. 
+ 
+Format 
+TsPointV GetVelocWorld() 
+ 
+Argument 
+                 N o n e  
+ 
+Return value 
+TsPointV Speed of 6-AXIS robot 
+(calculated based on the X, Y, Z,A,B and C components) 
+  
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+ 
+Notice 
+ 
+ 
+See also 
+TsPointV, GetVelocJoint()  
+ 
+PAGE 121
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 115 - 
+series  Robot Controller 
+ 
+Move()       TsRemoteV.method 
+Moves the 6-AXIS robot to the specified point. 
+ 
+Format 
+Move(double x, double y, double z, double a, double b, double c, 
+ double u, doublev, ConfigV config) 
+Move(double x, double y, double z, double a, double b, double c, 
+ double u, doublev, ConfigVpart config) 
+Move(TsPointV point) 
+Move(TsPointV point,double px, double py, double pz, 
+ double pa, double pb, double pc, double pu, double pv) 
+Move(TsPointV point,TsPointV offset) 
+Move(string pointName) 
+Move(string pointName,double px, double py, double pz, 
+double pa, double pb, double pc, double pu, double pv) 
+Move(string pointName,TsPointV offset) 
+ 
+Argument 
+double x X coordinate target point 
+double y Y coordinate target point 
+double z Z coordinate target point 
+double a A coordinate target point 
+double b B coordinate target point 
+double c C coordinate target point 
+double u U coordinate target point 
+double v V coordinate target point 
+ConfigV config configuration(enum) 
+ConfigVpart config configuration(class) 
+TsPointV point   Target point 
+double px Offset value to be added to  the X coordinate target point 
+double py Offset value to be added to the Y coordinate target point 
+double pz Offset value to be added to the Z coordinate target point 
+double pa Offset value to be added to the A coordinate target point 
+double pb Offset value to be added to  the B coordinate target point 
+double pc Offset value to be added to  the C coordinate target point 
+double pu Offset value to be added to the U coordinate target point 
+double pv Offset value to be added to  the V coordinate target point 
+TsPointV offset   Offset value to be added to the target point 
+string pointName   Name of the point that is r egistered in the selected program 
+ 
+ 
+Return value 
+                 N o n e  
+ 
+Exceptions 
+MoveStop  STOP signal during the Move command  
+MoveBreak  BREAK signal during the Move command  
+MoveTimeout  Move command execution timed out  
+CannotDoMove  Move command can not be ex ecuted, because of watch dog not running  
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter  
+ 
+Notice 
+Move() cannot be executed unless monitoring is performed by the WatchDogStart() method. 
+To detect BREAK or STOP (stopping the operation) during execution of Move(), perform exception 
+processing by using try-catch. 
+ 
+See also 
+WatchDogStart(), ResetMove(), Movea(), Movej(), Moves(), TsPoint 
+ 
+PAGE 122
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 116 - 
+series  Robot Controller 
+ 
+M o v e a ( )        TsRemoteV.method 
+Moves the joint axis of the 6-AXIS robot to the specified position. 
+ 
+Format 
+void Movea(int joint_no,double position) 
+ 
+Argument 
+int joint_no  Joint number(1-8) to be moved 
+double position Target position (angle) 
+ 
+Return value 
+                 N o n e  
+ 
+Exceptions 
+MoveStop  STOP signal during the Move command  
+MoveBreak  BREAK signal during the Move command  
+MoveTimeout  Move command execution timed out  
+CannotDoMove  Move command can not be ex ecuted, because of watch dog not running  
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter  
+ 
+Notice 
+Move() cannot be executed unless monitoring is performed by the WatchDogStart() method. 
+To detect BREAK or STOP (stopping the operation) during execution of Move(), perform exception 
+processing by using try-catch. 
+ 
+See also 
+WatchDogStart(), ResetMove(), Movea(), Movej(), Moves() 
+ 
+PAGE 123
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 117 - 
+series  Robot Controller 
+ 
+M o v e s ( )        TsRemoteV.method 
+Moves the 6-AXIS robot to the specified point with linear interpolation. 
+ 
+Format 
+void Moves(double x, double y, double z, double a, double b, double c, 
+ double u, doublev, ConfigV config) 
+void Moves(double x, double y, double z, double a, double b, double c, 
+ double u, doublev, ConfigVpart config) 
+ 
+void Moves(TsPointV point) 
+void Moves(TsPointV point,double px, double py, double pz, 
+ double pa, double pb, double pc, double pu, double pv) 
+void Moves(TsPointV point,TsPointV offset) 
+void Moves(string pointName) 
+void Moves(string pointName,double px, double py, double pz 
+ double pa, double pb, double pc, double pu, double pv) 
+void Moves(string pointName,TsPointV offset) 
+ 
+Argument 
+double x X coordinate target point 
+double y Y coordinate target point 
+double z Z coordinate target point 
+double a A coordinate target point 
+double b B coordinate target point 
+double c C coordinate target point 
+double u U coordinate target point 
+double v V coordinate target point 
+ConfigV config configuration(enum) 
+ConfigVpart config configuration(class) 
+TsPointV point   Target point 
+double px Offset value to be added to  the X coordinate target point 
+double py Offset value to be added to the Y coordinate target point 
+double pz Offset value to be added to the Z coordinate target point 
+double pa Offset value to be added to the A coordinate target point 
+double pb Offset value to be added to  the B coordinate target point 
+double pc Offset value to be added to  the C coordinate target point 
+double pu Offset value to be added to the U coordinate target point 
+double pv Offset value to be added to  the V coordinate target point 
+TsPointV offset   Offset value to be added to the target point 
+string pointName   Name of the point that is r egistered in the selected program 
+ 
+Return value 
+                N o n e  
+ 
+Exceptions 
+MoveStop  STOP signal during the Move command  
+MoveBreak  BREAK signal during the Move command  
+MoveTimeout  Move command execution timed out  
+CannotDoMove  Move command can not be ex ecuted, because of watch dog not running  
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter  
+ 
+Notice 
+Move() cannot be executed unless monitoring is performed by the WatchDogStart() method. 
+To detect BREAK or STOP (stopping the operation) during execution of Move(), perform exception 
+processing by using try-catch. 
+ 
+See also 
+WatchDogStart(), Move(), ResetMove(), Movea(), Movej(), TsPointV 
+ 
+PAGE 124
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 118 - 
+series  Robot Controller 
+ 
+S e t G a i n ( )       TsRemoteV.method 
+Sets the gain of each axis of the robot (servo control) to ON/OFF. 
+ 
+Format 
+void SetGain(int j1,int j2, int j3, int j4, int j5, int j6, int j7, int j8) 
+ 
+Argument 
+Int j1 Servo gain of the 1 st joint (0:OFF 1:ON) 
+Int j2 Servo gain of the 2 nd joint (0:OFF 1:ON) 
+Int j3 Servo gain of the 3 rd joint (0:OFF 1:ON) 
+Int j4 Servo gain of the 4 th joint (0:OFF 1:ON) 
+Int j5 Servo gain of the 5 th joint (0:OFF 1:ON) 
+Int j6 Servo gain of the 6 th joint (0:OFF 1:ON) 
+Int j7 Servo gain of the 7 th joint (0:OFF 1:ON) 
+Int j8 Servo gain of the 8 th joint (0:OFF 1:ON) 
+ 
+ 
+Return value 
+ None 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter  
+ 
+Notice 
+SetGain() changes the gain at the following operation (Move*()). 
+ 
+See also 
+ 
+PAGE 125
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 119 - 
+series  Robot Controller 
+ 
+SetGlobalPAYLOAD()   TsRemoteV.method 
+Sets the value of the program load type global variable of the program that is currently selected. 
+ 
+Format 
+SetGlobalPYLOAD(string name,int restore,double m, 
+double Gx, double Gy, double Gz, double Lx, double Ly, double Lz) 
+SetGlobalPYLOAD(string name,int restore,TsPayloadV  payload) 
+ 
+Argument 
+string name Name of the global variable 
+ When specifying an array variable, include the element number also. 
+ 
+Int restore Set whether RESTORE (change of the initial value of the program file) is 
+performed or not. 
+  0: Not performed 
+   1: Performed 
+double m Weight to be set(Kg) 
+double M Weight (kg) 
+double Lx Offset of the center of gravity (mm) 
+double Ly Offset of the center of gravity (mm) 
+double Lz Offset of the center of gravity (mm) 
+double Gx Work size(mm) 
+double Gy Work size(mm) 
+double Gz Work size(mm) 
+TsPayloadV  payload Specify the set value with TsPayLoadV. 
+ 
+ 
+Return value 
+                 N o n e  
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller   
+ 
+Notice 
+ 
+ 
+See also 
+SetGlobalINT(), SetGlobalPoint(), GetGlobalPAYLOAD(), SetGlobalREAL(), SetGlobalTRANS() 
+ 
+PAGE 126
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 120 - 
+series  Robot Controller 
+ 
+SetGlobalPOINT()    TsRemoteV.method 
+Sets the value of the program point type global variable of the program that is currently selected. 
+ 
+Format 
+void SetGlobalPoint(string name,int restore,double x, double y, double z, 
+double a, double b, double c, double u, double v, ConfigVpart config) 
+voidSetGlobalPoint(string name,int restore,TsPointV point) 
+ 
+Argument 
+string name Name of the global variable 
+ When specifying an array variable, include the element number also. 
+Int restore Set whether RESTORE (change of the initial value of the program file) is 
+performed or not. 
+  0: Not performed 
+   1: Performed 
+double x Value set for X 
+double y Value set for Y 
+double z Value set for Z 
+double a Value set for A 
+double b Value set for B 
+double c Value set for C 
+double u Value set for U 
+double v Value set for V 
+ConfigVpart config Value set for ConfigVpart class 
+TsPointV point   Specify the set value with TsPointV. 
+ 
+Return value 
+                 N o n e  
+ 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller   
+ 
+Notice 
+ 
+ 
+See also 
+TsPointV, SetGlobalINT(), GetGlobalPoint(), SetGlobalPAYLOAD(), SetGlobalREAL() 
+SetGlobalTRANS() 
+ 
+PAGE 127
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 121 - 
+series  Robot Controller 
+ 
+SetGlobalTRANS()    TsRemoteV.method 
+Sets the value of the coordinate type global variable of the program that is currently selected. 
+ 
+Format 
+void SetGlobalTRANS(string name,int restore,double x,double y,double z, 
+double a , double b ,double c) 
+void SetGlobalTRANS(string name,int restore,TsTransV trans) 
+ 
+Argument 
+string name Name of the coordinate type global variable 
+ When specifying an array variable, include the element number also. 
+Int restore Set whether RESTORE (change of the initial value of the program file) is 
+performed or not. 
+  0: Not performed 
+   1: Performed 
+double x Value set for X 
+double y Value set for Y 
+double z Value set for Z 
+double a Value set for A 
+double b Value set for B 
+double c Value set for C 
+TsTransV trans   Specify the set value with TsTrans. 
+ 
+ 
+Return value 
+                 N o n e  
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller   
+ 
+Notice 
+ 
+ 
+See also 
+SetGlobalINT(), SetGlobalPoint(), SetGlobalPAYLOAD(), SetGlobalREAL(), GetGlobalTRANS() 
+ 
+ 
+ 
+PAGE 128
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 122 - 
+series  Robot Controller 
+ 
+SetPayload()     TsRemoteV.method 
+Sets the load data of the 6-AXIS robot. 
+ 
+Format 
+void SetPayload (double m,double Gx, double Gy, double Gz, 
+ double Lx, double Ly, double Lz) 
+void SetPayload(TsPayloadV  payload) 
+ 
+Argument 
+double M Weight (kg) 
+double Lx Offset of the center of gravity (mm) 
+double Ly Offset of the center of gravity (mm) 
+double Lz Offset of the center of gravity (mm) 
+double Gx Work size(mm) 
+double Gy Work size(mm) 
+double Gz Work size(mm) 
+TsPayloadV  payload Specify the set value with TsPayLoadV 
+ 
+ 
+Return value 
+ None 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter  
+ 
+Notice 
+The load information that is set is inherited even if the master mode is changed. 
+To clear load data, specify SetPayload(0,0). 
+ 
+See also 
+ 
+ 
+ 
+ 
+ 
+ 
+PAGE 129
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 123 - 
+series  Robot Controller 
+ 
+SetTransTool()     TsRemoteV.method 
+Sets the tool coordinate. 
+ 
+Format 
+void SetTransTool(string name) *1 
+void SetTransTool(string name,double x,double y,double z, 
+double a, double b, double c) *2 
+void SetTransTool(string name,TsTransV tool) *2 
+ 
+Format 
+string name *1 Specify the name of the coordinate type variable that is registered in the 
+program file that is selected by the controller. 
+ *2  Names for the x,y,z, and c values that are set for convenience (displayed 
+in TP) 
+double x X set value 
+double y Y set value 
+double z Z set value 
+double a A set value 
+double b B set value 
+double c C set value 
+TsTransV tool Specify the set value with TsTrans. 
+ 
+Return value 
+ None 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter 
+ 
+Notice 
+The tool coordinate that is set is inherited even if the master mode is changed. 
+ 
+ 
+See also 
+ 
+ 
+ 
+PAGE 130
+TsRemoteLib.DLL MANUAL 
+ STE85409 
+- 124 - 
+series  Robot Controller 
+ 
+SetTransWork()     TsRemoteV.method 
+Sets the work coordinate. 
+ 
+Format 
+void SetTransWork(string name) *1 
+void SetTransWork(string name,double x,double y,double z, 
+double a, double b, double c) *2 
+void SetTransWork(string name,TsTransV work) *2 
+ 
+Argument 
+string name *1 Specify the name of the coordinate ty pe variable that is registered in the 
+program file that is selected by the controller. 
+ *2 Names for the x,y,z, and c values that are set for convenience (displayed 
+in TP) 
+double x X set value 
+double y Y set value 
+double z Z set value 
+double a A set value 
+double b B set value 
+double c C set value 
+TsTransV work Specify the set value with TsTrans. 
+ 
+Return value 
+ None 
+ 
+Exceptions 
+TCPNotConnect  Network is not connected  
+CommunicationError  Co mmunication Error  
+ControllerNG  Command not accepted by controller  
+IllegalParam  Illegal parameter 
+ 
+Notice 
+The work coordinate that is set is inherited even if the master mode is changed. 
+ 
+ 
+See also 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+PAGE 131
+Other ManualsLib Projects
+www.manualslib.com
+www.manualslib.de
+www.manualslib.es
+www.manualslib.fr
+www.manualslib.nl
+www.manualslib.mx
+www.manualslib.tech 30+ Languages

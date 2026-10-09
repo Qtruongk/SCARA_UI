@@ -1,0 +1,975 @@
+PAGE 0
+Manualslib.com
+ - The Global Manuals Library
+Manuals
+ 
+/ 
+Brands
+ 
+/ 
+Toshiba Manuals
+ 
+/ 
+Controller
+ 
+/ 
+TSL3000
+ 
+/ 
+Communications manual
+ 
+/ 
+PDF
+TOSHIBA TSL3000 COMMUNICATIONS MANUAL
+Quick Links
+Connections
+Com1 Port and Host Port Specifications and Settings
+Ethernet Specifications and Settings
+Reinitializing and Starting a Stopped Program
+Program Download
+Basic Operation
+Robot Operation Sequence Using External Communication
+PAGE 2
+Confirmation with a Windows Computer
+Commands
+List of Commands
+Commands and Operation Modes
+Details of Commands
+Ram Files
+User Files (Work files)
+TSPC Settings
+Robot Operation Sequence Using External Communication
+Basic Operation
+Program Download
+Reinitializing and Starting a Stopped Program
+Other ManualsLib Projects
+PAGE 5
+ 
+STE 80722 
+– b – 
+COMMUNICATION MANUAL series  Robot Controller  
+Preface 
+This manual describes serial communication and ethernet communication between the 
+robot controller and peripheral devices.  It covers such subjects as connecting 
+communication channels and setting communication modes.  It also describes 
+communication protocols, communication commands and data format, and presents 
+information on how to operate the robot with data communication and how to handle 
+communication dialogue with controller programs. 
+Before reading this manual, we ask that you first read and understand the contents of 
+the following user manuals. 
+ Operator’s Manual 
+ Robot Language Manual 
+ Interface Manual 
+This manual is divided into six (6) sections: 
+Section 1  Introduction 
+This section presents and introduction to the communication functions provided by 
+the TS3000 Series robot system. 
+Section 2  COM1 Port and HOST Port Specifications and S ettings 
+This section describes the RS-232C port hardware interfaces, communication 
+modes, and other information. 
+Section 3  Ethernet Specifications and Settings  
+This section describes the Ethernet hardware interfaces, communication modes, 
+and other information. 
+Section 4  Non- Protocol Communication 
+This section describes the protocol for communication between an external device 
+and the robot program only. 
+Section 5  Simple Protocol Communication 
+This section describes the communication protocol, commands, and robot program 
+files for communication with the host computer. 
+Section 6  Robot Operation Sequence Using External Communication 
+This section shows examples of methods for operating the robot. 
+PAGE 6
+ 
+STE 80722 
+– c – 
+COMMUNICATION MANUAL series  Robot Controller  
+Table of Contents 
+ Page 
+Section 1 Introduction ..................................................................................................  1 
+Section 2 COM1 Port and HOST Port Specifications and Settings ............................. 2 
+2.1 Connections ......................................................................................................... 2  
+2.2 Communication Specifications ............................................................................. 3  
+2.2.1 COM1 Port .................................................................................................... 3  
+2.2.2 HOST Port .................................................................................................... 4  
+2.3 Communication Parameters .................................................................................  5 
+Section 3 Ethernet Specifications and Settings ........................................................... 7 
+3.1 Connections ......................................................................................................... 7  
+3.2 Communication Specifications ............................................................................. 8  
+3.3 Communication Parameters .................................................................................  9 
+Section 4 Non-Protocol Communication .................................................................... 16 
+4.1 Communication with a Robot Language Program .............................................. 16 
+4.1.1 PRINT Command ........................................................................................  16 
+4.1.2 INPUT Command ........................................................................................  19 
+4.1.3 Clearing Communication Buffer .................................................................. 21 
+4.2 Programming Examples for Communication with a Robot Language Program . 22 
+4.2.1 Program Branching .....................................................................................  22 
+4.2.2 Correcting the Position of the Robot ........................................................... 26 
+4.3 INPUT Character String Conversion Function .................................................... 30 
+4.3.1 Converting a Character String to 0 .............................................................. 31 
+4.3.2 Converting a Character String to Any Numeric Value ................................. 32 
+Section 5 Simple Protocol Communication ................................................................ 34 
+5.1 Transmission Protocol ........................................................................................  34 
+5.2 Transmission Format ..........................................................................................  35 
+5.2.1 Text ............................................................................................................. 35 
+5.2.2 Data Section Format ...................................................................................  36 
+5.2.3 Ethernet Status Display [ETHER] ............................................................... 37 
+5.2.4 Confirmation with a Windows Computer ..................................................... 39 
+5.3 Commands ......................................................................................................... 41 
+5.3.1 List of Commands .......................................................................................  41 
+5.3.2 Commands and Operation Modes .............................................................. 46 
+5.3.3 Details of Commands ..................................................................................  50 
+5.4 Ram Files ......................................................................................................... 157 
+5.4.1 User Files (Work files) ...............................................................................  157 
+5.5 TSPC Settings ..................................................................................................  163 
+Section 6 Robot Operation Sequence Using External Communication ................... 164 
+6.1 Basic Operation ................................................................................................  164 
+6.2 Program Download ...........................................................................................  164 
+6.3 Reinitializing and Starting a Stopped Program ................................................. 164 
+PAGE 8
+ 
+STE 80722 
+– 1 – 
+COMMUNICATION MANUAL series  Robot Controller  
+Section 1 
+ 
+Introduction 
+ 
+This manual describes serial communication and ethernet  communication between the 
+robot controller and an external computer.  There are two procedures for data 
+transmission: non-protocol communication and simple protocol communication, each of 
+which can achieve the following functions. 
+ 
+Non-protocol communication 
+(1) Input variables into the program from the external device. 
+(2) Output variables or messages in the program. 
+ 
+Simple protocol communication 
+(1) Start and stop operation of the robot 
+(2) Program reset, step reset, cycle reset and output signal reset 
+(3) Servo ON/OFF 
+(4) Upload and download program files 
+(5) Erase program files 
+(6) Select programs 
+(7) Monitor the status of the robot 
+(8) Monitor for robot errors 
+ 
+The communication interface configuration is as shown below. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Fig. 1.1  Communication interface configuration 
+COM1 
+HOST 
+Ethernet  IP0 
+IP2 
+IP1 
+External device 
+HOST computer 
+External device 
+Controller side User side 
+Hub 
+HOST computer 
+External device 
+IP3 Dedicated device 
+Non-protocol communication 
+Non-protocol 
+communication 
+Non-protocol 
+communication 
+ 
+Dedicated 
+communication 
+Simple protocol 
+communication 
+Simple protocol communication 
+PAGE 9
+ 
+STE 80722 
+– 2 – 
+COMMUNICATION MANUAL series  Robot Controller  
+Cross connect cable 
+ 
+TS3000/TSL3000 External device 
+D-SUB 9-pin female D-SUB 9-pin female 
+ 1 1 
+ RXD 2 2 RXD 
+ TXD 3 3 TXD 
+ DTR 4 4 DTR 
+ FG 5 5 FG 
+ 6 6 DSR 
+ RTS 7 7 RTS 
+ CTS 8 8 CTS 
+ 9 9 
+ Frame Frame 
+Section 2 
+ 
+COM1 Port and HOST Port Specifications and Settings 
+ 
+The TS3000/TSL3000 controller has two (2) serial communication ports.  The COM1 
+port is used for non- protocol communication, being connected to external devices, and 
+the HOST port is used for protocol communication and communicates with the HOST 
+computer. 
+ 
+2.1 Connections 
+ 
+The COM1 port and HOST port should be connected, using an RS-232C cross connect 
+cable (D-SUB: 9-pin).  (For details, see the Interface Manual.)  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Fig. 2.1  Pin arrangement for cross connect cable 
+PAGE 30
+ 
+STE 80722 
+– 23 – 
+COMMUNICATION MANUAL series  Robot Controller  
+Data exchange 
+ 
+Controller External device 
+ 
+PRINT COM1, “REQ”  Execute 
+  REQ 
+INPUT COM1, N    Execute 
+ 
+(Repeat operation.) 
+PRINT COM1, END  Execute 
+  END 
+ 
+ 
+ 
+ 
+ 
+(Number of repetitions) Send 
+ 
+ 
+PAGE 32
+ 
+STE 80722 
+– 25 – 
+COMMUNICATION MANUAL series  Robot Controller  
+Data exchange 
+ 
+Controller External device 
+ 
+PRINT COM1, “STR”  Execute 
+  STR 
+INPUT COM1, K  Execute 
+ 
+ 
+(Execute specified task.) 
+ 
+Should a task number of anything 
+besides 1, 2 or 3 be received: 
+PRINT COM1, “NG”  Execute 
+  NG 
+ 
+ 
+ 
+ 
+ 
+(Task number) Send 
+PAGE 34
+ 
+STE 80722 
+– 27 – 
+COMMUNICATION MANUAL series  Robot Controller  
+Data exchange 
+ 
+Controller External device 
+ 
+PRINT COM1, “REQ”  Execute 
+ REQ 
+INPUT COM1, X, Y, Z, C, T, SUM 
+ Execute 
+ 
+ 
+ 
+PRINT COM1, “OK”  Execute 
+ OK 
+Move to position (X, Y, Z, C, T) 
+ 
+ 
+ 
+ 
+ 
+Positional data transmission 
+(<X>, <Y>, <Z>, <C>, <T>, <SUM> 
+(CR)) 
+ 
+PAGE 36
+ 
+STE 80722 
+– 29 – 
+COMMUNICATION MANUAL series  Robot Controller  
+Data exchange 
+ 
+Controller External device 
+ 
+PRINT COM1, “REQ”  Execute 
+ REQ 
+ 
+INPUT COM1, X, Y, SUM  Execute 
+ 
+ 
+ 
+ 
+PRINT COM1, “OK”  Execute 
+ OK 
+Move to position P1 + (X, Y) 
+ 
+ 
+ 
+ 
+ 
+ 
+Positional data transmission 
+(<X>, <Y>, <SUM> (CR)) 
+ 
+PAGE 37
+ 
+STE 80722 
+– 30 – 
+COMMUNICATION MANUAL series  Robot Controller  
+4.3 INPUT Character String Conversion Function 
+ 
+The INPUT command in SCOL language cannot receive a character string. If a 
+nonnumeric character string is received, 2-046 Invalid Channel error occurs. A 
+character string may be sent depending on the specification of the external device. 
+This function converts the character string received by the robot into a numeric 
+value. 
+ 
+ 
+The value of (FUNCTION 1), the 1st column in 1st row of user parameter [U25] 
+FUNCTION SELECT SWITCH is set to the following to switch the processing if a 
+nonnumeric character string is received. 
+0: Function disabled (if a nonnumeric character string is received, Invalid Channel 
+error occurs.) 
+1: A nonnumeric character string is converted to 0 if received. 
+2: A nonnumeric character string is converted to any numeric value if received. 
+ 
+Character string 
+"ABC<CR>" 
+Note: <CR> signifies the record end code (0x0D). 
+External device Robot controller 
+SCOL 
+language 
+INPUT 
+command 
+Numbe
+r 
+INPUT character string conversion 
+ 
+PAGE 38
+ 
+STE 80722 
+– 31 – 
+COMMUNICATION MANUAL series  Robot Controller  
+4.3.1 Converting a Character String to 0 
+ 
+The value of (FUNCTION 1), the 1st column in 1st row of user parameter [U25] 
+FUNCTION SELECT SWITCH is set to 1. 
+[U25] FUNCTION SELECT SWITCH 
+= 1  0  0  0  0  0  
+= 0  0  0  0  0   0 
+= 0  0  0  0  0  0  
+= 0  0  0  0  0  0  
+When the value is set to 1, a nonnumeric character string is converted to 0 if 
+received. 
+ 
+ 
+ 
+Character string 
+"ABC<CR>" 
+Note: <CR> signifies the record end code (0x0D). 
+External device 
+ 
+Robot controller 
+SCOL 
+language 
+INPUT 
+command 
+Numeric
+”0” 
+INPUT character string conversion 
+PAGE 39
+ 
+STE 80722 
+– 32 – 
+COMMUNICATION MANUAL series  Robot Controller  
+4.3.2 Converting a Character String to Any Numeric Value 
+ 
+The value of (FUNCTION 1), the 1st column in 1st row of user parameter [U25] 
+FUNCTION SELECT SWITCH is set to 2. 
+ [U25] FUNCTION SELECT SWITCH 
+= 2  0  0  0  0  0 
+= 0  0  0  0  0  0 
+= 0  0  0  0  0  0 
+= 0  0  0  0  0  0  
+When the value is set to 2, a nonnumeric character string is compared with the 
+character string in the previously created parameter file “STRING.PAR” and the 
+conversion number of the matching character string is returned if received. 
+ 
+ 
+STRING.PAR should be created in the following format. 
+           
+=  1  "▲▲▲▲▲" 
+ Conversion number (0 to 32767) 
+ Character string to be received (up to 32 characters) 
+ 
+Example of STRING.PAR: 
+= 0  "OK000"  
+= 1  "OK001"  
+= 2  "OK002"  
+ 
+= 127  "OK127"  
+The number of data rows can be specified to be up to 128. If 128 rows are 
+exceeded, data is truncated by 128 rows. 
+Character string 
+"ABC<CR>" 
+Note: <CR> signifies the record end code (0x0D).  
+External device 
+ 
+Robot controller 
+SCOL 
+language 
+INPUT 
+command 
+Numeric
+”1” 
+INPUT character string conversion 
+= 1 "ABC" 
+STRING.PAR 
+... 
+PAGE 109
+ 
+STE 80722 
+– 102 – 
+COMMUNICATION MANUAL series  Robot Controller  
+ 
+No. Name Size(byte) Description 
+1 Mode 30 
+(Variable) 
+The controller mode is shown in the following format: 
+"MODE: (mode)/(operation mode)" 
+(1) MODE : 5 byte fixed length   
+(2) (mode) : Controller modes 
+"external (sig)" : External Automatic Mode 
+ (External operation signal mode) 
+"external (rs232C)" : External Automatic Mode 
+ (RS232C mode) 
+"external (ethernet)" : External Automatic Mode  
+ (Ethernet mode) 
+"internal" : Internal Operation Mode 
+"teaching" : Test run mode 
+(3) / : 1 byte fixed length 
+(4) (operation mode) : Automatic Operation Modes 
+"step" : Step Operation Mode 
+"continuous" : Continuous Operation Mode 
+"cycle" : Cycle Operation Mode 
+"segment" : Segment operation mode 
+2 File 
+name 
+17 
+(Variable) 
+File name presently selected is shown in the following 
+format: 
+"FILE : (file name)" 
+(1) FILE : 5 byte fixed length 
+(2) (file name) 
+ 
+: Name of the file that has been  
+ selected. 
+3 Speed 
+override 
+11 
+(Variable) 
+The speed override is shown in the following format: 
+"OVRD : (override ) %" 
+(1) OVRD : 5-byte fixed length 
+(2) (override) : Percentage for the speed override. 
+(3) % : 1 byte fixed length 
+PAGE 116
+ 
+STE 80722 
+– 109 – 
+COMMUNICATION MANUAL series  Robot Controller  
+ 
+No. Name Size (byte) Description 
+5 Extension input 1 2  
+    Bit Line No. Signal name  
+    0 Din101 Extension input  
+    1 Din102 Extension input  
+    2 Din103 Extension input  
+    3 Din104 Extension input  
+    4 Din105 Extension input  
+    5 Din106 Extension input  
+    6 Din107 Extension input  
+    7 Din108 Extension input  
+    8 Din109 Extension input  
+    9 Din110 Extension input  
+    10 Din111 Extension input  
+    11 Din112 Extension input  
+    12 Din113 Extension input  
+    13 Din114 Extension input  
+    14 Din115 Extension input  
+    15 Din116 Extension input  
+        
+6 Extension input 2 2  
+    Bit Line No. Signal name  
+    0 Din117 Extension input  
+    1 Din118 Extension input  
+    2 Din119 Extension input  
+    3 Din120 Extension input  
+    4 Din121 Extension input  
+    5 Din122 Extension input  
+    6 Din123 Extension input  
+    7 Din124 Extension input  
+    8 Din125 Extension input  
+    9 Din126 Extension input  
+    10 Din127 Extension input  
+    11 Din128 Extension input  
+    12 Din129 Extension input  
+    13 Din130 Extension input  
+    14 Din131 Extension input  
+    15 Din132 Extension input  
+        
+PAGE 117
+ 
+STE 80722 
+– 110 – 
+COMMUNICATION MANUAL series  Robot Controller  
+ 
+No. Name Size (byte) Description 
+7 Extension input 3 2  
+    Bit Line No. Signal name  
+    0 Din133 Extension input  
+    1 Din134 Extension input  
+    2 Din135 Extension input  
+    3 Din136 Extension input  
+    4 Din137 Extension input  
+    5 Din138 Extension input  
+    6 Din139 Extension input  
+    7 Din140 Extension input  
+    8 Din141 Extension input  
+    9 Din142 Extension input  
+    10 Din143 Extension input  
+    11 Din144 Extension input  
+    12 Din145 Extension input  
+    13 Din146 Extension input  
+    14 Din147 Extension input  
+    15 Din148 Extension input  
+        
+8 Extension input 4 2  
+    Bit Line No. Signal name  
+    0 Din149 Extension input  
+    1 Din150 Extension input  
+    2 Din151 Extension input  
+    3 Din152 Extension input  
+    4 Din153 Extension input  
+    5 Din154 Extension input  
+    6 Din155 Extension input  
+    7 Din156 Extension input  
+    8 Din157 Extension input  
+    9 Din158 Extension input  
+    10 Din159 Extension input  
+    11 Din160 Extension input  
+    12 Din161 Extension input  
+    13 Din162 Extension input  
+    14 Din163 Extension input  
+    15 Din164 Extension input  
+        
+PAGE 124
+ 
+STE 80722 
+– 117 – 
+COMMUNICATION MANUAL series  Robot Controller  
+ 
+No. Name Size (byte) Description 
+21 Extension output 1 2  
+    Bit Line No. Signal name  
+    0 Dout101 Extension output  
+    1 Dout102 Extension output  
+    2 Dout103 Extension output  
+    3 Dout104 Extension output  
+    4 Dout105 Extension output  
+    5 Dout106 Extension output  
+    6 Dout107 Extension output  
+    7 Dout108 Extension output  
+    8 Dout109 Extension output  
+    9 Dout110 Extension output  
+    10 Dout111 Extension output  
+    11 Dout112 Extension output  
+    12 Dout113 Extension output  
+    13 Dout114 Extension output  
+    14 Dout115 Extension output  
+    15 Dout116 Extension output  
+        
+22 Extension output 2 2  
+    Bit Line No. Signal name  
+    0 Dout117 Extension output  
+    1 Dout118 Extension output  
+    2 Dout119 Extension output  
+    3 Dout120 Extension output  
+    4 Dout121 Extension output  
+    5 Dout122 Extension output  
+    6 Dout123 Extension output  
+    7 Dout124 Extension output  
+    8 Dout125 Extension output  
+    9 Dout126 Extension output  
+    10 Dout127 Extension output  
+    11 Dout128 Extension output  
+    12 Dout129 Extension output  
+    13 Dout130 Extension output  
+    14 Dout131 Extension output  
+    15 Dout132 Extension output  
+        
+PAGE 125
+ 
+STE 80722 
+– 118 – 
+COMMUNICATION MANUAL series  Robot Controller  
+ 
+No. Name Size (byte) Description 
+23 Extension output 3 2  
+    Bit Line No. Signal name  
+    0 Dout133 Extension output  
+    1 Dout134 Extension output  
+    2 Dout135 Extension output  
+    3 Dout136 Extension output  
+    4 Dout137 Extension output  
+    5 Dout138 Extension output  
+    6 Dout139 Extension output  
+    7 Dout140 Extension output  
+    8 Dout141 Extension output  
+    9 Dout142 Extension output  
+    10 Dout143 Extension output  
+    11 Dout144 Extension output  
+    12 Dout145 Extension output  
+    13 Dout146 Extension output  
+    14 Dout147 Extension output  
+    15 Dout148 Extension output  
+        
+24 Extension output 4 2  
+    Bit Line No. Signal name  
+    0 Dout149 Extension output  
+    1 Dout150 Extension output  
+    2 Dout151 Extension output  
+    3 Dout152 Extension output  
+    4 Dout153 Extension output  
+    5 Dout154 Extension output  
+    6 Dout155 Extension output  
+    7 Dout156 Extension output  
+    8 Dout157 Extension output  
+    9 Dout158 Extension output  
+    10 Dout159 Extension output  
+    11 Dout160 Extension output  
+    12 Dout161 Extension output  
+    13 Dout162 Extension output  
+    14 Dout163 Extension output  
+    15 Dout164 Extension output  
+        
+PAGE 141
+ 
+STE 80722 
+– 134 – 
+COMMUNICATION MANUAL series  Robot Controller  
+ 
+No. Name Size (byte) Description 
+5 Extension input 1 2  
+    Bit Line No. Signal name  
+    0 Din101 Extension input  
+    1 Din102 Extension input  
+    2 Din103 Extension input  
+    3 Din104 Extension input  
+    4 Din105 Extension input  
+    5 Din106 Extension input  
+    6 Din107 Extension input  
+    7 Din108 Extension input  
+    8 Din109 Extension input  
+    9 Din110 Extension input  
+    10 Din111 Extension input  
+    11 Din112 Extension input  
+    12 Din113 Extension input  
+    13 Din114 Extension input  
+    14 Din115 Extension input  
+    15 Din116 Extension input  
+        
+6 Extension input 2 2  
+    Bit Line No. Signal name  
+    0 Din117 Extension input  
+    1 Din118 Extension input  
+    2 Din119 Extension input  
+    3 Din120 Extension input  
+    4 Din121 Extension input  
+    5 Din122 Extension input  
+    6 Din123 Extension input  
+    7 Din124 Extension input  
+    8 Din125 Extension input  
+    9 Din126 Extension input  
+    10 Din127 Extension input  
+    11 Din128 Extension input  
+    12 Din129 Extension input  
+    13 Din130 Extension input  
+    14 Din131 Extension input  
+    15 Din132 Extension input  
+        
+PAGE 142
+ 
+STE 80722 
+– 135 – 
+COMMUNICATION MANUAL series  Robot Controller  
+ 
+No. Name Size (byte) Description 
+7 Extension input 3 2  
+    Bit Line No. Signal name  
+    0 Din133 Extension input  
+    1 Din134 Extension input  
+    2 Din135 Extension input  
+    3 Din136 Extension input  
+    4 Din137 Extension input  
+    5 Din138 Extension input  
+    6 Din139 Extension input  
+    7 Din140 Extension input  
+    8 Din141 Extension input  
+    9 Din142 Extension input  
+    10 Din143 Extension input  
+    11 Din144 Extension input  
+    12 Din145 Extension input  
+    13 Din146 Extension input  
+    14 Din147 Extension input  
+    15 Din148 Extension input  
+        
+8 Extension input 4 2  
+    Bit Line No. Signal name  
+    0 Din149 Extension input  
+    1 Din150 Extension input  
+    2 Din151 Extension input  
+    3 Din152 Extension input  
+    4 Din153 Extension input  
+    5 Din154 Extension input  
+    6 Din155 Extension input  
+    7 Din156 Extension input  
+    8 Din157 Extension input  
+    9 Din158 Extension input  
+    10 Din159 Extension input  
+    11 Din160 Extension input  
+    12 Din161 Extension input  
+    13 Din162 Extension input  
+    14 Din163 Extension input  
+    15 Din164 Extension input  
+        
+PAGE 151
+ 
+STE 80722 
+– 144 – 
+COMMUNICATION MANUAL series  Robot Controller  
+ 
+No. Name Size (byte) Description 
+25 Extension output 1 2  
+    Bit Line No. Signal name  
+    0 Dout101 Extension output  
+    1 Dout102 Extension output  
+    2 Dout103 Extension output  
+    3 Dout104 Extension output  
+    4 Dout105 Extension output  
+    5 Dout106 Extension output  
+    6 Dout107 Extension output  
+    7 Dout108 Extension output  
+    8 Dout109 Extension output  
+    9 Dout110 Extension output  
+    10 Dout111 Extension output  
+    11 Dout112 Extension output  
+    12 Dout113 Extension output  
+    13 Dout114 Extension output  
+    14 Dout115 Extension output  
+    15 Dout116 Extension output  
+        
+26 Extension output 2 2  
+    Bit Line No. Signal name  
+    0 Dout117 Extension output  
+    1 Dout118 Extension output  
+    2 Dout119 Extension output  
+    3 Dout120 Extension output  
+    4 Dout121 Extension output  
+    5 Dout122 Extension output  
+    6 Dout123 Extension output  
+    7 Dout124 Extension output  
+    8 Dout125 Extension output  
+    9 Dout126 Extension output  
+    10 Dout127 Extension output  
+    11 Dout128 Extension output  
+    12 Dout129 Extension output  
+    13 Dout130 Extension output  
+    14 Dout131 Extension output  
+    15 Dout132 Extension output  
+        
+PAGE 152
+ 
+STE 80722 
+– 145 – 
+COMMUNICATION MANUAL series  Robot Controller  
+ 
+No. Name Size (byte) Description 
+27 Extension output 3 2  
+    Bit Line No. Signal name  
+    0 Dout133 Extension output  
+    1 Dout134 Extension output  
+    2 Dout135 Extension output  
+    3 Dout136 Extension output  
+    4 Dout137 Extension output  
+    5 Dout138 Extension output  
+    6 Dout139 Extension output  
+    7 Dout140 Extension output  
+    8 Dout141 Extension output  
+    9 Dout142 Extension output  
+    10 Dout143 Extension output  
+    11 Dout144 Extension output  
+    12 Dout145 Extension output  
+    13 Dout146 Extension output  
+    14 Dout147 Extension output  
+    15 Dout148 Extension output  
+        
+28 Extension output 4 2  
+    Bit Line No. Signal name  
+    0 Dout149 Extension output  
+    1 Dout150 Extension output  
+    2 Dout151 Extension output  
+    3 Dout152 Extension output  
+    4 Dout153 Extension output  
+    5 Dout154 Extension output  
+    6 Dout155 Extension output  
+    7 Dout156 Extension output  
+    8 Dout157 Extension output  
+    9 Dout158 Extension output  
+    10 Dout159 Extension output  
+    11 Dout160 Extension output  
+    12 Dout161 Extension output  
+    13 Dout162 Extension output  
+    14 Dout163 Extension output  
+    15 Dout164 Extension output  
+        
+PAGE 171
+ 
+STE 80722 
+– 164 – 
+COMMUNICATION MANUAL series  Robot Controller  
+Section 6 
+ 
+Robot Operation Sequence Using External Communication 
+ 
+Operating procedures for the robot in the External Control Mode are basically the same 
+as those in the Internal Control Mode. 
+ 
+6.1 Basic Operation 
+ 
+Figure 6.1 presents a flow sequence in which a certain block is selected and executed 
+repeatedly. 
+ 
+6.2 Program Download 
+ 
+Figure 6.2 presents a flow sequence in which a program is downloaded at the 
+completion of each cycle and it is executed. 
+ 
+6.3 Reinitializing and Starting a Stopped Program 
+ 
+Figure 6.3 presents a flow sequence which reinitializes and starts a program which has 
+been stopped. 
+ 
+PAGE 172
+ 
+STE 80722 
+– 165 – 
+COMMUNICATION MANUAL series  Robot Controller  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Fig. 6.1  Basic operation sequence 
+Operation 
+Status check 
+Perform 
+necessary 
+operations. 
+Ready? 
+Abnormal completion 
+N 
+Y 
+Manually turn on the 
+controller power and servo 
+power. 
+; External control mode with 
+servo ON and without 
+errors 
+Program selection 
+System check 
+Robot check 
+OK? 
+N 
+Y 
+OK? 
+Start 
+N 
+Y (During operation) 
+Fault? Y 
+N 
+N 
+Y 
+Y 
+N 
+Cycle finish? ; Stops automatically upon 
+cycle completion. 
+Continue 
+operation? 
+Servo OFF 
+Completion 
