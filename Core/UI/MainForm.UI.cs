@@ -34,8 +34,10 @@ namespace Test_1.UI
         {
             // Register paint handlers
             panelHeader.Paint += panelHeader_Paint;
-            panelStatus.Paint += panelStatus_Paint;this.BackColor = Color.FromArgb(245, 246, 250);
+            panelStatus.Paint += panelStatus_Paint;
+            this.BackColor = Color.FromArgb(245, 246, 250);
             this.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
+            this.AutoScaleMode = AutoScaleMode.None;
 
             // ==========================================
             // PROJECT INFORMATION
