@@ -44,6 +44,7 @@ namespace Test_1.UI
             // PROJECT INFORMATION
             // ==========================================
             string projAuthor = "Tran Quang Truong";
+            string projCoAuthor = "Luong Hoang Long";
             string projDate = "10/07/2026";
             string projName = "Scara Robot";
             string projTarget = "TSL3000";
@@ -171,8 +172,8 @@ namespace Test_1.UI
             Label lblProjTitle = new Label { Text = "PROJECT INFO", Font = new Font("Segoe UI", 9F, FontStyle.Bold), ForeColor = Color.FromArgb(150, 150, 150), AutoSize = true, Location = new Point(15, 15) };
             pnlProjInfo.Controls.Add(lblProjTitle);
 
-            string[] infoLabels = { "Author:", "Create Date:", "Project Name:", "Target Devices:", "Tool Versions:", "Description:", "Comments:" };
-            string[] infoValues = { projAuthor, projDate, projName, projTarget, projToolVers, projDesc, projComments };
+            string[] infoLabels = { "Author:", "", "Create Date:", "Project Name:", "Target Devices:", "Tool Versions:", "Description:", "Comments:" };
+            string[] infoValues = { projAuthor, projCoAuthor, projDate, projName, projTarget, projToolVers, projDesc, projComments };
             
             for (int i = 0; i < infoLabels.Length; i++)
             {
