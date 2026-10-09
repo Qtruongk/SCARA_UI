@@ -263,61 +263,7 @@ namespace Test_1.UI
                 AutoScroll = true
             };
             
-            // Helper to create cards
-            Func<string, Size, Panel> CreateCard = (title, size) => {
-                Panel card = new Panel { BackColor = lightBg, Margin = new Padding(10), Size = size };
-                card.Paint += (s, e) => { e.Graphics.DrawRectangle(new Pen(borderColor, 1), 0, 0, card.Width-1, card.Height-1); };
-                Label lbl = new Label { Text = title, Font = new Font("Segoe UI", 10F, FontStyle.Bold), ForeColor = darkText, AutoSize = true, Location = new Point(20, 15) };
-                card.Controls.Add(lbl);
-                return card;
-            };
 
-            // Helper to create label-value pairs
-            Action<Panel, string, string, int, int> AddParam = (parent, labelText, valueText, x, y) => {
-                Label lblParamTitle = new Label { Text = labelText, Font = new Font("Segoe UI", 9F, FontStyle.Bold), ForeColor = darkText, AutoSize = true, Location = new Point(x, y+3) };
-                TextBox txtValue = new TextBox { Text = valueText, Font = new Font("Consolas", 10F), ForeColor = darkText, BackColor = Color.FromArgb(250, 250, 250), BorderStyle = BorderStyle.FixedSingle, Location = new Point(x + 70, y), Size = new Size(70, 25), ReadOnly = true, TextAlign = HorizontalAlignment.Right };
-                parent.Controls.Add(lblParamTitle);
-                parent.Controls.Add(txtValue);
-                paramBoxes[labelText] = txtValue;
-            };
-
-            // Card: Theta
-            Panel cardTheta = CreateCard("THETA (°)", new Size(200, 310));
-            for (int i=1; i<=6; i++) AddParam(cardTheta, "Theta " + i + ":", "0.0", 20, 50 + (i-1)*40);
-            workspace.Controls.Add(cardTheta);
-
-            // Card: Speed
-            Panel cardSpeed = CreateCard("SPEED (°/s)", new Size(200, 310));
-            for (int i=1; i<=6; i++) AddParam(cardSpeed, "Speed " + i + ":", "0.0", 20, 50 + (i-1)*40);
-            workspace.Controls.Add(cardSpeed);
-
-            // Column 3 for Matrix and Acc/Dec
-            FlowLayoutPanel col3 = new FlowLayoutPanel { Size = new Size(320, 310), Margin = new Padding(0), FlowDirection = FlowDirection.TopDown };
-
-            // Card: Matrix
-            Panel cardMatrix = CreateCard("EE ORIENTATION MATRIX", new Size(300, 190));
-            for (int r=0; r<3; r++) {
-                for (int c=0; c<3; c++) {
-                    TextBox txtVal = new TextBox { Text = "0.00", Font = new Font("Consolas", 10F), ForeColor = darkText, BackColor = Color.FromArgb(250, 250, 250), BorderStyle = BorderStyle.FixedSingle, Location = new Point(20 + c*85, 55 + r*40), Size = new Size(70, 25), ReadOnly = true, TextAlign = HorizontalAlignment.Right };
-                    cardMatrix.Controls.Add(txtVal);
-                }
-            }
-            col3.Controls.Add(cardMatrix);
-
-            // Card: Acc & Dec
-            Panel cardAcc = CreateCard("ACC & DEC (ms)", new Size(300, 100));
-            AddParam(cardAcc, "Acc:", "80", 20, 55);
-            AddParam(cardAcc, "Dec:", "80", 160, 55);
-            col3.Controls.Add(cardAcc);
-
-            workspace.Controls.Add(col3);
-
-            // Card: Position (full width of the 3 columns)
-            Panel cardPos = CreateCard("POSITION (mm)", new Size(740, 100));
-            AddParam(cardPos, "EEx:", "0.0", 50, 50);
-            AddParam(cardPos, "EEy:", "0.0", 280, 50);
-            AddParam(cardPos, "EEz:", "0.0", 510, 50);
-            workspace.Controls.Add(cardPos);
 
             // Guide Key Workspace
             Panel workspaceGuide = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(245, 246, 250), Padding = new Padding(20), Visible = false };
