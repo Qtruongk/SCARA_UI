@@ -5,7 +5,7 @@
 
 ---
 
-## Tiến độ Phase 1
+## Phase 1
 
 | STT | Hạng mục công việc | Mô tả chi tiết | Trạng thái |
 | :---: | :--- | :--- | :---: |
@@ -21,7 +21,7 @@
 
 ---
 
-## Kế hoạch & Điều kiện tiên quyết Phase 2 (Hardware Prerequisites)
+## Phase 2
 
 Quá trình triển khai thử nghiệm thực tế cho chu trình gắp/đặt Wafer (Pick & Place) tuân theo trình tự phụ thuộc phần cứng như sau:
 
