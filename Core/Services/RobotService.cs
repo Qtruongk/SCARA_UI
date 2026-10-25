@@ -521,7 +521,8 @@ namespace Test_1.Services
             try
             {
                 _robot.ProgramStop();
-                _logger.Log("STOP requested.");
+                try { _robot.ProgramBreak(); } catch { }
+                _logger.Log("STOP requested. Robot motion halted.");
             }
             catch (Exception ex)
             {

@@ -9,18 +9,21 @@ Test_1/
 ├── Core/                          # Main Application logic & UI
 │   ├── Models/                    # Data structures & State
 │   │   ├── RobotPositionData.cs   # DTO for Joint and World coordinates
-│   │   └── RobotState.cs          # Hardware state (IsConnected, ServoOn, Alarms)
+│   │   ├── RobotState.cs          # Hardware state (IsConnected, ServoOn, Alarms)
+│   │   └── CameraCalibrationConfig.cs # DTO for Camera Intrinsics and Hand-Eye matrices
 │   │
 │   ├── Services/                  # Business logic & hardware I/O
 │   │   ├── LoggingService.cs      # Centralized Pub/Sub logger
 │   │   ├── MotionService.cs       # 7-phase S-Curve trajectory math (pure logic)
-│   │   └── RobotService.cs        # Robot TCP comms, Connect/Disconnect, Watchdog loop
+│   │   ├── RobotService.cs        # Robot TCP comms, Connect/Disconnect, Watchdog loop
+│   │   └── CameraTransformService.cs # Coordinate conversions (Pixel <-> Robot Base), Ray-Plane math
 │   │
 │   ├── UI/                        # Presentation layer (Listen to Services, no direct I/O)
 │   │   ├── MainForm.cs            # Event handlers and UI state updates
 │   │   ├── MainForm.Designer.cs   # Auto-generated VS designer code
 │   │   ├── MainForm.UI.cs         # Programmatic UI setup (InitializeModernUI)
 │   │   ├── MainForm.DigitalTwin.cs # Single-flight background feedback polling + lifecycle
+│   │   ├── MainForm.Camera.cs     # Camera Vision workspace, coordinate picker & tolerance checks
 │   │   ├── ScaraDigitalTwinView.cs # WPF canvas, THL300 transforms, axis labels and actual WORLD/joint readouts
 │   │   ├── RobotCoordinateSystem.cs # Frozen XYZ axes and tick marks in mm
 │   │   ├── RobotGroundGrid.cs     # Full viewport open XY grid, projected with the camera
@@ -38,7 +41,9 @@ Test_1/
 │
 ├── Program.cs                     # Entrypoint: Application.Run(new MainForm())
 ├── Assets/THL300/                 # Original IGES, embedded mesh and provenance
-├── Tools/THL300/                  # Reproducible CAD conversion + integrity checks
+├── Tools/
+│   ├── THL300/                    # Reproducible CAD conversion + integrity checks
+│   └── CameraCalibration/         # Hand-Eye solvers (Kabsch, Park-Martin), data collection & live verification
 └── Test_1.csproj                  # MSBuild project config & build targets
 ```
 
@@ -53,5 +58,6 @@ Test_1/
 | **Need to add a new UI control (TextBox, Chart, etc.)** | `MainForm.UI.cs`, `MainForm.cs` |
 | **3D twin is stale, frozen, or receives an old connection sample** | `MainForm.DigitalTwin.cs`, `RobotService.cs` |
 | **3D geometry, joint direction/zero, camera, or calibration is wrong** | `ScaraDigitalTwinView.cs`, `Thl300CadModel.cs`, `Assets/THL300/THL300.metadata.json` |
+| **Camera coordinates don't match robot, error > 1mm, Hand-Eye calibration** | `CameraTransformService.cs`, `MainForm.Camera.cs`, `Tools/CameraCalibration/hand_eye_solver.py` |
 | **Log messages are missing or format needs change** | `LoggingService.cs` |
 | **Adding a new data field to the robot state (e.g. Temp)** | `RobotState.cs`, `RobotService.cs` |

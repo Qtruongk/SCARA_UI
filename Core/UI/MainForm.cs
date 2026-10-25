@@ -13,6 +13,7 @@ namespace Test_1.UI
         private readonly RobotService _robotService;
         private readonly LoggingService _logger;
         private readonly MotionService _motionService;
+        private readonly CameraTransformService _cameraService;
         private bool _connectionChangePending;
         private bool _statusCommandPending;
 
@@ -30,6 +31,8 @@ namespace Test_1.UI
             _motionService = new MotionService();
             _motionService.OnDemoStep += MotionService_OnDemoStep;
             _motionService.OnDemoFinished += MotionService_OnDemoFinished;
+
+            _cameraService = new CameraTransformService(_logger);
 
             InitializeModernUI();
             
@@ -64,12 +67,12 @@ namespace Test_1.UI
             UpdateDigitalTwinConnection(state.IsConnected && !_connectionChangePending);
             btnConnect.Enabled = !_connectionChangePending && !_statusCommandPending;
 
-            Color brandOrange = Color.FromArgb(232, 93, 4);
-            Color dangerRed = Color.FromArgb(220, 53, 69);
-            Color successGreen = Color.FromArgb(40, 167, 69);
-            Color lightGrayBg = Color.FromArgb(240, 240, 240);
-            Color textDark = Color.FromArgb(40, 40, 40);
-            Color textMuted = Color.FromArgb(120, 120, 120);
+            Color primaryColor = Color.FromArgb(52, 71, 103);
+            Color dangerRed = Color.FromArgb(200, 35, 51);
+            Color successGreen = Color.FromArgb(46, 125, 50);
+            Color lightGrayBg = Color.FromArgb(240, 242, 245);
+            Color textDark = Color.FromArgb(33, 37, 41);
+            Color textMuted = Color.FromArgb(108, 117, 125);
 
             if (state.IsConnected)
             {
@@ -88,13 +91,13 @@ namespace Test_1.UI
                 btnServoOff.BackColor = !state.IsServoOn ? dangerRed : lightGrayBg;
 
                 btnWatchdog.ForeColor = state.IsWatchdogRunning ? Color.White : textDark;
-                btnWatchdog.BackColor = state.IsWatchdogRunning ? Color.FromArgb(0, 123, 255) : lightGrayBg;
+                btnWatchdog.BackColor = state.IsWatchdogRunning ? Color.FromArgb(66, 103, 147) : lightGrayBg;
                 btnWatchdog.Text = state.IsWatchdogRunning ? "\uD83D\uDC41 Watchdog ON" : "\uD83D\uDC41 Watchdog";
             }
             else
             {
                 btnConnect.Text = "\u26A1 Connect";
-                btnConnect.BackColor = brandOrange;
+                btnConnect.BackColor = primaryColor;
                 btnConnect.ForeColor = Color.White;
 
                 btnServoOn.Enabled = false;
@@ -110,10 +113,10 @@ namespace Test_1.UI
             lblConnectionStatus.ForeColor = state.IsConnected ? successGreen : dangerRed;
 
             lblServoStatus.Text = state.IsConnected ? (state.IsServoOn ? "\u25CF Servo: ON" : "\u25CB Servo: OFF") : "\u25CB Servo: N/A";
-            lblServoStatus.ForeColor = state.IsConnected ? (state.IsServoOn ? successGreen : brandOrange) : textMuted;
+            lblServoStatus.ForeColor = state.IsConnected ? (state.IsServoOn ? successGreen : textMuted) : textMuted;
 
             lblWatchdogStatus.Text = state.IsWatchdogRunning ? "\u25CF Watchdog: Active" : "\u25CB Watchdog: Off";
-            lblWatchdogStatus.ForeColor = state.IsWatchdogRunning ? Color.FromArgb(0, 123, 255) : textMuted;
+            lblWatchdogStatus.ForeColor = state.IsWatchdogRunning ? Color.FromArgb(66, 103, 147) : textMuted;
         }
 
         private async void btnConnect_Click(object sender, EventArgs e)
