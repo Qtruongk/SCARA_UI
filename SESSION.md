@@ -1,5 +1,6 @@
 # TIẾN ĐỘ CÔNG VIỆC - PHASE 1
 
+**Đề tài:** Nghiên cứu, phát triển hệ thống điều khiển và giám sát Robot SCARA gắp chuyển Wafer bán dẫn tích hợp Thị giác máy tính  
 **Dự án:** SCARA Robot Controller UI (`Qtruongk/SCARA_UI` - Shibaura Machine THL300)  
 **Cập nhật:** 25/10/2026  
 

@@ -1,7 +1,14 @@
-# SCARA Robot Controller UI
+# Nghiên cứu, phát triển hệ thống điều khiển và giám sát Robot SCARA gắp chuyển Wafer bán dẫn tích hợp Thị giác máy tính
+*(SCARA Robot Controller UI - Shibaura Machine THL300)*
 
 ## Giới thiệu
-Đây là dự án phần mềm điều khiển cho Robot SCARA. Hệ thống cung cấp giao diện người dùng (UI) để kết nối, giám sát trạng thái phần cứng và điều khiển, cũng như tính toán quỹ đạo chuyển động của robot.
+Đây là dự án nghiên cứu và phát triển hệ thống phần mềm điều khiển, giám sát và thị giác máy tính cho cánh tay robot công nghiệp SCARA (Shibaura Machine THL300) ứng dụng trong bài toán **gắp chuyển phiến bán dẫn (Wafer Handling / Wafer Transfer)**. 
+
+Hệ thống cung cấp:
+- Giao diện người dùng (UI) trực quan, kết nối TCP tốc độ cao với bộ điều khiển TSL3000.
+- Giám sát trạng thái phần cứng và mô hình **Bản sao số 3D (3D Digital Twin)** thời gian thực theo phản hồi từ controller.
+- Quy hoạch quỹ đạo chuyển động mượt mà (7-phase S-curve trajectory) hạn chế giật động học (*jerk*), bảo vệ an toàn cho wafer silicon mỏng.
+- Tích hợp hệ thống thị giác máy tính (**Camera Vision**) với kỹ thuật căn chuẩn Hand-Eye (Eye-to-Hand) chuyển đổi tọa độ Pixel sang tọa độ Robot Base đạt độ chính xác dưới 1mm phục vụ định vị và gắp chuyển wafer.
 
 ## Cấu trúc thư mục
 - **Core/**: Chứa logic chính của ứng dụng và giao diện.
