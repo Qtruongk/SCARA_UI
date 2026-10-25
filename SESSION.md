@@ -18,3 +18,17 @@
 | 7 | **Bộ công cụ Calib Python** | Bộ script Python thu thập mẫu bàn cờ trên robot, thuật toán giải Hand-Eye Eye-to-Hand và kiểm định sai số còn dư. | ✅ Hoàn thành |
 | 8 | **Tái cấu trúc UI & An toàn hệ thống** | Bố cục 4 tab (Home, Guide, Shapes, Camera Vision), bảng màu Navy Slate, thanh trượt Splitter, cơ chế bắt crash log toàn cục (`crash.log`). | ✅ Hoàn thành |
 | 9 | **Kiểm thử thực tế với phần cứng** | Kết nối trực tiếp robot THL300 và camera Logitech Brio 100 thật để kiểm tra luồng video và thu thập điểm khớp hoàn tất ma trận Hand-Eye. | 🟡 Đang chờ phần cứng |
+
+---
+
+## Kế hoạch & Điều kiện tiên quyết Phase 2 (Hardware Prerequisites)
+
+Quá trình triển khai thử nghiệm thực tế cho chu trình gắp/đặt Wafer (Pick & Place) tuân theo trình tự phụ thuộc phần cứng như sau:
+
+1. **Đợi thiết bị & phôi mẫu:**
+   - Đợi hộp chứa **FOUP** (*Front Opening Unified Pod*).
+   - Đợi phôi mẫu **Wafer** (phiến silicon bán dẫn).
+2. **Thiết kế tay gắp khâu cuối (End-Effector / Vacuum Gripper):**
+   - Sau khi nhận hộp FOUP thực tế: tiến hành đo đạc kích thước khe chứa (*slot clearance*), hành trình ra vào và biên dạng tiếp xúc $\to$ bắt đầu **thiết kế tay gắp khâu cuối**.
+3. **Thực nghiệm chu trình Pick & Place Wafer:**
+   - Sau khi thiết kế và lắp đặt tay gắp hoàn chỉnh $\to$ triển khai thử nghiệm quy trình gắp/đặt Wafer tự động (kết hợp nhận diện góc xoay/tâm bằng Thị giác máy tính, chuyển động mượt 7-phase S-Curve và điều khiển hút chân không).
