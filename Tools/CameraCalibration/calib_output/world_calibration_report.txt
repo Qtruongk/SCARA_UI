@@ -1,0 +1,104 @@
+=== XÁC LẬP WORLD THAM CHIẾU CHO CAMERA CỐ ĐỊNH ===
+Thời điểm UTC: 2026-10-24T01:57:29.962757+00:00
+Nội tại nguồn: C:\Semicon\research\Lane detection_2026\sw\calib_output\camera_calibration.npz
+Đơn vị: mm; kích thước ảnh (WxH): (1280, 720)
+Cạnh ô thực tế: 25.0 mm
+Pattern detector: (15, 10); lưới world sau sắp thứ tự: (15, 10)
+Góc gốc detector: 2; đổi X/Y: False
+World gắn với bàn cờ tham chiếu đã xác nhận. O là góc trong ngoài cùng được đánh dấu trên ảnh; người dùng đối chiếu với dấu vật lý trên bàn cờ. +X dọc hàng, +Y dọc cột của lưới đã sắp thứ tự; điểm (j*s, i*s, 0) mm; +Z = +X cross +Y theo bàn tay phải. Dấu của +Z không mặc định là chiều cao phía trên bàn. Camera OpenCV: +X sang phải ảnh, +Y xuống dưới ảnh, +Z ra trước camera. Chưa có phép đổi từ world sang hệ gốc robot.
+
+P_camera = R @ P_board + t
+tvec là tọa độ GỐC WORLD trong camera, không phải vị trí camera trong world.
+camera_position_world_mm = -R.T @ t là vị trí TÂM CAMERA trong world.
+T_cw: world -> camera; T_wc: camera -> world.
+P_projection = K @ [R | t] là ma trận chiếu lý tưởng, chưa gồm méo.
+Vẽ ảnh gốc/tính sai số bằng cv2.projectPoints(K, dist).
+T_camera_from_board: bàn -> camera; T_board_from_camera: camera -> bàn.
+C_board = -R.T @ t là tâm camera trong hệ bàn; tvec là gốc bàn trong camera.
+H_board_to_image = K @ [r1 r2 t], H_image_to_board là nghịch đảo.
+H chỉ áp dụng Zb=0 và pixel LÝ TƯỞNG đã khử méo bằng undistortPoints(P=K).
+Không áp dụng H trực tiếp lên pixel ảnh gốc có méo; không khử méo hai lần.
+
+K:
+[[1.338959848e+03 0.000000000e+00 6.322242845e+02]
+ [0.000000000e+00 1.339417873e+03 3.585521662e+02]
+ [0.000000000e+00 0.000000000e+00 1.000000000e+00]]
+
+dist:
+[[ 2.886292156e-02]
+ [ 6.624871781e-01]
+ [-1.763991431e-03]
+ [-1.562485001e-03]
+ [-2.766607036e+00]]
+
+rvec:
+[[-0.10122624 ]
+ [ 0.117852019]
+ [ 1.570788624]]
+
+R:
+[[-0.003512093 -0.999940233  0.010353537]
+ [ 0.990290631 -0.002038998  0.138997515]
+ [-0.138968097  0.010741183  0.990238605]]
+
+tvec:
+[[ 231.526110637]
+ [-174.765303397]
+ [ 807.694148805]]
+
+T_cw:
+[[-3.512092752e-03 -9.999402329e-01  1.035353740e-02  2.315261106e+02]
+ [ 9.902906307e-01 -2.038998436e-03  1.389975155e-01 -1.747653034e+02]
+ [-1.389680972e-01  1.074118325e-02  9.902386051e-01  8.076941488e+02]
+ [ 0.000000000e+00  0.000000000e+00  0.000000000e+00  1.000000000e+00]]
+
+T_wc:
+[[-3.512092752e-03  9.902906307e-01 -1.389680972e-01  2.861253027e+02]
+ [-9.999402329e-01 -2.038998436e-03  1.074118325e-02  2.224803360e+02]
+ [ 1.035353740e-02  1.389975155e-01  9.902386051e-01 -7.779150985e+02]
+ [ 0.000000000e+00  0.000000000e+00  0.000000000e+00  1.000000000e+00]]
+
+camera_position_world_mm:
+[ 286.125302651  222.480335961 -777.915098507]
+
+P_projection:
+[[-9.256155699e+01 -1.332088985e+03  6.399158645e+02  8.206480212e+05]
+ [ 1.276585658e+03  1.120203575e+00  5.412279535e+02  5.551671574e+04]
+ [-1.389680972e-01  1.074118325e-02  9.902386051e-01  8.076941488e+02]]
+
+T_camera_from_board:
+[[-3.512092752e-03 -9.999402329e-01  1.035353740e-02  2.315261106e+02]
+ [ 9.902906307e-01 -2.038998436e-03  1.389975155e-01 -1.747653034e+02]
+ [-1.389680972e-01  1.074118325e-02  9.902386051e-01  8.076941488e+02]
+ [ 0.000000000e+00  0.000000000e+00  0.000000000e+00  1.000000000e+00]]
+
+T_board_from_camera:
+[[-3.512092752e-03  9.902906307e-01 -1.389680972e-01  2.861253027e+02]
+ [-9.999402329e-01 -2.038998436e-03  1.074118325e-02  2.224803360e+02]
+ [ 1.035353740e-02  1.389975155e-01  9.902386051e-01 -7.779150985e+02]
+ [ 0.000000000e+00  0.000000000e+00  0.000000000e+00  1.000000000e+00]]
+
+C_board:
+[ 286.125302651  222.480335961 -777.915098507]
+
+H_board_to_image:
+[[-9.256155699e+01 -1.332088985e+03  8.206480212e+05]
+ [ 1.276585658e+03  1.120203575e+00  5.551671574e+04]
+ [-1.389680972e-01  1.074118325e-02  8.076941488e+02]]
+
+H_image_to_board:
+[[ 2.211018520e-07  7.775134186e-04 -5.366689644e-02]
+ [-7.445922803e-04  2.815677424e-05  7.545987682e-01]
+ [ 9.940059917e-09  1.334008961e-07  1.218823649e-03]]
+reprojection_mean_error_px: 0.404835 px
+reprojection_rms_error_px: 0.465273 px
+reprojection_max_error_px: 1.569554 px
+
+Mặt phẳng đo Zw = +0 mm, có dấu trong hệ world.
+Một pixel chỉ xác định điểm khi giả định điểm nằm trên mặt phẳng này.
+Điểm click được hiển thị/in console: point_camera_mm và point_world_mm, khác với vị trí tâm camera camera_position_world_mm.
+Ngoại tại cố định sau xác nhận; chỉ chọn lại bằng thao tác chủ động.
+Giữ nguyên camera (vị trí, tiêu cự/zoom, độ phân giải) và mặt phẳng làm việc.
+Có thể bỏ bàn cờ sau xác nhận. Để điều khiển SCARA theo hệ robot, cần xác lập thêm biến đổi world -> hệ gốc robot.
+Ảnh gốc: C:\Semicon\research\Lane detection_2026\sw\calib_output\world_reference_raw.png
+Ảnh gốc/trục đã xác nhận: C:\Semicon\research\Lane detection_2026\sw\calib_output\world_reference_axes.png

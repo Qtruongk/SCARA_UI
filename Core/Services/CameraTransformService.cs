@@ -25,9 +25,11 @@ namespace Test_1.Services
             // 1. Nạp bộ thông số hiệu chuẩn Camera (fx, fy, cx, cy, distortion, rms)
             string[] cameraCalibPaths = new string[]
             {
-                @"C:\Semicon\research\Lane detection_2026\sw\calib_output\camera_calibration.json",
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\Tools\CameraCalibration\calib_output\camera_calibration.json"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Tools\CameraCalibration\calib_output\camera_calibration.json"),
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "camera_calibration.json"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\camera_calibration.json")
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\camera_calibration.json"),
+                @"C:\Semicon\research\Lane detection_2026\sw\calib_output\camera_calibration.json"
             };
 
             foreach (var p in cameraCalibPaths)
@@ -45,9 +47,11 @@ namespace Test_1.Services
             // 2. Nạp thêm Hand-Eye calibration matrices (T_cam2base, T_base2cam, H_pixel2robot) nếu có
             string[] handEyePaths = new string[]
             {
-                @"C:\Semicon\research\Lane detection_2026\sw\calib_output\hand_eye_calibration.json",
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\Tools\CameraCalibration\calib_output\hand_eye_calibration.json"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\Tools\CameraCalibration\hand_eye_calibration.json"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Tools\CameraCalibration\calib_output\hand_eye_calibration.json"),
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "hand_eye_calibration.json"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\Tools\CameraCalibration\hand_eye_calibration.json")
+                @"C:\Semicon\research\Lane detection_2026\sw\calib_output\hand_eye_calibration.json"
             };
 
             foreach (var p in handEyePaths)

@@ -46,7 +46,7 @@ from hand_eye_solver import (
 )
 
 
-DEFAULT_CALIB_PATH = r"C:\Semicon\research\Lane detection_2026\sw\calib_output\camera_calibration.json"
+DEFAULT_CALIB_PATH = os.path.join(os.path.dirname(__file__), "calib_output", "camera_calibration.json")
 
 
 def load_camera_intrinsics(json_path=DEFAULT_CALIB_PATH):
@@ -341,9 +341,10 @@ def execute_calibration_calculation(samples, K, dist, img_w=1280, img_h=720, tar
 
     # Xuất ra các vị trí thư mục cần thiết
     save_paths = [
-        r"C:\Semicon\research\Lane detection_2026\sw\calib_output\hand_eye_calibration.json",
+        os.path.join(os.path.dirname(__file__), "calib_output", "hand_eye_calibration.json"),
         os.path.join(os.path.dirname(__file__), "hand_eye_calibration.json"),
-        r"c:\Users\qtruo\source\repos\Test_1\bin\x86\Debug\hand_eye_calibration.json"
+        os.path.join(os.path.dirname(__file__), "..", "..", "bin", "Debug", "hand_eye_calibration.json"),
+        r"C:\Semicon\research\Lane detection_2026\sw\calib_output\hand_eye_calibration.json"
     ]
 
     for p in save_paths:
@@ -356,7 +357,7 @@ def execute_calibration_calculation(samples, K, dist, img_w=1280, img_h=720, tar
             print(f"[CẢNH BÁO] Không ghi được file {p}: {e}")
 
     # Báo cáo text
-    report_path = r"C:\Semicon\research\Lane detection_2026\sw\calib_output\hand_eye_calibration_report.txt"
+    report_path = os.path.join(os.path.dirname(__file__), "calib_output", "hand_eye_calibration_report.txt")
     try:
         with open(report_path, "w", encoding="utf-8") as f:
             f.write("=== BÁO CÁO CĂN CHUẨN HAND-EYE (EYE-TO-HAND) ROBOT SCARA ===\n")

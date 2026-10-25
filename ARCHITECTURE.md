@@ -43,7 +43,7 @@ Test_1/
 ├── Assets/THL300/                 # Original IGES, embedded mesh and provenance
 ├── Tools/
 │   ├── THL300/                    # Reproducible CAD conversion + integrity checks
-│   └── CameraCalibration/         # Hand-Eye solvers (Kabsch, Park-Martin), data collection & live verification
+│   └── CameraCalibration/         # Căn chuẩn nội tại (A3 Chessboard), Hand-Eye solver (Eye-to-Hand), calib_output & kiểm định sai số
 └── Test_1.csproj                  # MSBuild project config & build targets
 ```
 

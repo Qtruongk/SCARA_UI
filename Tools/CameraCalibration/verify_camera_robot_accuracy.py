@@ -39,7 +39,7 @@ from hand_eye_solver import (
 )
 
 
-DEFAULT_CALIB_FILE = r"C:\Semicon\research\Lane detection_2026\sw\calib_output\hand_eye_calibration.json"
+DEFAULT_CALIB_FILE = os.path.join(os.path.dirname(__file__), "calib_output", "hand_eye_calibration.json")
 
 
 def load_calibration_data(filepath=DEFAULT_CALIB_FILE):

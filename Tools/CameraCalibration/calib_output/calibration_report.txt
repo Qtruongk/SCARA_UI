@@ -1,0 +1,48 @@
+=== BÁO CÁO HIỆU CHUẨN CAMERA (CHESSBOARD A3 15x10) ===
+Kích thước ảnh : 1280 x 720
+Số ảnh sử dụng : 15
+Kích thước 1 ô : 25.0 mm
+Sai số RMS     : 0.944844 px
+Sai số Mean    : 0.793806 px
+
+Ma trận Camera K (Intrinsic Matrix):
+[[1.41851273e+03 0.00000000e+00 6.15350285e+02]
+ [0.00000000e+00 1.41397137e+03 3.81176003e+02]
+ [0.00000000e+00 0.00000000e+00 1.00000000e+00]]
+
+Hệ số biến dạng méo thấu kính (Distortion Coefficients):
+k1=0.019561, k2=0.787866, p1=0.001204, p2=-0.006260, k3=-5.148775
+
+Sai số từng ảnh:
+ - Mẫu 01: 0.5891 px; pattern=(15, 10); ảnh=C:\Semicon\research\Lane detection_2026\sw\calib_output\captured_samples\sample_01.jpg
+   rvec=[ 0.05555525  0.043353   -1.55519147]; tvec(mm)=[-164.4299495   162.85732494  830.20042397]
+ - Mẫu 02: 0.6880 px; pattern=(15, 10); ảnh=C:\Semicon\research\Lane detection_2026\sw\calib_output\captured_samples\sample_02.jpg
+   rvec=[ 0.44802225 -0.44435555  1.5315654 ]; tvec(mm)=[  64.74391756 -135.49935013  615.30597035]
+ - Mẫu 03: 1.2264 px; pattern=(15, 10); ảnh=C:\Semicon\research\Lane detection_2026\sw\calib_output\captured_samples\sample_03.jpg
+   rvec=[0.08984305 0.05988354 0.10323065]; tvec(mm)=[-157.75519757 -142.79514608  591.98844294]
+ - Mẫu 04: 0.5191 px; pattern=(15, 10); ảnh=C:\Semicon\research\Lane detection_2026\sw\calib_output\captured_samples\sample_04.jpg
+   rvec=[ 0.06937186 -0.34372628  0.07760582]; tvec(mm)=[-171.38952032 -128.6821071   605.10506446]
+ - Mẫu 05: 0.6537 px; pattern=(15, 10); ảnh=C:\Semicon\research\Lane detection_2026\sw\calib_output\captured_samples\sample_05.jpg
+   rvec=[0.04235891 0.42263564 0.04239248]; tvec(mm)=[-175.25975924 -141.05301517  725.75443979]
+ - Mẫu 06: 0.9191 px; pattern=(15, 10); ảnh=C:\Semicon\research\Lane detection_2026\sw\calib_output\captured_samples\sample_06.jpg
+   rvec=[0.14902448 0.12768968 1.57188785]; tvec(mm)=[ 198.6426148  -178.54113924  741.02729037]
+ - Mẫu 07: 1.1781 px; pattern=(15, 10); ảnh=C:\Semicon\research\Lane detection_2026\sw\calib_output\captured_samples\sample_07.jpg
+   rvec=[0.07729978 0.08044529 0.04503369]; tvec(mm)=[-177.3613603  -122.9761511   810.17685229]
+ - Mẫu 08: 0.7036 px; pattern=(15, 10); ảnh=C:\Semicon\research\Lane detection_2026\sw\calib_output\captured_samples\sample_08.jpg
+   rvec=[0.07490471 0.55640088 0.03509251]; tvec(mm)=[-186.21569166 -122.83110421  773.76486551]
+ - Mẫu 09: 0.9388 px; pattern=(15, 10); ảnh=C:\Semicon\research\Lane detection_2026\sw\calib_output\captured_samples\sample_09.jpg
+   rvec=[ 0.70611773  0.10780628 -2.955973  ]; tvec(mm)=[114.54428334 143.63040519 798.28298563]
+ - Mẫu 10: 0.9330 px; pattern=(15, 10); ảnh=C:\Semicon\research\Lane detection_2026\sw\calib_output\captured_samples\sample_10.jpg
+   rvec=[ 0.20041938 -0.07814328  1.57061493]; tvec(mm)=[ 119.91264014 -168.56570089  731.09479153]
+ - Mẫu 11: 0.6383 px; pattern=(15, 10); ảnh=C:\Semicon\research\Lane detection_2026\sw\calib_output\captured_samples\sample_11.jpg
+   rvec=[ 0.15729739 -0.15041344  1.59267345]; tvec(mm)=[  71.45962824 -177.65940886  757.58596669]
+ - Mẫu 12: 0.7322 px; pattern=(15, 10); ảnh=C:\Semicon\research\Lane detection_2026\sw\calib_output\captured_samples\sample_12.jpg
+   rvec=[-0.19278617  0.33120303 -1.49283887]; tvec(mm)=[-161.43608767  158.9416667   819.15195088]
+ - Mẫu 13: 0.8602 px; pattern=(15, 10); ảnh=C:\Semicon\research\Lane detection_2026\sw\calib_output\captured_samples\sample_13.jpg
+   rvec=[ 0.23670749 -0.11454566 -1.56140377]; tvec(mm)=[-154.70751791  168.3858445   777.04030899]
+ - Mẫu 14: 0.6082 px; pattern=(15, 10); ảnh=C:\Semicon\research\Lane detection_2026\sw\calib_output\captured_samples\sample_14.jpg
+   rvec=[ 0.08165628  0.06770339 -1.54946894]; tvec(mm)=[-170.35795534  155.01104237  828.95837863]
+ - Mẫu 15: 0.7194 px; pattern=(15, 10); ảnh=C:\Semicon\research\Lane detection_2026\sw\calib_output\captured_samples\sample_15.jpg
+   rvec=[-0.19194618  0.29973459 -1.48657078]; tvec(mm)=[-169.98878579  156.48156402  822.40894661]
+
+Mỗi ảnh có hệ bàn cờ riêng. Không lấy trung bình ngoại tại và không tự chọn ảnh làm world.
