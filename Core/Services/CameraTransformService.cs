@@ -1,21 +1,182 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using Test_1.Models;
 
 namespace Test_1.Services
 {
-    public class CameraTransformService
+    public class CameraTransformService : IDisposable
     {
         private readonly LoggingService _logger;
         public CameraCalibrationConfig Config { get; private set; }
 
         public event Action CalibrationUpdated;
+        public event Action<string> CalibrationAutoReloaded;
+
+        private readonly List<FileSystemWatcher> _watchers = new List<FileSystemWatcher>();
+        private Timer _debounceTimer;
+        private readonly object _reloadLock = new object();
+        public bool IsAutoConfigEnabled { get; set; } = true;
+        public DateTime LastReloadTime { get; private set; } = DateTime.MinValue;
+        public string LastLoadedSource { get; private set; } = "";
 
         public CameraTransformService(LoggingService logger)
         {
             _logger = logger;
             Config = new CameraCalibrationConfig();
             TryLoadDefaultCalibration();
+            StartAutoConfigWatchers();
+        }
+
+        public void StartAutoConfigWatchers()
+        {
+            try
+            {
+                StopAutoConfigWatchers();
+
+                var candidateDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                string[] searchDirs = new string[]
+                {
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\Tools\CameraCalibration\calib_output"),
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\Tools\CameraCalibration"),
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Tools\CameraCalibration\calib_output"),
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Tools\CameraCalibration"),
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory),
+                    @"C:\Semicon\research\Lane detection_2026\sw\calib_output"
+                };
+
+                foreach (var dir in searchDirs)
+                {
+                    try
+                    {
+                        if (Directory.Exists(dir))
+                        {
+                            string fullPath = Path.GetFullPath(dir);
+                            candidateDirs.Add(fullPath);
+                        }
+                    }
+                    catch { }
+                }
+
+                foreach (var dir in candidateDirs)
+                {
+                    try
+                    {
+                        var watcher = new FileSystemWatcher(dir, "*.json")
+                        {
+                            NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size | NotifyFilters.CreationTime,
+                            EnableRaisingEvents = true,
+                            IncludeSubdirectories = false
+                        };
+
+                        watcher.Changed += OnWatcherFileChanged;
+                        watcher.Created += OnWatcherFileChanged;
+                        watcher.Renamed += (s, e) => OnWatcherFileChanged(s, new FileSystemEventArgs(WatcherChangeTypes.Changed, e.FullPath, e.Name));
+
+                        _watchers.Add(watcher);
+                        _logger?.Log($"[Camera Auto-Config] Bắt đầu theo dõi thư mục hiệu chuẩn: {dir}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.Log($"[Camera Auto-Config] Không thể theo dõi thư mục {dir}: {ex.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.Log($"[Camera Auto-Config] Lỗi khởi động watcher: {ex.Message}");
+            }
+        }
+
+        public void StopAutoConfigWatchers()
+        {
+            foreach (var w in _watchers)
+            {
+                try
+                {
+                    w.EnableRaisingEvents = false;
+                    w.Dispose();
+                }
+                catch { }
+            }
+            _watchers.Clear();
+
+            _debounceTimer?.Dispose();
+            _debounceTimer = null;
+        }
+
+        private void OnWatcherFileChanged(object sender, FileSystemEventArgs e)
+        {
+            if (!IsAutoConfigEnabled) return;
+
+            string fileName = Path.GetFileName(e.FullPath);
+            if (string.IsNullOrEmpty(fileName)) return;
+
+            // Chỉ kích hoạt khi file liên quan đến hiệu chuẩn (camera hoặc hand_eye)
+            if (fileName.IndexOf("calibration", StringComparison.OrdinalIgnoreCase) < 0 &&
+                fileName.IndexOf("hand_eye", StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                return;
+            }
+
+            // Debounce 400ms để đợi quá trình ghi file hoàn tất
+            lock (_reloadLock)
+            {
+                _debounceTimer?.Dispose();
+                string targetPath = e.FullPath;
+                _debounceTimer = new Timer(_ => {
+                    ExecuteAutoReload(targetPath);
+                }, null, 400, Timeout.Infinite);
+            }
+        }
+
+        private void ExecuteAutoReload(string changedPath)
+        {
+            lock (_reloadLock)
+            {
+                bool ready = WaitForFileReady(changedPath, 5, 100);
+                if (!ready)
+                {
+                    _logger?.Log($"[Camera Auto-Config] File {Path.GetFileName(changedPath)} đang bị khóa ghi, tiến hành nạp lại ma trận...");
+                }
+
+                try
+                {
+                    TryLoadDefaultCalibration();
+                    LastReloadTime = DateTime.Now;
+                    LastLoadedSource = changedPath;
+
+                    string name = Path.GetFileName(changedPath);
+                    _logger?.Log($"[Camera Auto-Config] ✔ Tự động nạp thành công bộ ma trận calib mới từ: {name} ({LastReloadTime:HH:mm:ss})");
+                    CalibrationAutoReloaded?.Invoke(name);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.Log($"[Camera Auto-Config] Lỗi khi tự động nạp cấu hình: {ex.Message}");
+                }
+            }
+        }
+
+        private bool WaitForFileReady(string path, int maxRetries, int delayMs)
+        {
+            for (int i = 0; i < maxRetries; i++)
+            {
+                try
+                {
+                    if (!File.Exists(path)) return false;
+                    using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    {
+                        if (stream.Length > 10) return true;
+                    }
+                }
+                catch
+                {
+                    Thread.Sleep(delayMs);
+                }
+            }
+            return false;
         }
 
         public void TryLoadDefaultCalibration()
@@ -27,6 +188,7 @@ namespace Test_1.Services
             {
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\Tools\CameraCalibration\calib_output\camera_calibration.json"),
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Tools\CameraCalibration\calib_output\camera_calibration.json"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\Tools\CameraCalibration\camera_calibration.json"),
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "camera_calibration.json"),
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\camera_calibration.json"),
                 @"C:\Semicon\research\Lane detection_2026\sw\calib_output\camera_calibration.json"
@@ -85,7 +247,14 @@ namespace Test_1.Services
             {
                 TryLoadDefaultCalibration();
             }
+            LastReloadTime = DateTime.Now;
             CalibrationUpdated?.Invoke();
+            CalibrationAutoReloaded?.Invoke(string.IsNullOrEmpty(customPath) ? "Default Config" : Path.GetFileName(customPath));
+        }
+
+        public void Dispose()
+        {
+            StopAutoConfigWatchers();
         }
 
         /// <summary>

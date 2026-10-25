@@ -44,6 +44,7 @@ namespace Test_1.UI
         private Button btnMoveRobotToTarget;
         private Button btnStopCameraMove;
         private bool _isCameraMoving = false;
+        private Label lblAutoConfigBadge;
 
         // Current Robot Position Readout controls for Camera Tab
         private Panel pnlRobotReadout;
@@ -137,11 +138,47 @@ namespace Test_1.UI
                 ToggleCameraLive();
             };
 
+            Button btnReloadCalib = new Button
+            {
+                Text = "🔄 Nạp lại Calib",
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                BackColor = Color.FromArgb(240, 244, 248),
+                ForeColor = Color.FromArgb(52, 71, 103),
+                FlatStyle = FlatStyle.Flat,
+                Location = new Point(602, 12),
+                Size = new Size(130, 32),
+                Cursor = Cursors.Hand
+            };
+            btnReloadCalib.FlatAppearance.BorderColor = borderColor;
+            btnReloadCalib.Click += (s, e) => {
+                _cameraService?.ReloadCalibration();
+                lblAutoConfigBadge.Text = $"✔ Đã nạp lại ({DateTime.Now:HH:mm:ss})";
+                lblAutoConfigBadge.ForeColor = Color.FromArgb(0, 120, 215);
+                MessageBox.Show($"Đã nạp lại toàn bộ ma trận hiệu chuẩn thành công!\n\n" +
+                                $"• Tiêu cự: Fx = {_cameraService?.Config.Fx:F2}, Fy = {_cameraService?.Config.Fy:F2}\n" +
+                                $"• Tâm ảnh: Cx = {_cameraService?.Config.Cx:F2}, Cy = {_cameraService?.Config.Cy:F2}\n" +
+                                $"• Sai số RMS: {_cameraService?.Config.RmsReprojectionPx:F4} px\n" +
+                                $"• Sai số vị trí: {_cameraService?.Config.RmsErrorMm:F3} mm (≤ 1.0mm)\n" +
+                                $"• T_cam2base(t): [{_cameraService?.Config.T_cam2base[0,3]:F1}, {_cameraService?.Config.T_cam2base[1,3]:F1}, {_cameraService?.Config.T_cam2base[2,3]:F1}] mm",
+                                "Auto-Config Calib", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            };
+
+            lblAutoConfigBadge = new Label
+            {
+                Text = "🟢 Auto-Config: BẬT",
+                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(46, 125, 50),
+                Location = new Point(742, 18),
+                AutoSize = true
+            };
+
             pnlTopBar.Controls.Add(lblDev);
             pnlTopBar.Controls.Add(cmbCameraDevices);
             pnlTopBar.Controls.Add(lblRes);
             pnlTopBar.Controls.Add(cmbResolutions);
             pnlTopBar.Controls.Add(btnToggleCamera);
+            pnlTopBar.Controls.Add(btnReloadCalib);
+            pnlTopBar.Controls.Add(lblAutoConfigBadge);
 
             // 2. Full Live Viewport (Takes up entire center area)
             Panel pnlViewContainer = new Panel
@@ -673,12 +710,57 @@ namespace Test_1.UI
             // Refresh camera devices list on initialization
             PopulateCameraDevices();
 
+            // Wire Auto-Config calibration reload event
+            if (_cameraService != null)
+            {
+                _cameraService.CalibrationAutoReloaded += (fileName) => {
+                    if (IsDisposed || Disposing) return;
+                    if (InvokeRequired)
+                    {
+                        try { BeginInvoke(new Action(() => OnCalibrationAutoReloaded(fileName))); } catch { }
+                    }
+                    else
+                    {
+                        OnCalibrationAutoReloaded(fileName);
+                    }
+                };
+            }
+
             // Handle clean stop when form closes
             this.FormClosing += (s, e) => {
                 StopCameraLive();
+                _cameraService?.Dispose();
             };
 
             return workspaceCamera;
+        }
+
+        private void OnCalibrationAutoReloaded(string fileName)
+        {
+            if (lblAutoConfigBadge != null && !lblAutoConfigBadge.IsDisposed)
+            {
+                lblAutoConfigBadge.Text = $"✔ Auto-Config: Đã nạp {fileName} ({DateTime.Now:HH:mm:ss})";
+                lblAutoConfigBadge.ForeColor = Color.FromArgb(0, 120, 215);
+            }
+
+            // Nếu đang chọn một điểm trên khung hình camera -> tự động tính lại tọa độ Robot Base với ma trận mới
+            if (_selectedPixel.HasValue)
+            {
+                double workZ = 0.0;
+                if (_cameraService != null && _cameraService.PixelToRobotBase(_selectedPixel.Value.X, _selectedPixel.Value.Y, workZ, out double rx, out double ry, out double rz))
+                {
+                    double radius = Math.Sqrt(rx * rx + ry * ry);
+                    _targetRobotX = rx;
+                    _targetRobotY = ry;
+                    _targetRobotZ = rz;
+                    _targetRobotRadius = radius;
+                    _isTargetValidRadius = (radius <= 300.0);
+                    UpdateTargetDisplay();
+                }
+            }
+
+            picCameraLive?.Invalidate();
+            _logger?.Log($"[Camera UI] Auto-Config: Đã tự động cập nhật ma trận mới từ file: {fileName}");
         }
 
         private void UpdateTargetDisplay()
