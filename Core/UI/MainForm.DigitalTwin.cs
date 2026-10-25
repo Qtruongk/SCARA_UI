@@ -34,6 +34,7 @@ namespace Test_1.UI
             _feedbackSession++;
             _feedbackAge.Reset();
             _digitalTwin.SetConnectionState(connected);
+            SetCameraConnectionState(connected);
         }
 
         private async void PollRobotFeedback(object sender, EventArgs e)
@@ -42,7 +43,10 @@ namespace Test_1.UI
             if (_feedbackReadPending)
             {
                 if (_feedbackAge.IsRunning && _feedbackAge.ElapsedMilliseconds >= Constants.DigitalTwinStaleMs)
+                {
                     _digitalTwin.SetFeedbackUnavailable();
+                    SetCameraFeedbackUnavailable();
+                }
                 return;
             }
 
@@ -57,15 +61,20 @@ namespace Test_1.UI
                 if (position == null || position.JointPosition == null)
                 {
                     _digitalTwin.SetFeedbackUnavailable();
+                    SetCameraFeedbackUnavailable();
                     return;
                 }
                 _digitalTwin.ApplyFeedback(position);
+                ApplyCameraFeedback(position);
                 _feedbackAge.Restart();
             }
             catch (Exception)
             {
                 if (!_twinStopped && !IsDisposed && !Disposing && session == _feedbackSession && _twinConnected)
+                {
                     _digitalTwin.SetFeedbackUnavailable();
+                    SetCameraFeedbackUnavailable();
+                }
             }
             finally
             {
@@ -79,6 +88,7 @@ namespace Test_1.UI
             _twinStopped = true;
             _feedbackSession++;
             if (_feedbackTimer != null) _feedbackTimer.Stop();
+            SetCameraConnectionState(false);
             if (_robotService != null) _robotService.StateChanged -= UpdateButtonStates;
             if (_logger != null) _logger.OnLogMessage -= LogMessage;
             if (_motionService != null)
