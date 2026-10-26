@@ -251,6 +251,37 @@ namespace Test_1.UI
                 }
             };
 
+            Label lblSpeed = new Label
+            {
+                Text = "Tốc độ:",
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(51, 65, 85),
+                Location = new Point(475, 56),
+                AutoSize = true
+            };
+
+            tbCameraMoveSpeed = new TrackBar
+            {
+                Minimum = 1,
+                Maximum = 100,
+                Value = 10,
+                Width = 110,
+                TickStyle = TickStyle.None,
+                Location = new Point(528, 51)
+            };
+
+            lblCameraMoveSpeedVal = new Label
+            {
+                Text = "10%",
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(30, 41, 59),
+                Location = new Point(642, 56),
+                AutoSize = true
+            };
+            tbCameraMoveSpeed.Scroll += (s, e) => {
+                lblCameraMoveSpeedVal.Text = tbCameraMoveSpeed.Value + "%";
+            };
+
             pnlTopBar.Controls.Add(lblDev);
             pnlTopBar.Controls.Add(cmbCameraDevices);
             pnlTopBar.Controls.Add(lblRes);
@@ -261,6 +292,9 @@ namespace Test_1.UI
             pnlTopBar.Controls.Add(btnToggleGrid);
             pnlTopBar.Controls.Add(btnGridSettings);
             pnlTopBar.Controls.Add(btnSnapGrid);
+            pnlTopBar.Controls.Add(lblSpeed);
+            pnlTopBar.Controls.Add(tbCameraMoveSpeed);
+            pnlTopBar.Controls.Add(lblCameraMoveSpeedVal);
 
             // 2. Full Live Viewport (Takes up entire center area)
             Panel pnlViewContainer = new Panel
@@ -804,34 +838,6 @@ namespace Test_1.UI
                 picCameraLive.Invalidate();
             };
 
-            Label lblSpeed = new Label
-            {
-                Text = "Tốc độ:",
-                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(51, 65, 85),
-                AutoSize = true
-            };
-
-            tbCameraMoveSpeed = new TrackBar
-            {
-                Minimum = 1,
-                Maximum = 100,
-                Value = 10,
-                Width = 85,
-                TickStyle = TickStyle.None
-            };
-
-            lblCameraMoveSpeedVal = new Label
-            {
-                Text = "10%",
-                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(30, 41, 59),
-                AutoSize = true
-            };
-            tbCameraMoveSpeed.Scroll += (s, e) => {
-                lblCameraMoveSpeedVal.Text = tbCameraMoveSpeed.Value + "%";
-            };
-
             // Khởi tạo các nút thao tác ký hiệu ô vuông & di chuyển robot
             btnDrawX = new Button
             {
@@ -1091,14 +1097,11 @@ namespace Test_1.UI
                 int w = pnlBottomControl.ClientSize.Width;
                 int rightMargin = 12;
 
-                // --- HÀNG 1: THÔNG TIN MỤC TIÊU & TỐC ĐỘ ROBOT ---
+                // --- HÀNG 1: THÔNG TIN MỤC TIÊU & TRẠNG THÁI ---
                 lblTargetIcon.Location = new Point(12, 11);
                 lblTargetCoords.Location = new Point(80, 11);
 
-                lblCameraMoveSpeedVal.Location = new Point(w - rightMargin - lblCameraMoveSpeedVal.Width, 11);
-                tbCameraMoveSpeed.Location = new Point(lblCameraMoveSpeedVal.Left - 4 - tbCameraMoveSpeed.Width, 6);
-                lblSpeed.Location = new Point(tbCameraMoveSpeed.Left - 4 - lblSpeed.Width, 11);
-                btnClearTarget.Location = new Point(lblSpeed.Left - 16 - btnClearTarget.Width, 8);
+                btnClearTarget.Location = new Point(w - rightMargin - btnClearTarget.Width, 8);
                 lblTargetStatus.Location = new Point(btnClearTarget.Left - 10 - lblTargetStatus.Width, 10);
 
                 // --- HÀNG 2: THAO TÁC KÝ HIỆU & CHUYỂN ĐỘNG ROBOT ---
@@ -1196,9 +1199,6 @@ namespace Test_1.UI
             pnlBottomControl.Controls.Add(lblTargetCoords);
             pnlBottomControl.Controls.Add(lblTargetStatus);
             pnlBottomControl.Controls.Add(btnClearTarget);
-            pnlBottomControl.Controls.Add(lblSpeed);
-            pnlBottomControl.Controls.Add(tbCameraMoveSpeed);
-            pnlBottomControl.Controls.Add(lblCameraMoveSpeedVal);
 
             pnlBottomControl.Controls.Add(btnDrawX);
             pnlBottomControl.Controls.Add(btnDrawO);
