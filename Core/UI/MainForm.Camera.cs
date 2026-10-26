@@ -882,7 +882,7 @@ namespace Test_1.UI
             {
                 Text = "Di chuyển Robot",
                 Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                BackColor = Color.FromArgb(30, 41, 59),
+                BackColor = Color.FromArgb(120, 160, 210),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
                 Size = new Size(130, 30),
@@ -890,6 +890,11 @@ namespace Test_1.UI
                 Enabled = false
             };
             btnMoveRobotToTarget.FlatAppearance.BorderSize = 0;
+            btnMoveRobotToTarget.EnabledChanged += (s, e) => {
+                btnMoveRobotToTarget.BackColor = btnMoveRobotToTarget.Enabled 
+                    ? Color.FromArgb(13, 110, 253) 
+                    : Color.FromArgb(120, 160, 210);
+            };
 
             btnStopCameraMove = new Button
             {
