@@ -46,6 +46,16 @@ namespace Test_1.Services
         public float WidthMm => (CornersRobot != null && CornersRobot.Length >= 2) ? (float)Math.Sqrt(Math.Pow(CornersRobot[1].X - CornersRobot[0].X, 2) + Math.Pow(CornersRobot[1].Y - CornersRobot[0].Y, 2)) : 0;
         public float HeightMm => (CornersRobot != null && CornersRobot.Length >= 4) ? (float)Math.Sqrt(Math.Pow(CornersRobot[3].X - CornersRobot[0].X, 2) + Math.Pow(CornersRobot[3].Y - CornersRobot[0].Y, 2)) : 0;
 
+        // Ký hiệu hiển thị trong ô vuông (None, X, O)
+        public enum CellSymbol
+        {
+            None = 0,
+            X = 1,
+            O = 2
+        }
+
+        public CellSymbol Symbol { get; set; } = CellSymbol.None;
+
         // Tọa độ tâm (fallback kế thừa)
         public PointF CenterPixel { get; set; }
         public PointF CenterRobot { get; set; }
@@ -828,19 +838,62 @@ namespace Test_1.Services
                         g.DrawPolygon(pGrid, screenCorners);
                     }
 
-                    // Nhãn chỉ số ô vuông bên trong ranh giới ô (không vẽ chấm tâm)
+                    // 1B. Vẽ ký hiệu X hoặc O nếu ô đã được đánh dấu
+                    if (cell.Symbol == GridCell.CellSymbol.X)
+                    {
+                        using (Pen pX = new Pen(Color.FromArgb(255, 68, 68), 3.0f) { StartCap = LineCap.Round, EndCap = LineCap.Round })
+                        {
+                            PointF pTL = Lerp(screenCorners[0], screenCorners[2], 0.18f);
+                            PointF pBR = Lerp(screenCorners[0], screenCorners[2], 0.82f);
+                            PointF pTR = Lerp(screenCorners[1], screenCorners[3], 0.18f);
+                            PointF pBL = Lerp(screenCorners[1], screenCorners[3], 0.82f);
+
+                            g.DrawLine(pX, pTL, pBR);
+                            g.DrawLine(pX, pTR, pBL);
+                        }
+                    }
+                    else if (cell.Symbol == GridCell.CellSymbol.O)
+                    {
+                        using (Pen pO = new Pen(Color.FromArgb(0, 230, 118), 3.0f))
+                        {
+                            float minX = Math.Min(Math.Min(screenCorners[0].X, screenCorners[1].X), Math.Min(screenCorners[2].X, screenCorners[3].X));
+                            float maxX = Math.Max(Math.Max(screenCorners[0].X, screenCorners[1].X), Math.Max(screenCorners[2].X, screenCorners[3].X));
+                            float minY = Math.Min(Math.Min(screenCorners[0].Y, screenCorners[1].Y), Math.Min(screenCorners[2].Y, screenCorners[3].Y));
+                            float maxY = Math.Max(Math.Max(screenCorners[0].Y, screenCorners[1].Y), Math.Max(screenCorners[2].Y, screenCorners[3].Y));
+
+                            float padX = (maxX - minX) * 0.18f;
+                            float padY = (maxY - minY) * 0.18f;
+
+                            g.DrawEllipse(pO, minX + padX, minY + padY, (maxX - minX) - 2 * padX, (maxY - minY) - 2 * padY);
+                        }
+                    }
+
+                    // 1C. Nhãn chỉ số ô vuông bên trong ranh giới ô
                     if (ShowCellLabels)
                     {
-                        float cx = (screenCorners[0].X + screenCorners[1].X + screenCorners[2].X + screenCorners[3].X) / 4.0f;
-                        float cy = (screenCorners[0].Y + screenCorners[1].Y + screenCorners[2].Y + screenCorners[3].Y) / 4.0f;
-
                         string lbl = $"#{cell.Index}";
                         SizeF sLbl = g.MeasureString(lbl, fLabel);
                         Brush bText = (cell == SelectedCell || cell == HoveredCell) ? Brushes.Black : Brushes.White;
                         Brush bBgText = (cell == SelectedCell) ? Brushes.LightGreen : (cell == HoveredCell) ? Brushes.Yellow : new SolidBrush(Color.FromArgb(160, 15, 17, 26));
 
-                        g.FillRectangle(bBgText, cx - sLbl.Width / 2 - 2, cy - sLbl.Height / 2 - 1, sLbl.Width + 4, sLbl.Height + 2);
-                        g.DrawString(lbl, fLabel, bText, cx - sLbl.Width / 2, cy - sLbl.Height / 2);
+                        float lx, ly;
+                        if (cell.Symbol != GridCell.CellSymbol.None)
+                        {
+                            // Đặt nhãn nhỏ ở góc trên trái ô để không che khuất chữ X/O
+                            lx = screenCorners[0].X + 4;
+                            ly = screenCorners[0].Y + 4;
+                        }
+                        else
+                        {
+                            // Đặt nhãn ở giữa ranh giới ô
+                            float cx = (screenCorners[0].X + screenCorners[1].X + screenCorners[2].X + screenCorners[3].X) / 4.0f;
+                            float cy = (screenCorners[0].Y + screenCorners[1].Y + screenCorners[2].Y + screenCorners[3].Y) / 4.0f;
+                            lx = cx - sLbl.Width / 2 - 2;
+                            ly = cy - sLbl.Height / 2 - 1;
+                        }
+
+                        g.FillRectangle(bBgText, lx, ly, sLbl.Width + 4, sLbl.Height + 2);
+                        g.DrawString(lbl, fLabel, bText, lx + 2, ly + 1);
                     }
                 }
 

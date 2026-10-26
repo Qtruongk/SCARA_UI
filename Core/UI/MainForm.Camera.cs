@@ -44,6 +44,9 @@ namespace Test_1.UI
         private Label lblCameraMoveSpeedVal;
         private Button btnMoveRobotToTarget;
         private Button btnStopCameraMove;
+        private Button btnDrawX;
+        private Button btnDrawO;
+        private Button btnClearSymbol;
         private bool _isCameraMoving = false;
         private Label lblAutoConfigBadge;
         private Button btnFourPointCalib;
@@ -319,8 +322,8 @@ namespace Test_1.UI
                     return;
                 }
 
-                // 1. Draw Selected Target Reticle (Hồng tâm mục tiêu)
-                if (_selectedPixel.HasValue && _targetRobotX.HasValue && _targetRobotY.HasValue)
+                // 1. Draw Selected Target Reticle (Hồng tâm mục tiêu khi chọn điểm tự do)
+                if (_selectedPixel.HasValue && _targetRobotX.HasValue && _targetRobotY.HasValue && _gridService.SelectedCell == null)
                 {
                     if (GetScreenPointFromImagePixel(_selectedPixel.Value.X, _selectedPixel.Value.Y, out float sx, out float sy))
                     {
@@ -520,8 +523,53 @@ namespace Test_1.UI
             };
 
             picCameraLive.MouseDown += (s, e) => {
-                if (e.Button != MouseButtons.Left) return;
+                if (e.Button != MouseButtons.Left && e.Button != MouseButtons.Right) return;
                 if (!GetImagePixelFromMouse(e.X, e.Y, out float u, out float v)) return;
+
+                // Chuột phải (Right-Click): Đổi luân phiên ký hiệu X / O / Trống trên ô vuông
+                if (e.Button == MouseButtons.Right)
+                {
+                    if (_gridService.IsGridEnabled)
+                    {
+                        var clickedCell = _gridService.FindCellAtPixel(u, v);
+                        if (clickedCell != null)
+                        {
+                            _gridService.SelectedCell = clickedCell;
+                            _selectedPixel = clickedCell.CenterPixel;
+                            _targetRobotX = clickedCell.CenterRobot.X;
+                            _targetRobotY = clickedCell.CenterRobot.Y;
+                            double r = Math.Sqrt(_targetRobotX.Value * _targetRobotX.Value + _targetRobotY.Value * _targetRobotY.Value);
+                            _targetRobotRadius = r;
+                            _isTargetValidRadius = (r <= 300.0);
+
+                            // Luân phiên ký hiệu: None -> X -> O -> None
+                            if (clickedCell.Symbol == GridCell.CellSymbol.None)
+                                clickedCell.Symbol = GridCell.CellSymbol.X;
+                            else if (clickedCell.Symbol == GridCell.CellSymbol.X)
+                                clickedCell.Symbol = GridCell.CellSymbol.O;
+                            else
+                                clickedCell.Symbol = GridCell.CellSymbol.None;
+
+                            string symName = clickedCell.Symbol == GridCell.CellSymbol.None ? "(Trống)" : clickedCell.Symbol.ToString();
+                            lblTargetCoords.Text = $"ĐÃ KHÓA Ô #{clickedCell.Index} [H{clickedCell.Row + 1}, C{clickedCell.Col + 1}]  |  Ký hiệu: {symName}  |  Kích thước: {clickedCell.WidthMm:F1}x{clickedCell.HeightMm:F1} mm";
+                            lblTargetCoords.ForeColor = clickedCell.Symbol == GridCell.CellSymbol.X ? Color.FromArgb(255, 68, 68) : clickedCell.Symbol == GridCell.CellSymbol.O ? Color.FromArgb(0, 200, 83) : Color.FromArgb(0, 150, 136);
+
+                            lblTargetStatus.Text = _isTargetValidRadius ? " ✔ TRONG TẦM VỚI (R ≤ 300mm) " : " ✖ VƯỢT TẦM VỚI (R > 300mm) ";
+                            lblTargetStatus.BackColor = _isTargetValidRadius ? Color.FromArgb(232, 245, 233) : Color.FromArgb(255, 235, 238);
+                            lblTargetStatus.ForeColor = _isTargetValidRadius ? Color.FromArgb(46, 125, 50) : Color.FromArgb(198, 40, 40);
+
+                            if (btnDrawX != null) btnDrawX.Enabled = true;
+                            if (btnDrawO != null) btnDrawO.Enabled = true;
+                            if (btnClearSymbol != null) btnClearSymbol.Enabled = true;
+                            if (btnMoveRobotToTarget != null) btnMoveRobotToTarget.Enabled = _isTargetValidRadius && !_isCameraMoving;
+
+                            _logger?.Log($"[Grid] Đổi ký hiệu Ô #{clickedCell.Index} thành: {clickedCell.Symbol}");
+                            picCameraLive.Invalidate();
+                            return;
+                        }
+                    }
+                    return;
+                }
 
                 // 1. Kiểm tra nếu đang trong chế độ chấm điểm mốc của Calib 4 Điểm
                 if (_fourPointDialog != null && !_fourPointDialog.IsDisposed && _fourPointDialog.ActivePickingPointIndex >= 0)
@@ -540,10 +588,27 @@ namespace Test_1.UI
                     if (clickedCell != null)
                     {
                         _gridService.SelectedCell = clickedCell;
+                        _selectedPixel = clickedCell.CenterPixel;
+                        _targetRobotX = clickedCell.CenterRobot.X;
+                        _targetRobotY = clickedCell.CenterRobot.Y;
+                        double r = Math.Sqrt(_targetRobotX.Value * _targetRobotX.Value + _targetRobotY.Value * _targetRobotY.Value);
+                        _targetRobotRadius = r;
+                        _isTargetValidRadius = (r <= 300.0);
 
-                        lblTargetCoords.Text = $"ĐÃ KHÓA Ô #{clickedCell.Index} [H{clickedCell.Row + 1}, C{clickedCell.Col + 1}]  |  Ranh giới: TL({clickedCell.CornersPixel[0].X:F0}, {clickedCell.CornersPixel[0].Y:F0}) ➜ BR({clickedCell.CornersPixel[2].X:F0}, {clickedCell.CornersPixel[2].Y:F0}) px  |  Robot TL: ({clickedCell.CornersRobot[0].X:F1}, {clickedCell.CornersRobot[0].Y:F1}) mm  |  Kích thước: {clickedCell.WidthMm:F1}x{clickedCell.HeightMm:F1} mm";
-                        lblTargetCoords.ForeColor = Color.FromArgb(0, 230, 118);
-                        _logger?.Log($"[Grid] Đã chọn và khóa ranh giới Ô #{clickedCell.Index} (Hàng {clickedCell.Row + 1}, Cột {clickedCell.Col + 1}) - Kích thước: {clickedCell.WidthMm:F1}x{clickedCell.HeightMm:F1} mm, 4 đỉnh góc ranh giới đã sẵn sàng.");
+                        string symName = clickedCell.Symbol == GridCell.CellSymbol.None ? "(Trống)" : clickedCell.Symbol.ToString();
+                        lblTargetCoords.Text = $"ĐÃ KHÓA Ô #{clickedCell.Index} [H{clickedCell.Row + 1}, C{clickedCell.Col + 1}]  |  Ký hiệu: {symName}  |  Robot TL: ({clickedCell.CornersRobot[0].X:F1}, {clickedCell.CornersRobot[0].Y:F1}) mm  |  Kích thước: {clickedCell.WidthMm:F1}x{clickedCell.HeightMm:F1} mm";
+                        lblTargetCoords.ForeColor = clickedCell.Symbol == GridCell.CellSymbol.X ? Color.FromArgb(255, 68, 68) : clickedCell.Symbol == GridCell.CellSymbol.O ? Color.FromArgb(0, 200, 83) : Color.FromArgb(0, 150, 136);
+
+                        lblTargetStatus.Text = _isTargetValidRadius ? " ✔ TRONG TẦM VỚI (R ≤ 300mm) " : " ✖ VƯỢT TẦM VỚI (R > 300mm) ";
+                        lblTargetStatus.BackColor = _isTargetValidRadius ? Color.FromArgb(232, 245, 233) : Color.FromArgb(255, 235, 238);
+                        lblTargetStatus.ForeColor = _isTargetValidRadius ? Color.FromArgb(46, 125, 50) : Color.FromArgb(198, 40, 40);
+
+                        if (btnDrawX != null) btnDrawX.Enabled = true;
+                        if (btnDrawO != null) btnDrawO.Enabled = true;
+                        if (btnClearSymbol != null) btnClearSymbol.Enabled = true;
+                        if (btnMoveRobotToTarget != null) btnMoveRobotToTarget.Enabled = _isTargetValidRadius && !_isCameraMoving;
+
+                        _logger?.Log($"[Grid] Đã chọn và khóa ranh giới Ô #{clickedCell.Index} (Hàng {clickedCell.Row + 1}, Cột {clickedCell.Col + 1}) - Ký hiệu: {clickedCell.Symbol} - Kích thước: {clickedCell.WidthMm:F1}x{clickedCell.HeightMm:F1} mm, 4 đỉnh góc ranh giới đã sẵn sàng.");
                         picCameraLive.Invalidate();
                         return;
                     }
@@ -557,6 +622,10 @@ namespace Test_1.UI
                     bool isValid = (radius <= 300.0);
 
                     _gridService.SelectedCell = null;
+                    if (btnDrawX != null) btnDrawX.Enabled = false;
+                    if (btnDrawO != null) btnDrawO.Enabled = false;
+                    if (btnClearSymbol != null) btnClearSymbol.Enabled = false;
+
                     _selectedPixel = new PointF(u, v);
                     _targetRobotX = rx;
                     _targetRobotY = ry;
@@ -578,7 +647,7 @@ namespace Test_1.UI
             Panel pnlBottomArea = new Panel
             {
                 Dock = DockStyle.Bottom,
-                Height = 126,
+                Height = 154,
                 BackColor = Color.White
             };
 
@@ -758,6 +827,10 @@ namespace Test_1.UI
                 _targetRobotZ = null;
                 _targetRobotRadius = null;
                 _isTargetValidRadius = false;
+                _gridService.SelectedCell = null;
+                if (btnDrawX != null) btnDrawX.Enabled = false;
+                if (btnDrawO != null) btnDrawO.Enabled = false;
+                if (btnClearSymbol != null) btnClearSymbol.Enabled = false;
                 UpdateTargetDisplay();
                 picCameraLive.Invalidate();
             };
@@ -790,14 +863,70 @@ namespace Test_1.UI
                 lblCameraMoveSpeedVal.Text = tbCameraMoveSpeed.Value + "%";
             };
 
-            btnMoveRobotToTarget = new Button
+            // Khởi tạo các nút thao tác vẽ X / O trên Ô Vuông
+            Label lblDrawTitle = new Label
             {
-                Text = "► DI CHUYỂN ROBOT TỚI ĐIỂM",
-                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                Text = "THAO TÁC Ô VUÔNG:",
+                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
+                ForeColor = primaryColor,
+                AutoSize = true
+            };
+
+            btnDrawX = new Button
+            {
+                Text = "✍ VẼ CHỮ X",
+                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
+                BackColor = Color.FromArgb(229, 57, 53),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(110, 32),
+                Cursor = Cursors.Hand,
+                Enabled = false
+            };
+            btnDrawX.FlatAppearance.BorderSize = 0;
+
+            btnDrawO = new Button
+            {
+                Text = "✍ VẼ CHỮ O",
+                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
                 BackColor = Color.FromArgb(46, 125, 50),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Size = new Size(215, 34),
+                Size = new Size(110, 32),
+                Cursor = Cursors.Hand,
+                Enabled = false
+            };
+            btnDrawO.FlatAppearance.BorderSize = 0;
+
+            btnClearSymbol = new Button
+            {
+                Text = "✖ Xóa ký hiệu",
+                Font = new Font("Segoe UI", 8.5F),
+                BackColor = Color.FromArgb(245, 247, 250),
+                ForeColor = Color.FromArgb(73, 80, 87),
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(100, 32),
+                Cursor = Cursors.Hand,
+                Enabled = false
+            };
+            btnClearSymbol.FlatAppearance.BorderColor = borderColor;
+
+            Label lblDrawHint = new Label
+            {
+                Text = "(Tip: Chuột phải lên ô để đánh dấu X/O ảo, hoặc bấm nút để Robot vẽ thật)",
+                Font = new Font("Segoe UI", 8F, FontStyle.Italic),
+                ForeColor = Color.FromArgb(120, 130, 140),
+                AutoSize = true
+            };
+
+            btnMoveRobotToTarget = new Button
+            {
+                Text = "► DI CHUYỂN TỚI ĐIỂM",
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                BackColor = Color.FromArgb(21, 101, 192),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(190, 32),
                 Cursor = Cursors.Hand,
                 Enabled = false
             };
@@ -810,23 +939,231 @@ namespace Test_1.UI
                 BackColor = Color.FromArgb(198, 40, 40),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Size = new Size(75, 34),
+                Size = new Size(75, 32),
                 Cursor = Cursors.Hand,
                 Enabled = true
             };
             btnStopCameraMove.FlatAppearance.BorderSize = 0;
 
-            // Responsive layout for bottom bar
+            // Xử lý sự kiện bấm nút Vẽ Chữ X
+            btnDrawX.Click += async (s, e) => {
+                var cell = _gridService.SelectedCell;
+                if (cell == null)
+                {
+                    MessageBox.Show("Vui lòng click chọn một ô vuông trong lưới trước khi vẽ!", "Chưa chọn ô vuông", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // Đánh dấu ký hiệu X lên Camera
+                cell.Symbol = GridCell.CellSymbol.X;
+                lblTargetCoords.Text = $"ĐÃ KHÓA Ô #{cell.Index} [H{cell.Row + 1}, C{cell.Col + 1}]  |  Ký hiệu: X  |  Kích thước: {cell.WidthMm:F1}x{cell.HeightMm:F1} mm";
+                lblTargetCoords.ForeColor = Color.FromArgb(255, 68, 68);
+                picCameraLive.Invalidate();
+
+                // Kiểm tra nếu Robot sẵn sàng vẽ thật
+                if (_robotService == null || !_robotService.State.IsConnected || !_robotService.State.IsServoOn)
+                {
+                    _logger?.Log($"[Grid] Đã đánh dấu chữ X tại Ô #{cell.Index} trên Camera. (Robot chưa kết nối hoặc chưa bật Servo)");
+                    MessageBox.Show($"Đã đánh dấu chữ X tại Ô #{cell.Index} trên Camera!\n\nNếu muốn Robot THL300 cầm bút vẽ thật lên giấy:\n1. Kết nối Robot (CONNECT)\n2. Bật SERVO ON\n3. Bấm lại nút [✍ VẼ CHỮ X].", "Đã đánh dấu trên Camera", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                if (cell.CornersRobot == null || cell.CornersRobot.Length < 4)
+                {
+                    MessageBox.Show("Ô vuông chưa có dữ liệu 4 đỉnh góc Robot hợp lệ!", "Thiếu tọa độ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                for (int i = 0; i < 4; i++)
+                {
+                    double r = Math.Sqrt(cell.CornersRobot[i].X * cell.CornersRobot[i].X + cell.CornersRobot[i].Y * cell.CornersRobot[i].Y);
+                    if (r > 300.0)
+                    {
+                        MessageBox.Show($"Góc #{i + 1} của Ô #{cell.Index} có bán kính R = {r:F1} mm vượt quá bán kính an toàn 300.0 mm!\nRobot không thể với tới ô này để vẽ.", "Vượt tầm với an toàn", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                }
+
+                double workZ = _cameraService?.Config?.CalibratedWorkZ ?? 0.0;
+                var curPos = _robotService.GetCurrentPosition()?.WorldPosition;
+                if (curPos != null && Math.Abs(workZ) < 0.001) workZ = curPos.Z;
+
+                int speed = tbCameraMoveSpeed.Value;
+                string confirmMsg = $"Xác nhận điều khiển Robot THL300 cầm bút vẽ chữ X thật vào Ô #{cell.Index}:\n\n" +
+                                   $" • Kích thước ô: {cell.WidthMm:F1} x {cell.HeightMm:F1} mm\n" +
+                                   $" • Mặt phẳng vẽ Z_work: {workZ:F1} mm\n" +
+                                   $" • Nâng bút an toàn Z_safe: {workZ + 10.0:F1} mm (+10mm)\n" +
+                                   $" • Tốc độ vẽ: {speed} %\n\n" +
+                                   $"Robot sẽ tự động nâng bút khi di chuyển và hạ bút đúng mặt phẳng ô vuông.\nBạn có muốn bắt đầu vẽ không?";
+
+                if (MessageBox.Show(confirmMsg, "Xác nhận Robot vẽ thật chữ X", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                    return;
+
+                try
+                {
+                    _isCameraMoving = true;
+                    btnDrawX.Enabled = false;
+                    btnDrawO.Enabled = false;
+                    btnClearSymbol.Enabled = false;
+                    btnMoveRobotToTarget.Enabled = false;
+
+                    _logger?.Log($"[Robot Draw] Bắt đầu vẽ chữ X vào Ô #{cell.Index} ở tốc độ {speed}%...");
+                    bool ok = await _robotService.DrawXInCellAsync(cell.CornersRobot, workZ, speed);
+                    if (ok)
+                    {
+                        _logger?.Log($"[Robot Draw] Hoàn thành vẽ chữ X vào Ô #{cell.Index} thành công!");
+                        MessageBox.Show($"Robot THL300 đã vẽ xong chữ X vào Ô #{cell.Index}!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger?.Log($"[Robot Draw] Lỗi khi vẽ chữ X: {ex.Message}");
+                    MessageBox.Show("Lỗi khi robot vẽ chữ X: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    _isCameraMoving = false;
+                    if (!IsDisposed && !Disposing)
+                    {
+                        btnDrawX.Enabled = true;
+                        btnDrawO.Enabled = true;
+                        btnClearSymbol.Enabled = true;
+                        btnMoveRobotToTarget.Enabled = _isTargetValidRadius;
+                    }
+                }
+            };
+
+            // Xử lý sự kiện bấm nút Vẽ Chữ O
+            btnDrawO.Click += async (s, e) => {
+                var cell = _gridService.SelectedCell;
+                if (cell == null)
+                {
+                    MessageBox.Show("Vui lòng click chọn một ô vuông trong lưới trước khi vẽ!", "Chưa chọn ô vuông", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // Đánh dấu ký hiệu O lên Camera
+                cell.Symbol = GridCell.CellSymbol.O;
+                lblTargetCoords.Text = $"ĐÃ KHÓA Ô #{cell.Index} [H{cell.Row + 1}, C{cell.Col + 1}]  |  Ký hiệu: O  |  Kích thước: {cell.WidthMm:F1}x{cell.HeightMm:F1} mm";
+                lblTargetCoords.ForeColor = Color.FromArgb(0, 200, 83);
+                picCameraLive.Invalidate();
+
+                // Kiểm tra nếu Robot sẵn sàng vẽ thật
+                if (_robotService == null || !_robotService.State.IsConnected || !_robotService.State.IsServoOn)
+                {
+                    _logger?.Log($"[Grid] Đã đánh dấu chữ O tại Ô #{cell.Index} trên Camera. (Robot chưa kết nối hoặc chưa bật Servo)");
+                    MessageBox.Show($"Đã đánh dấu chữ O tại Ô #{cell.Index} trên Camera!\n\nNếu muốn Robot THL300 cầm bút vẽ thật lên giấy:\n1. Kết nối Robot (CONNECT)\n2. Bật SERVO ON\n3. Bấm lại nút [✍ VẼ CHỮ O].", "Đã đánh dấu trên Camera", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                if (cell.CornersRobot == null || cell.CornersRobot.Length < 4)
+                {
+                    MessageBox.Show("Ô vuông chưa có dữ liệu 4 đỉnh góc Robot hợp lệ!", "Thiếu tọa độ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                for (int i = 0; i < 4; i++)
+                {
+                    double r = Math.Sqrt(cell.CornersRobot[i].X * cell.CornersRobot[i].X + cell.CornersRobot[i].Y * cell.CornersRobot[i].Y);
+                    if (r > 300.0)
+                    {
+                        MessageBox.Show($"Góc #{i + 1} của Ô #{cell.Index} có bán kính R = {r:F1} mm vượt quá bán kính an toàn 300.0 mm!\nRobot không thể với tới ô này để vẽ.", "Vượt tầm với an toàn", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                }
+
+                double workZ = _cameraService?.Config?.CalibratedWorkZ ?? 0.0;
+                var curPos = _robotService.GetCurrentPosition()?.WorldPosition;
+                if (curPos != null && Math.Abs(workZ) < 0.001) workZ = curPos.Z;
+
+                int speed = tbCameraMoveSpeed.Value;
+                string confirmMsg = $"Xác nhận điều khiển Robot THL300 cầm bút vẽ chữ O tròn thật vào Ô #{cell.Index}:\n\n" +
+                                   $" • Kích thước ô: {cell.WidthMm:F1} x {cell.HeightMm:F1} mm\n" +
+                                   $" • Mặt phẳng vẽ Z_work: {workZ:F1} mm\n" +
+                                   $" • Nâng bút an toàn Z_safe: {workZ + 10.0:F1} mm (+10mm)\n" +
+                                   $" • Tốc độ vẽ: {speed} %\n\n" +
+                                   $"Robot sẽ tự động nâng bút, hạ bút và vẽ cung tròn 360 độ mượt mà.\nBạn có muốn bắt đầu vẽ không?";
+
+                if (MessageBox.Show(confirmMsg, "Xác nhận Robot vẽ thật chữ O", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                    return;
+
+                try
+                {
+                    _isCameraMoving = true;
+                    btnDrawX.Enabled = false;
+                    btnDrawO.Enabled = false;
+                    btnClearSymbol.Enabled = false;
+                    btnMoveRobotToTarget.Enabled = false;
+
+                    _logger?.Log($"[Robot Draw] Bắt đầu vẽ chữ O vào Ô #{cell.Index} ở tốc độ {speed}%...");
+                    bool ok = await _robotService.DrawOInCellAsync(cell.CornersRobot, workZ, speed);
+                    if (ok)
+                    {
+                        _logger?.Log($"[Robot Draw] Hoàn thành vẽ chữ O vào Ô #{cell.Index} thành công!");
+                        MessageBox.Show($"Robot THL300 đã vẽ xong chữ O vào Ô #{cell.Index}!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger?.Log($"[Robot Draw] Lỗi khi vẽ chữ O: {ex.Message}");
+                    MessageBox.Show("Lỗi khi robot vẽ chữ O: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    _isCameraMoving = false;
+                    if (!IsDisposed && !Disposing)
+                    {
+                        btnDrawX.Enabled = true;
+                        btnDrawO.Enabled = true;
+                        btnClearSymbol.Enabled = true;
+                        btnMoveRobotToTarget.Enabled = _isTargetValidRadius;
+                    }
+                }
+            };
+
+            // Xử lý sự kiện Xóa ký hiệu trên ô
+            btnClearSymbol.Click += (s, e) => {
+                var cell = _gridService.SelectedCell;
+                if (cell == null)
+                {
+                    MessageBox.Show("Vui lòng click chọn một ô vuông trong lưới trước!", "Chưa chọn ô vuông", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                cell.Symbol = GridCell.CellSymbol.None;
+                lblTargetCoords.Text = $"ĐÃ KHÓA Ô #{cell.Index} [H{cell.Row + 1}, C{cell.Col + 1}]  |  Ký hiệu: (Trống)  |  Kích thước: {cell.WidthMm:F1}x{cell.HeightMm:F1} mm";
+                lblTargetCoords.ForeColor = Color.FromArgb(0, 150, 136);
+                _logger?.Log($"[Grid] Đã xóa ký hiệu tại Ô #{cell.Index}.");
+                picCameraLive.Invalidate();
+            };
+
+            // Responsive layout cho thanh điều khiển 2 hàng bên dưới
             Action updateBottomLayout = () => {
                 int w = pnlBottomControl.ClientSize.Width;
                 int rightMargin = 12;
-                btnStopCameraMove.Location = new Point(w - rightMargin - btnStopCameraMove.Width, 11);
-                btnMoveRobotToTarget.Location = new Point(btnStopCameraMove.Left - 8 - btnMoveRobotToTarget.Width, 11);
-                lblCameraMoveSpeedVal.Location = new Point(btnMoveRobotToTarget.Left - 8 - lblCameraMoveSpeedVal.Width, 18);
-                tbCameraMoveSpeed.Location = new Point(lblCameraMoveSpeedVal.Left - 4 - tbCameraMoveSpeed.Width, 13);
-                lblSpeed.Location = new Point(tbCameraMoveSpeed.Left - 4 - lblSpeed.Width, 18);
-                btnClearTarget.Location = new Point(lblSpeed.Left - 16 - btnClearTarget.Width, 15);
-                lblTargetStatus.Location = new Point(btnClearTarget.Left - 10 - lblTargetStatus.Width, 16);
+
+                // --- HÀNG 1: THÔNG TIN MỤC TIÊU & TỐC ĐỘ ROBOT ---
+                lblTargetIcon.Location = new Point(12, 11);
+                lblTargetCoords.Location = new Point(155, 11);
+
+                lblCameraMoveSpeedVal.Location = new Point(w - rightMargin - lblCameraMoveSpeedVal.Width, 11);
+                tbCameraMoveSpeed.Location = new Point(lblCameraMoveSpeedVal.Left - 4 - tbCameraMoveSpeed.Width, 6);
+                lblSpeed.Location = new Point(tbCameraMoveSpeed.Left - 4 - lblSpeed.Width, 11);
+                btnClearTarget.Location = new Point(lblSpeed.Left - 16 - btnClearTarget.Width, 8);
+                lblTargetStatus.Location = new Point(btnClearTarget.Left - 10 - lblTargetStatus.Width, 9);
+
+                // --- HÀNG 2: THAO TÁC VẼ Ô VUÔNG (X/O) & CHUYỂN ĐỘNG ROBOT ---
+                lblDrawTitle.Location = new Point(12, 47);
+                btnDrawX.Location = new Point(155, 41);
+                btnDrawO.Location = new Point(btnDrawX.Right + 8, 41);
+                btnClearSymbol.Location = new Point(btnDrawO.Right + 8, 41);
+                lblDrawHint.Location = new Point(btnClearSymbol.Right + 12, 48);
+
+                btnStopCameraMove.Location = new Point(w - rightMargin - btnStopCameraMove.Width, 41);
+                btnMoveRobotToTarget.Location = new Point(btnStopCameraMove.Left - 8 - btnMoveRobotToTarget.Width, 41);
+
+                // Ẩn bớt gợi ý nếu chiều ngang cửa sổ hẹp
+                lblDrawHint.Visible = (lblDrawHint.Right < btnMoveRobotToTarget.Left - 10);
             };
             pnlBottomControl.Resize += (s, e) => updateBottomLayout();
 
@@ -918,6 +1255,13 @@ namespace Test_1.UI
             pnlBottomControl.Controls.Add(lblSpeed);
             pnlBottomControl.Controls.Add(tbCameraMoveSpeed);
             pnlBottomControl.Controls.Add(lblCameraMoveSpeedVal);
+
+            pnlBottomControl.Controls.Add(lblDrawTitle);
+            pnlBottomControl.Controls.Add(btnDrawX);
+            pnlBottomControl.Controls.Add(btnDrawO);
+            pnlBottomControl.Controls.Add(btnClearSymbol);
+            pnlBottomControl.Controls.Add(lblDrawHint);
+
             pnlBottomControl.Controls.Add(btnMoveRobotToTarget);
             pnlBottomControl.Controls.Add(btnStopCameraMove);
 

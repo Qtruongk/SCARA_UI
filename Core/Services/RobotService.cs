@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Drawing;
 using Test_1.Models;
 using Test_1.Utilities;
 using TsRemoteLib;
@@ -512,6 +513,289 @@ namespace Test_1.Services
                 }
                 await Task.Delay(50);
                 elapsedMs += 50;
+            }
+        }
+
+        private async Task WaitUntilReach3DAsync(double targetX, double targetY, double targetZ, double tolerance = 3.0)
+        {
+            int timeoutMs = 10000;
+            int elapsedMs = 0;
+            while (elapsedMs < timeoutMs)
+            {
+                var pos = GetCurrentPosition()?.WorldPosition;
+                if (pos != null)
+                {
+                    double dx = pos.X - targetX;
+                    double dy = pos.Y - targetY;
+                    double dz = pos.Z - targetZ;
+                    if (Math.Sqrt(dx * dx + dy * dy + dz * dz) <= tolerance)
+                    {
+                        break;
+                    }
+                }
+                await Task.Delay(50);
+                elapsedMs += 50;
+            }
+        }
+
+        /// <summary>
+        /// Điều khiển Robot THL300 cầm bút vẽ chữ X thật sự vào ô vuông trên giấy theo 4 đỉnh góc ranh giới.
+        /// </summary>
+        public async Task<bool> DrawXInCellAsync(PointF[] cornersRobot, double workZ, double speedPercent = 20.0, double liftHeightMm = 10.0, double marginRatio = 0.20)
+        {
+            if (!State.IsConnected || _robot == null)
+            {
+                _logger.Log("[Draw X] Thất bại: Robot chưa kết nối.");
+                return false;
+            }
+
+            if (!State.IsServoOn)
+            {
+                _logger.Log("[Draw X] Thất bại: Servo đang TẮT.");
+                return false;
+            }
+
+            if (cornersRobot == null || cornersRobot.Length < 4)
+            {
+                _logger.Log("[Draw X] Thất bại: Thiếu dữ liệu 4 góc ranh giới.");
+                return false;
+            }
+
+            // Kiểm tra an toàn bán kính làm việc R <= 300mm cho cả 4 góc
+            for (int i = 0; i < 4; i++)
+            {
+                double r = Math.Sqrt(cornersRobot[i].X * cornersRobot[i].X + cornersRobot[i].Y * cornersRobot[i].Y);
+                if (r > 300.0)
+                {
+                    _logger.Log($"[Draw X] Hủy lệnh: Góc #{i + 1} có R={r:F1}mm vượt quá bán kính an toàn 300mm!");
+                    return false;
+                }
+            }
+
+            try
+            {
+                var curPos = GetCurrentPosition()?.WorldPosition;
+                double cAngle = curPos?.C ?? 0.0;
+                double zSafe = workZ + Math.Abs(liftHeightMm);
+                double zWork = workZ;
+
+                PointF tl = cornersRobot[0];
+                PointF tr = cornersRobot[1];
+                PointF br = cornersRobot[2];
+                PointF bl = cornersRobot[3];
+
+                float m = (float)Math.Max(0.05, Math.Min(0.40, marginRatio));
+
+                // Nét 1: Chéo từ TL sang BR
+                PointF p1Start = new PointF(tl.X + m * (br.X - tl.X), tl.Y + m * (br.Y - tl.Y));
+                PointF p1End = new PointF(br.X - m * (br.X - tl.X), br.Y - m * (br.Y - tl.Y));
+
+                // Nét 2: Chéo từ TR sang BL
+                PointF p2Start = new PointF(tr.X + m * (bl.X - tr.X), tr.Y + m * (bl.Y - tr.Y));
+                PointF p2End = new PointF(bl.X - m * (bl.X - tr.X), bl.Y - m * (bl.Y - tr.Y));
+
+                _logger.Log($"[Draw X] Bắt đầu vẽ chữ X (Z_work={zWork:F1}mm, Z_safe={zSafe:F1}mm, Tốc độ: {speedPercent}%)...");
+
+                await Task.Run(async () =>
+                {
+                    double oldSpeed = _robot.MvSpeed;
+                    double oldAcc = _robot.MvAccel;
+                    double oldDec = _robot.MvDecel;
+
+                    _robot.MvSpeed = Math.Max(5, Math.Min(50, speedPercent));
+                    _robot.MvAccel = 50;
+                    _robot.MvDecel = 50;
+
+                    try
+                    {
+                        // 1. Nhấc bút lên độ cao an toàn
+                        if (curPos != null)
+                        {
+                            _robot.Move(new TsPointS { X = curPos.X, Y = curPos.Y, Z = zSafe, C = cAngle, T = 0 });
+                            await WaitUntilReach3DAsync(curPos.X, curPos.Y, zSafe, 3.0);
+                        }
+
+                        // --- NÉT 1 (TL -> BR) ---
+                        // 2. Bay ngang đến điểm bắt đầu nét 1
+                        _robot.Move(new TsPointS { X = p1Start.X, Y = p1Start.Y, Z = zSafe, C = cAngle, T = 0 });
+                        await WaitUntilReachAsync(p1Start.X, p1Start.Y, 2.0);
+
+                        // 3. Hạ bút xuống mặt giấy
+                        _robot.Moves(new TsPointS { X = p1Start.X, Y = p1Start.Y, Z = zWork, C = cAngle, T = 0 });
+                        await WaitUntilReach3DAsync(p1Start.X, p1Start.Y, zWork, 2.0);
+
+                        // 4. Kẻ nét 1 đến p1End
+                        _robot.Moves(new TsPointS { X = p1End.X, Y = p1End.Y, Z = zWork, C = cAngle, T = 0 });
+                        await WaitUntilReachAsync(p1End.X, p1End.Y, 2.0);
+
+                        // 5. Nhấc bút lên Z_safe
+                        _robot.Moves(new TsPointS { X = p1End.X, Y = p1End.Y, Z = zSafe, C = cAngle, T = 0 });
+                        await WaitUntilReach3DAsync(p1End.X, p1End.Y, zSafe, 2.0);
+
+                        // --- NÉT 2 (TR -> BL) ---
+                        // 6. Bay ngang đến điểm bắt đầu nét 2
+                        _robot.Move(new TsPointS { X = p2Start.X, Y = p2Start.Y, Z = zSafe, C = cAngle, T = 0 });
+                        await WaitUntilReachAsync(p2Start.X, p2Start.Y, 2.0);
+
+                        // 7. Hạ bút xuống mặt giấy
+                        _robot.Moves(new TsPointS { X = p2Start.X, Y = p2Start.Y, Z = zWork, C = cAngle, T = 0 });
+                        await WaitUntilReach3DAsync(p2Start.X, p2Start.Y, zWork, 2.0);
+
+                        // 8. Kẻ nét 2 đến p2End
+                        _robot.Moves(new TsPointS { X = p2End.X, Y = p2End.Y, Z = zWork, C = cAngle, T = 0 });
+                        await WaitUntilReachAsync(p2End.X, p2End.Y, 2.0);
+
+                        // 9. Nhấc bút lên Z_safe kết thúc
+                        _robot.Moves(new TsPointS { X = p2End.X, Y = p2End.Y, Z = zSafe, C = cAngle, T = 0 });
+                        await WaitUntilReach3DAsync(p2End.X, p2End.Y, zSafe, 2.0);
+                    }
+                    finally
+                    {
+                        _robot.MvSpeed = oldSpeed;
+                        _robot.MvAccel = oldAcc;
+                        _robot.MvDecel = oldDec;
+                    }
+                });
+
+                _logger.Log("[Draw X] ✔ Đã vẽ xong chữ X thành công!");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Log($"[Draw X] Lỗi thực thi: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Điều khiển Robot THL300 cầm bút vẽ chữ O thật sự vào ô vuông trên giấy theo 4 đỉnh góc ranh giới.
+        /// </summary>
+        public async Task<bool> DrawOInCellAsync(PointF[] cornersRobot, double workZ, double speedPercent = 20.0, double liftHeightMm = 10.0, double radiusRatio = 0.32)
+        {
+            if (!State.IsConnected || _robot == null)
+            {
+                _logger.Log("[Draw O] Thất bại: Robot chưa kết nối.");
+                return false;
+            }
+
+            if (!State.IsServoOn)
+            {
+                _logger.Log("[Draw O] Thất bại: Servo đang TẮT.");
+                return false;
+            }
+
+            if (cornersRobot == null || cornersRobot.Length < 4)
+            {
+                _logger.Log("[Draw O] Thất bại: Thiếu dữ liệu 4 góc ranh giới.");
+                return false;
+            }
+
+            // Kiểm tra an toàn bán kính làm việc R <= 300mm
+            for (int i = 0; i < 4; i++)
+            {
+                double r = Math.Sqrt(cornersRobot[i].X * cornersRobot[i].X + cornersRobot[i].Y * cornersRobot[i].Y);
+                if (r > 300.0)
+                {
+                    _logger.Log($"[Draw O] Hủy lệnh: Góc #{i + 1} có R={r:F1}mm vượt quá bán kính an toàn 300mm!");
+                    return false;
+                }
+            }
+
+            try
+            {
+                var curPos = GetCurrentPosition()?.WorldPosition;
+                double cAngle = curPos?.C ?? 0.0;
+                double zSafe = workZ + Math.Abs(liftHeightMm);
+                double zWork = workZ;
+
+                PointF tl = cornersRobot[0];
+                PointF tr = cornersRobot[1];
+                PointF br = cornersRobot[2];
+                PointF bl = cornersRobot[3];
+
+                // Tâm ô
+                double cx = (tl.X + tr.X + br.X + bl.X) / 4.0;
+                double cy = (tl.Y + tr.Y + br.Y + bl.Y) / 4.0;
+
+                // Kích thước cạnh ô
+                double w = Math.Sqrt(Math.Pow(tr.X - tl.X, 2) + Math.Pow(tr.Y - tl.Y, 2));
+                double h = Math.Sqrt(Math.Pow(bl.X - tl.X, 2) + Math.Pow(bl.Y - tl.Y, 2));
+                double radius = Math.Min(w, h) * Math.Max(0.15, Math.Min(0.45, radiusRatio));
+
+                // Vector trực chuẩn hệ ô
+                double ux = (tr.X - tl.X) / (w + 1e-12);
+                double uy = (tr.Y - tl.Y) / (w + 1e-12);
+                double vx = (bl.X - tl.X) / (h + 1e-12);
+                double vy = (bl.Y - tl.Y) / (h + 1e-12);
+
+                int segments = 36;
+                var circlePoints = new PointF[segments + 1];
+                for (int i = 0; i <= segments; i++)
+                {
+                    double angle = i * 2.0 * Math.PI / segments;
+                    double px = cx + radius * Math.Cos(angle) * ux + radius * Math.Sin(angle) * vx;
+                    double py = cy + radius * Math.Cos(angle) * uy + radius * Math.Sin(angle) * vy;
+                    circlePoints[i] = new PointF((float)px, (float)py);
+                }
+
+                _logger.Log($"[Draw O] Bắt đầu vẽ chữ O (Tâm: ({cx:F1}, {cy:F1}), Bán kính: {radius:F1}mm, Tốc độ: {speedPercent}%)...");
+
+                await Task.Run(async () =>
+                {
+                    double oldSpeed = _robot.MvSpeed;
+                    double oldAcc = _robot.MvAccel;
+                    double oldDec = _robot.MvDecel;
+
+                    _robot.MvSpeed = Math.Max(5, Math.Min(40, speedPercent));
+                    _robot.MvAccel = 50;
+                    _robot.MvDecel = 50;
+
+                    try
+                    {
+                        // 1. Nhấc bút lên độ cao an toàn
+                        if (curPos != null)
+                        {
+                            _robot.Move(new TsPointS { X = curPos.X, Y = curPos.Y, Z = zSafe, C = cAngle, T = 0 });
+                            await WaitUntilReach3DAsync(curPos.X, curPos.Y, zSafe, 3.0);
+                        }
+
+                        // 2. Bay ngang đến điểm bắt đầu đường tròn
+                        PointF startPt = circlePoints[0];
+                        _robot.Move(new TsPointS { X = startPt.X, Y = startPt.Y, Z = zSafe, C = cAngle, T = 0 });
+                        await WaitUntilReachAsync(startPt.X, startPt.Y, 2.0);
+
+                        // 3. Hạ bút xuống mặt giấy
+                        _robot.Moves(new TsPointS { X = startPt.X, Y = startPt.Y, Z = zWork, C = cAngle, T = 0 });
+                        await WaitUntilReach3DAsync(startPt.X, startPt.Y, zWork, 2.0);
+
+                        // 4. Nội suy vẽ liên tục 360 độ
+                        for (int i = 1; i <= segments; i++)
+                        {
+                            PointF pt = circlePoints[i];
+                            _robot.Moves(new TsPointS { X = pt.X, Y = pt.Y, Z = zWork, C = cAngle, T = 0 });
+                            await WaitUntilReachAsync(pt.X, pt.Y, 2.5);
+                        }
+
+                        // 5. Nhấc bút lên Z_safe kết thúc
+                        PointF endPt = circlePoints[segments];
+                        _robot.Moves(new TsPointS { X = endPt.X, Y = endPt.Y, Z = zSafe, C = cAngle, T = 0 });
+                        await WaitUntilReach3DAsync(endPt.X, endPt.Y, zSafe, 2.0);
+                    }
+                    finally
+                    {
+                        _robot.MvSpeed = oldSpeed;
+                        _robot.MvAccel = oldAcc;
+                        _robot.MvDecel = oldDec;
+                    }
+                });
+
+                _logger.Log("[Draw O] ✔ Đã vẽ xong chữ O thành công!");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Log($"[Draw O] Lỗi thực thi: {ex.Message}");
+                return false;
             }
         }
 
