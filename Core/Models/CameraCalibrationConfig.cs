@@ -29,6 +29,14 @@ namespace Test_1.Models
         public double[,] T_cam2base { get; set; } = new double[4, 4];
         public double[,] T_base2cam { get; set; } = new double[4, 4];
         public double[,] H_pixel2robot { get; set; } = new double[3, 3];
+        public double[,] H_robot2pixel { get; set; } = new double[3, 3];
+
+        // 4-Point Planar Homography specific
+        public bool HasHomography { get; set; } = false;
+        public double CalibratedWorkZ { get; set; } = 0.0;
+        public System.Drawing.PointF[] CalibPixelPoints { get; set; } = new System.Drawing.PointF[4];
+        public System.Drawing.PointF[] CalibRobotPoints { get; set; } = new System.Drawing.PointF[4];
+        public double HomographyRmsErrorMm { get; set; } = 0.0;
 
         // Residual Accuracy
         public double RmsErrorMm { get; set; } = 0.352;
@@ -117,7 +125,30 @@ namespace Test_1.Models
 
                 // Parse 3x3 H
                 double[,] h = ExtractMatrix3x3(json, "H_pixel2robot");
-                if (h != null) config.H_pixel2robot = h;
+                if (h != null)
+                {
+                    config.H_pixel2robot = h;
+                    // Kiểm tra xem H có phải là ma trận mặc định ban đầu hay đã hiệu chuẩn
+                    if (Math.Abs(h[0, 2]) > 1e-4 || Math.Abs(h[1, 2]) > 1e-4 || Math.Abs(h[2, 0]) > 1e-6)
+                    {
+                        config.HasHomography = true;
+                    }
+                }
+
+                // Parse 3x3 H_robot2pixel
+                double[,] h_inv = ExtractMatrix3x3(json, "H_robot2pixel");
+                if (h_inv != null)
+                {
+                    config.H_robot2pixel = h_inv;
+                }
+                else if (config.HasHomography && config.H_pixel2robot != null)
+                {
+                    Test_1.Services.PlanarHomography.InvertHomography(config.H_pixel2robot, out double[,] computedInv);
+                    config.H_robot2pixel = computedInv;
+                }
+
+                config.CalibratedWorkZ = ExtractDouble(json, "work_plane_z_mm", config.CalibratedWorkZ);
+                config.HomographyRmsErrorMm = ExtractDouble(json, "homography_rms_error_mm", config.HomographyRmsErrorMm);
 
                 config.RmsErrorMm = ExtractDouble(json, "rms_translation_error_mm", config.RmsErrorMm);
                 config.MaxErrorMm = ExtractDouble(json, "max_translation_error_mm", config.MaxErrorMm);
@@ -131,6 +162,74 @@ namespace Test_1.Models
             }
 
             return config;
+        }
+
+        public void SaveHomographyCalibration(string filePath, double[,] H, double[,] H_inv, System.Drawing.PointF[] pixels, System.Drawing.PointF[] robots, double workZ, double rmsError)
+        {
+            try
+            {
+                H_pixel2robot = H;
+                H_robot2pixel = H_inv;
+                CalibPixelPoints = pixels;
+                CalibRobotPoints = robots;
+                CalibratedWorkZ = workZ;
+                HomographyRmsErrorMm = rmsError;
+                HasHomography = true;
+
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine("{");
+                sb.AppendLine($"    \"timestamp\": \"{DateTime.Now:yyyy-MM-ddTHH:mm:ss}\",");
+                sb.AppendLine($"    \"calibration_type\": \"4_point_planar_homography\",");
+                sb.AppendLine($"    \"camera_model\": \"{CameraModel}\",");
+                sb.AppendLine($"    \"work_plane_z_mm\": {workZ.ToString("F3", CultureInfo.InvariantCulture)},");
+                sb.AppendLine($"    \"homography_rms_error_mm\": {rmsError.ToString("F4", CultureInfo.InvariantCulture)},");
+                sb.AppendLine($"    \"is_within_spec\": {(rmsError <= 1.0 ? "true" : "false")},");
+
+                sb.AppendLine("    \"pixel_points\": [");
+                for (int i = 0; i < pixels.Length; i++)
+                {
+                    string comma = (i < pixels.Length - 1) ? "," : "";
+                    sb.AppendLine($"        {{ \"point_id\": {i + 1}, \"u\": {pixels[i].X.ToString("F2", CultureInfo.InvariantCulture)}, \"v\": {pixels[i].Y.ToString("F2", CultureInfo.InvariantCulture)} }}{comma}");
+                }
+                sb.AppendLine("    ],");
+
+                sb.AppendLine("    \"robot_points\": [");
+                for (int i = 0; i < robots.Length; i++)
+                {
+                    string comma = (i < robots.Length - 1) ? "," : "";
+                    sb.AppendLine($"        {{ \"point_id\": {i + 1}, \"x\": {robots[i].X.ToString("F3", CultureInfo.InvariantCulture)}, \"y\": {robots[i].Y.ToString("F3", CultureInfo.InvariantCulture)} }}{comma}");
+                }
+                sb.AppendLine("    ],");
+
+                sb.AppendLine("    \"H_pixel2robot\": [");
+                for (int r = 0; r < 3; r++)
+                {
+                    string comma = (r < 2) ? "," : "";
+                    sb.AppendLine($"        [{H[r, 0].ToString("E12", CultureInfo.InvariantCulture)}, {H[r, 1].ToString("E12", CultureInfo.InvariantCulture)}, {H[r, 2].ToString("E12", CultureInfo.InvariantCulture)}]{comma}");
+                }
+                sb.AppendLine("    ],");
+
+                sb.AppendLine("    \"H_robot2pixel\": [");
+                for (int r = 0; r < 3; r++)
+                {
+                    string comma = (r < 2) ? "," : "";
+                    sb.AppendLine($"        [{H_inv[r, 0].ToString("E12", CultureInfo.InvariantCulture)}, {H_inv[r, 1].ToString("E12", CultureInfo.InvariantCulture)}, {H_inv[r, 2].ToString("E12", CultureInfo.InvariantCulture)}]{comma}");
+                }
+                sb.AppendLine("    ]");
+                sb.AppendLine("}");
+
+                string dir = Path.GetDirectoryName(filePath);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+
+                File.WriteAllText(filePath, sb.ToString(), System.Text.Encoding.UTF8);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Lỗi lưu file Homography: {ex.Message}", ex);
+            }
         }
 
         private static double ExtractDouble(string text, string key, double defaultVal)

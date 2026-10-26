@@ -96,7 +96,12 @@
     <Compile Include="Core\Services\RobotService.cs" />
     <Compile Include="Core\Services\MotionService.cs" />
     <Compile Include="Core\Services\CameraTransformService.cs" />
+    <Compile Include="Core\Services\PlanarHomography.cs" />
+    <Compile Include="Core\Services\GridScannerService.cs" />
     <Compile Include="Core\Utilities\Constants.cs" />
+    <Compile Include="Core\UI\FourPointCalibrationDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Core\UI\MainForm.cs">
       <SubType>Form</SubType>
     </Compile>

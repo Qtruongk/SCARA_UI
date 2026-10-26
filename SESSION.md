@@ -14,11 +14,12 @@
 | 3 | **Quy hoạch quỹ đạo S-Curve** | Giải thuật S-Curve 7 pha, điều khiển Jogging từng trục/tọa độ World (Guide), tự động vẽ biên dạng hình học (Square, Circle). | ✅ Hoàn thành |
 | 4 | **Tối ưu hiển thị & Tỉ lệ DPI** | Cấu hình DPI Unawareness, triệt tiêu lỗi lệch layout và méo khung vẽ 3D trên các màn hình có tỉ lệ hiển thị (scale) khác nhau. | ✅ Hoàn thành |
 | 5 | **Tích hợp Camera Vision (Live)** | Thu phát video trực tiếp từ webcam (Logitech Brio 100), chọn thiết bị, tùy chọn độ phân giải linh hoạt (1280x720,...), quản lý hủy luồng an toàn. | ✅ Hoàn thành |
-| 6 | **Căn chuẩn & Biến đổi Tọa độ** | Nạp thông số nội tại camera, giải ma trận Hand-Eye 4x4 và Homography phẳng chuyển đổi Pixel sang Robot Base (sai số $\le 1\text{mm}$), tích hợp cơ chế **Auto-Config Hot-Reload** tự động phát hiện và nạp lại ma trận khi calib lại vị trí. | ✅ Hoàn thành |
+| 6 | **Căn chuẩn & Biến đổi Tọa độ** | Nạp thông số nội tại camera, giải ma trận Hand-Eye 4x4 và Homography phẳng chuyển đổi Pixel sang Robot Base (sai số $\le 1\text{mm}$), tích hợp cơ chế **Auto-Config Hot-Reload** và **Giao diện Calib nhanh 4 điểm (Planar Homography)** trực tiếp trên ứng dụng. | ✅ Hoàn thành |
 | 7 | **Bộ công cụ Calib Python** | Bộ script Python thu thập mẫu bàn cờ trên robot, thuật toán giải Hand-Eye Eye-to-Hand và kiểm định sai số còn dư. | ✅ Hoàn thành |
 | 8 | **Tái cấu trúc UI & An toàn hệ thống** | Bố cục 4 tab (Home, Guide, Shapes, Camera Vision), bảng màu Navy Slate, thanh trượt Splitter, cơ chế bắt crash log toàn cục (`crash.log`). | ✅ Hoàn thành |
-| 9 | **Điều khiển Point-and-Click Camera** | Chấm điểm trên camera live, tự động tính tọa độ Robot Base qua ma trận Hand-Eye, kiểm tra $R \le 300\text{mm}$, bảng đọc tọa độ thực thời gian thực (TCP World & Joints) để so sánh vị trí tức thời, di chuyển trực tiếp tới $(X, Y)$ giữ nguyên cao độ $Z$. | ✅ Hoàn thành |
-| 10 | **Kiểm thử thực tế với phần cứng** | Kết nối trực tiếp robot THL300 và camera Logitech Brio 100 thật để kiểm tra luồng video và thu thập điểm khớp hoàn tất ma trận Hand-Eye. | ✅ Hoàn thành |
+| 9 | **Điều khiển Point-and-Click Camera** | Chấm điểm trên camera live, tự động tính tọa độ Robot Base qua ma trận Hand-Eye/Homography, kiểm tra $R \le 300\text{mm}$, bảng đọc tọa độ thực thời gian thực (TCP World & Joints) để so sánh vị trí tức thời, di chuyển trực tiếp tới $(X, Y)$ giữ nguyên cao độ $Z$. | ✅ Hoàn thành |
+| 10 | **Kiểm thử thực tế với phần cứng** | Kết nối trực tiếp robot THL300 và camera Logitech Brio 100 thật, tích hợp tính năng Calib 4 điểm tương ứng triệt tiêu góc nghiêng camera, trực quan hóa tứ giác làm việc trên Camera Live View. | ✅ Hoàn thành |
+| 11 | **Quét ô vuông & Lưới Grid tương tác** | Tự động quét và phát hiện lưới ô vuông trong phạm vi 4 điểm calib, **tích hợp thuật toán Thị giác máy tính bám nét mực thật (1D Valley Caliper + Sub-pixel Parabola + Total Least Squares)** khóa chặt các đường ranh giới và 4 đỉnh góc vào đúng nét kẻ đen trên giấy (triệt tiêu sai lệch lệch ô), loại bỏ hiển thị tâm ô vuông, vẽ Grid và highlight ranh giới từng ô vuông độc lập (#1..#N) để sẵn sàng làm việc với từng ô vuông nhỏ. | ✅ Hoàn thành |
 
 ---
 

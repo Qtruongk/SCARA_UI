@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using AForge.Video;
 using AForge.Video.DirectShow;
 using Test_1.Models;
+using Test_1.Services;
 
 namespace Test_1.UI
 {
@@ -45,6 +46,15 @@ namespace Test_1.UI
         private Button btnStopCameraMove;
         private bool _isCameraMoving = false;
         private Label lblAutoConfigBadge;
+        private Button btnFourPointCalib;
+        private FourPointCalibrationDialog _fourPointDialog = null;
+        private bool _showCalibOverlay = true;
+
+        // Grid Scanner Controls
+        private readonly GridScannerService _gridService = new GridScannerService();
+        private Button btnToggleGrid;
+        private Button btnGridSettings;
+        private Button btnSnapGrid;
 
         // Current Robot Position Readout controls for Camera Tab
         private Panel pnlRobotReadout;
@@ -73,11 +83,11 @@ namespace Test_1.UI
                 Visible = false
             };
 
-            // 1. Top Control Bar (Clean, Minimal, Professional)
+            // 1. Top Control Bar (2-Row Responsive Layout to avoid getting cut off on various screen sizes)
             Panel pnlTopBar = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 56,
+                Height = 92,
                 BackColor = Color.White,
                 Padding = new Padding(12, 8, 12, 8)
             };
@@ -85,6 +95,7 @@ namespace Test_1.UI
                 e.Graphics.DrawLine(new Pen(borderColor, 1), 0, pnlTopBar.Height - 1, pnlTopBar.Width, pnlTopBar.Height - 1);
             };
 
+            // --- HÀNG 1: Thiết bị Camera & Độ phân giải & Bật/Tắt Live ---
             Label lblDev = new Label
             {
                 Text = "Camera:",
@@ -98,7 +109,7 @@ namespace Test_1.UI
             {
                 DropDownStyle = ComboBoxStyle.DropDownList,
                 Font = new Font("Segoe UI", 9F),
-                Location = new Point(68, 14),
+                Location = new Point(70, 14),
                 Width = 170
             };
             cmbCameraDevices.SelectedIndexChanged += (s, e) => {
@@ -110,7 +121,7 @@ namespace Test_1.UI
                 Text = "Độ phân giải:",
                 Font = new Font("Segoe UI", 9F, FontStyle.Bold),
                 ForeColor = darkText,
-                Location = new Point(246, 17),
+                Location = new Point(252, 17),
                 AutoSize = true
             };
 
@@ -118,7 +129,7 @@ namespace Test_1.UI
             {
                 DropDownStyle = ComboBoxStyle.DropDownList,
                 Font = new Font("Segoe UI", 9F),
-                Location = new Point(328, 14),
+                Location = new Point(334, 14),
                 Width = 105
             };
 
@@ -129,8 +140,8 @@ namespace Test_1.UI
                 BackColor = Color.FromArgb(46, 125, 50),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Location = new Point(442, 12),
-                Size = new Size(150, 32),
+                Location = new Point(448, 12),
+                Size = new Size(160, 32),
                 Cursor = Cursors.Hand
             };
             btnToggleCamera.FlatAppearance.BorderSize = 0;
@@ -138,6 +149,16 @@ namespace Test_1.UI
                 ToggleCameraLive();
             };
 
+            lblAutoConfigBadge = new Label
+            {
+                Text = "🟢 Auto-Config: BẬT",
+                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(46, 125, 50),
+                Location = new Point(620, 18),
+                AutoSize = true
+            };
+
+            // --- HÀNG 2: Các công cụ Hiệu chuẩn Calib & Lưới Grid Vision ---
             Button btnReloadCalib = new Button
             {
                 Text = "🔄 Nạp lại Calib",
@@ -145,7 +166,7 @@ namespace Test_1.UI
                 BackColor = Color.FromArgb(240, 244, 248),
                 ForeColor = Color.FromArgb(52, 71, 103),
                 FlatStyle = FlatStyle.Flat,
-                Location = new Point(602, 12),
+                Location = new Point(12, 52),
                 Size = new Size(130, 32),
                 Cursor = Cursors.Hand
             };
@@ -163,13 +184,93 @@ namespace Test_1.UI
                                 "Auto-Config Calib", MessageBoxButtons.OK, MessageBoxIcon.Information);
             };
 
-            lblAutoConfigBadge = new Label
+            btnFourPointCalib = new Button
             {
-                Text = "🟢 Auto-Config: BẬT",
-                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(46, 125, 50),
-                Location = new Point(742, 18),
-                AutoSize = true
+                Text = "🎯 CALIB 4 ĐIỂM",
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                BackColor = Color.FromArgb(13, 110, 253),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Location = new Point(150, 52),
+                Size = new Size(140, 32),
+                Cursor = Cursors.Hand
+            };
+            btnFourPointCalib.FlatAppearance.BorderSize = 0;
+            btnFourPointCalib.Click += (s, e) => {
+                OpenFourPointCalibrationDialog();
+            };
+
+            btnToggleGrid = new Button
+            {
+                Text = "🔲 LƯỚI GRID: BẬT",
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                BackColor = Color.FromArgb(111, 66, 193),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Location = new Point(298, 52),
+                Size = new Size(145, 32),
+                Cursor = Cursors.Hand
+            };
+            btnToggleGrid.FlatAppearance.BorderSize = 0;
+            btnToggleGrid.Click += (s, e) => {
+                _gridService.IsGridEnabled = !_gridService.IsGridEnabled;
+                btnToggleGrid.Text = _gridService.IsGridEnabled ? "🔲 LƯỚI GRID: BẬT" : "🔲 LƯỚI GRID: TẮT";
+                btnToggleGrid.BackColor = _gridService.IsGridEnabled ? Color.FromArgb(111, 66, 193) : Color.FromArgb(140, 150, 165);
+                picCameraLive?.Invalidate();
+            };
+
+            btnGridSettings = new Button
+            {
+                Text = "⚙ Grid",
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                BackColor = Color.FromArgb(240, 244, 248),
+                ForeColor = Color.FromArgb(52, 71, 103),
+                FlatStyle = FlatStyle.Flat,
+                Location = new Point(451, 52),
+                Size = new Size(75, 32),
+                Cursor = Cursors.Hand
+            };
+            btnGridSettings.FlatAppearance.BorderColor = borderColor;
+            btnGridSettings.Click += (s, e) => {
+                ShowGridConfigDialog();
+            };
+
+            btnSnapGrid = new Button
+            {
+                Text = "⚡ BÁM ĐƯỜNG KẺ THẬT",
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                BackColor = Color.FromArgb(0, 150, 136),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Location = new Point(534, 52),
+                Size = new Size(175, 32),
+                Cursor = Cursors.Hand
+            };
+            btnSnapGrid.FlatAppearance.BorderSize = 0;
+            btnSnapGrid.Click += (s, e) => {
+                Bitmap frame = picCameraLive?.Image as Bitmap;
+                UpdateGridFromCalibration(frame);
+                if (_gridService.IsVisionSnapped)
+                {
+                    btnSnapGrid.BackColor = Color.FromArgb(46, 125, 50);
+                    btnSnapGrid.Text = "✔ ĐÃ BÁM NÉT MỰC";
+                    _logger?.Log($"[Vision Grid] ✔ {_gridService.SnapStatusMessage}");
+                    MessageBox.Show($"Thị giác máy tính đã quét và bám dính thành công!\n\n" +
+                                    $"• Số đường bám thành công: {_gridService.SnappedLineCount}/{_gridService.TotalLineCount} đường nét mực thật\n" +
+                                    $"• Sai số bám dính: {_gridService.AverageResidualPx:F2} pixel (Sub-pixel Caliper)\n" +
+                                    $"• Toàn bộ các tâm ô vuông và đỉnh góc đã được khóa chặt vào nét kẻ thật trên giấy.",
+                                    "Vision Line Snapping", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    btnSnapGrid.BackColor = Color.FromArgb(0, 150, 136);
+                    btnSnapGrid.Text = "⚡ BÁM ĐƯỜNG KẺ THẬT";
+                    _logger?.Log($"[Vision Grid] ⚠ {_gridService.SnapStatusMessage}");
+                    MessageBox.Show($"Chưa phát hiện rõ nét mực đen hoặc camera chưa hoạt động!\n\n" +
+                                    $"Hệ thống tiếp tục dùng lưới nội suy hình học.\n" +
+                                    $"Gợi ý: Bật camera Live và đảm bảo tờ giấy kẻ ô được chiếu sáng rõ nét.",
+                                    "Vision Line Snapping", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
             };
 
             pnlTopBar.Controls.Add(lblDev);
@@ -177,8 +278,12 @@ namespace Test_1.UI
             pnlTopBar.Controls.Add(lblRes);
             pnlTopBar.Controls.Add(cmbResolutions);
             pnlTopBar.Controls.Add(btnToggleCamera);
-            pnlTopBar.Controls.Add(btnReloadCalib);
             pnlTopBar.Controls.Add(lblAutoConfigBadge);
+            pnlTopBar.Controls.Add(btnReloadCalib);
+            pnlTopBar.Controls.Add(btnFourPointCalib);
+            pnlTopBar.Controls.Add(btnToggleGrid);
+            pnlTopBar.Controls.Add(btnGridSettings);
+            pnlTopBar.Controls.Add(btnSnapGrid);
 
             // 2. Full Live Viewport (Takes up entire center area)
             Panel pnlViewContainer = new Panel
@@ -262,10 +367,100 @@ namespace Test_1.UI
                     }
                 }
 
-                // 2. Draw Real-time Hover HUD (Tọa độ con trỏ thời gian thực)
+                // 2. Draw 4-Point Homography Calibration Overlay (nếu có và bật hiển thị)
+                if (_showCalibOverlay)
+                {
+                    PointF[] calibPixels = _fourPointDialog?.GetCurrentPixelPoints() ?? _cameraService?.Config?.CalibPixelPoints;
+                    PointF[] calibRobots = _fourPointDialog?.GetCurrentRobotPoints() ?? _cameraService?.Config?.CalibRobotPoints;
+
+                    Color[] pColors = {
+                        Color.FromArgb(220, 53, 69),   // P1 Đỏ
+                        Color.FromArgb(0, 123, 255),  // P2 Xanh dương
+                        Color.FromArgb(111, 66, 193), // P3 Tím
+                        Color.FromArgb(40, 167, 69)   // P4 Xanh lá
+                    };
+
+                    if (calibPixels != null)
+                    {
+                        PointF[] screenPoints = new PointF[4];
+                        int validCount = 0;
+
+                        for (int i = 0; i < 4; i++)
+                        {
+                            if (i < calibPixels.Length && calibPixels[i] != PointF.Empty && calibPixels[i].X > 0 && calibPixels[i].Y > 0)
+                            {
+                                if (GetScreenPointFromImagePixel(calibPixels[i].X, calibPixels[i].Y, out float sx, out float sy))
+                                {
+                                    screenPoints[i] = new PointF(sx, sy);
+                                    validCount++;
+
+                                    // Vẽ marker mốc P[i]
+                                    Color c = pColors[i];
+                                    using (Brush bPoint = new SolidBrush(c))
+                                    using (Pen pCircle = new Pen(Color.White, 2f))
+                                    using (Font fP = new Font("Segoe UI", 8F, FontStyle.Bold))
+                                    {
+                                        g.FillEllipse(bPoint, sx - 6, sy - 6, 12, 12);
+                                        g.DrawEllipse(pCircle, sx - 6, sy - 6, 12, 12);
+
+                                        string pName = $"P{i + 1}";
+                                        if (calibRobots != null && i < calibRobots.Length && calibRobots[i] != PointF.Empty)
+                                        {
+                                            pName += $" ({calibRobots[i].X:F0}, {calibRobots[i].Y:F0})";
+                                        }
+                                        SizeF sName = g.MeasureString(pName, fP);
+                                        using (Brush bBg = new SolidBrush(Color.FromArgb(210, 15, 17, 26)))
+                                        using (Pen pBorder = new Pen(c, 1))
+                                        {
+                                            g.FillRectangle(bBg, sx + 8, sy - sName.Height / 2, sName.Width + 4, sName.Height);
+                                            g.DrawRectangle(pBorder, sx + 8, sy - sName.Height / 2, sName.Width + 4, sName.Height);
+                                        }
+                                        g.DrawString(pName, fP, Brushes.White, sx + 10, sy - sName.Height / 2);
+                                    }
+                                }
+                            }
+                        }
+
+                        // Nếu có đủ 4 điểm trên màn hình, vẽ đa giác bao nối 4 điểm
+                        if (validCount == 4)
+                        {
+                            using (Pen pPoly = new Pen(Color.FromArgb(180, 0, 229, 255), 1.5f) { DashStyle = DashStyle.Dash })
+                            using (Brush bPoly = new SolidBrush(Color.FromArgb(25, 0, 229, 255)))
+                            {
+                                g.FillPolygon(bPoly, screenPoints);
+                                g.DrawPolygon(pPoly, screenPoints);
+                            }
+                        }
+                    }
+
+                    // Hiển thị Banner nếu đang ở chế độ picking điểm từ Dialog
+                    if (_fourPointDialog != null && !_fourPointDialog.IsDisposed && _fourPointDialog.ActivePickingPointIndex >= 0)
+                    {
+                        int pickingIdx = _fourPointDialog.ActivePickingPointIndex;
+                        string pickMsg = $"🎯 CHẾ ĐỘ CHẤM ĐIỂM: Vui lòng CLICK CHUỘT trên ảnh để ghim vị trí cho Điểm P{pickingIdx + 1}";
+                        using (Font fPick = new Font("Segoe UI", 9.5F, FontStyle.Bold))
+                        {
+                            SizeF sPick = g.MeasureString(pickMsg, fPick);
+                            float bannerX = (picCameraLive.Width - sPick.Width - 24) / 2f;
+                            using (Brush bBg = new SolidBrush(Color.FromArgb(235, 217, 83, 79)))
+                            using (Pen pBorder = new Pen(Color.White, 1.5f))
+                            {
+                                g.FillRectangle(bBg, bannerX, 10, sPick.Width + 24, sPick.Height + 10);
+                                g.DrawRectangle(pBorder, bannerX, 10, sPick.Width + 24, sPick.Height + 10);
+                            }
+                            g.DrawString(pickMsg, fPick, Brushes.White, bannerX + 12, 15);
+                        }
+                    }
+                }
+
+                // 3. Draw Perspective Grid Ô Vuông (Quét và vẽ các ô vuông trong phạm vi 4 điểm)
+                _gridService.DrawGrid(g, (u, v) => GetScreenPointFromImagePixel(u, v, out float sx, out float sy) ? Tuple.Create(sx, sy) : null);
+
+                // 4. Draw Real-time Hover HUD (Tọa độ con trỏ thời gian thực)
                 if (_hoverPixel.HasValue && _hoverRobotX.HasValue && _hoverRobotY.HasValue)
                 {
-                    string hud = $"Con trỏ: Pixel ({_hoverPixel.Value.X:F0}, {_hoverPixel.Value.Y:F0}) ➜ Robot Base: X={_hoverRobotX:F1}, Y={_hoverRobotY:F1} mm (R={_hoverRobotRadius:F1} mm)";
+                    string modeTag = (_cameraService != null && _cameraService.UseHomography && _cameraService.Config.HasHomography) ? " [HOMOGRAPHY]" : "";
+                    string hud = $"Con trỏ: Pixel ({_hoverPixel.Value.X:F0}, {_hoverPixel.Value.Y:F0}) ➜ Robot Base: X={_hoverRobotX:F1}, Y={_hoverRobotY:F1} mm (R={_hoverRobotRadius:F1} mm){modeTag}";
                     using (Font fHud = new Font("Consolas", 8.5F, FontStyle.Bold))
                     {
                         SizeF sHud = g.MeasureString(hud, fHud);
@@ -283,29 +478,43 @@ namespace Test_1.UI
                 if (GetImagePixelFromMouse(e.X, e.Y, out float u, out float v))
                 {
                     _hoverPixel = new PointF(u, v);
-                    double workZ = 0.0;
-                    if (_cameraService != null && _cameraService.PixelToRobotBase(u, v, workZ, out double rx, out double ry, out double rz))
+                    double curZ = _robotService?.GetCurrentPosition()?.WorldPosition?.Z ?? (_cameraService?.Config?.CalibratedWorkZ ?? 0.0);
+                    if (_cameraService != null && _cameraService.PixelToRobotBase(u, v, curZ, out double rx, out double ry, out double rz))
                     {
                         _hoverRobotX = rx;
                         _hoverRobotY = ry;
                         _hoverRobotRadius = Math.Sqrt(rx * rx + ry * ry);
                     }
-                    picCameraLive.Invalidate();
+
+                    // Hover Grid Cell
+                    var prevHover = _gridService.HoveredCell;
+                    _gridService.HoveredCell = _gridService.FindCellAtPixel(u, v);
+                    if (_gridService.HoveredCell != prevHover)
+                    {
+                        picCameraLive.Invalidate();
+                    }
+                    else
+                    {
+                        picCameraLive.Invalidate();
+                    }
                 }
                 else
                 {
-                    if (_hoverPixel.HasValue)
+                    if (_hoverPixel.HasValue || _gridService.HoveredCell != null)
                     {
                         _hoverPixel = null;
+                        _gridService.HoveredCell = null;
                         picCameraLive.Invalidate();
                     }
                 }
             };
 
             picCameraLive.MouseLeave += (s, e) => {
-                if (_hoverPixel.HasValue)
+                bool needRepaint = _hoverPixel.HasValue || _gridService.HoveredCell != null;
+                _hoverPixel = null;
+                _gridService.HoveredCell = null;
+                if (needRepaint)
                 {
-                    _hoverPixel = null;
                     picCameraLive.Invalidate();
                 }
             };
@@ -314,12 +523,40 @@ namespace Test_1.UI
                 if (e.Button != MouseButtons.Left) return;
                 if (!GetImagePixelFromMouse(e.X, e.Y, out float u, out float v)) return;
 
-                double workZ = 0.0;
-                if (_cameraService != null && _cameraService.PixelToRobotBase(u, v, workZ, out double rx, out double ry, out double rz))
+                // 1. Kiểm tra nếu đang trong chế độ chấm điểm mốc của Calib 4 Điểm
+                if (_fourPointDialog != null && !_fourPointDialog.IsDisposed && _fourPointDialog.ActivePickingPointIndex >= 0)
+                {
+                    int activeIdx = _fourPointDialog.ActivePickingPointIndex;
+                    _fourPointDialog.SetPickedPixel(activeIdx, u, v);
+                    _logger?.Log($"[Calib 4 Điểm] Đã chấm Điểm P{activeIdx + 1}: Pixel ({u:F1}, {v:F1})");
+                    picCameraLive.Invalidate();
+                    return;
+                }
+
+                // 2. Kiểm tra nếu click chọn một ô vuông trong Lưới Grid (Khóa ranh giới ô vuông)
+                if (_gridService.IsGridEnabled)
+                {
+                    var clickedCell = _gridService.FindCellAtPixel(u, v);
+                    if (clickedCell != null)
+                    {
+                        _gridService.SelectedCell = clickedCell;
+
+                        lblTargetCoords.Text = $"ĐÃ KHÓA Ô #{clickedCell.Index} [H{clickedCell.Row + 1}, C{clickedCell.Col + 1}]  |  Ranh giới: TL({clickedCell.CornersPixel[0].X:F0}, {clickedCell.CornersPixel[0].Y:F0}) ➜ BR({clickedCell.CornersPixel[2].X:F0}, {clickedCell.CornersPixel[2].Y:F0}) px  |  Robot TL: ({clickedCell.CornersRobot[0].X:F1}, {clickedCell.CornersRobot[0].Y:F1}) mm  |  Kích thước: {clickedCell.WidthMm:F1}x{clickedCell.HeightMm:F1} mm";
+                        lblTargetCoords.ForeColor = Color.FromArgb(0, 230, 118);
+                        _logger?.Log($"[Grid] Đã chọn và khóa ranh giới Ô #{clickedCell.Index} (Hàng {clickedCell.Row + 1}, Cột {clickedCell.Col + 1}) - Kích thước: {clickedCell.WidthMm:F1}x{clickedCell.HeightMm:F1} mm, 4 đỉnh góc ranh giới đã sẵn sàng.");
+                        picCameraLive.Invalidate();
+                        return;
+                    }
+                }
+
+                // 3. Chế độ click chọn mục tiêu tự do trên ảnh
+                double curZ = _robotService?.GetCurrentPosition()?.WorldPosition?.Z ?? (_cameraService?.Config?.CalibratedWorkZ ?? 0.0);
+                if (_cameraService != null && _cameraService.PixelToRobotBase(u, v, curZ, out double rx, out double ry, out double rz))
                 {
                     double radius = Math.Sqrt(rx * rx + ry * ry);
                     bool isValid = (radius <= 300.0);
 
+                    _gridService.SelectedCell = null;
                     _selectedPixel = new PointF(u, v);
                     _targetRobotX = rx;
                     _targetRobotY = ry;
@@ -330,7 +567,8 @@ namespace Test_1.UI
                     UpdateTargetDisplay();
                     picCameraLive.Invalidate();
 
-                    _logger?.Log($"[Camera Point] Đã chọn Pixel ({u:F1}, {v:F1}) ➜ Robot Base: X={rx:F2} mm, Y={ry:F2} mm (R={radius:F2} mm) - {(isValid ? "HỢP LỆ (R <= 300mm)" : "CẢNH BÁO: VƯỢT TẦM VỚI 300mm")}");
+                    string method = (_cameraService.UseHomography && _cameraService.Config.HasHomography) ? "Homography 4-Điểm" : "Ray-Plane 3D";
+                    _logger?.Log($"[Camera Point] [{method}] Đã chọn Pixel ({u:F1}, {v:F1}) ➜ Robot Base: X={rx:F2} mm, Y={ry:F2} mm (R={radius:F2} mm) - {(isValid ? "HỢP LỆ (R <= 300mm)" : "CẢNH BÁO: VƯỢT TẦM VỚI 300mm")}");
                 }
             };
 
@@ -724,7 +962,13 @@ namespace Test_1.UI
                         OnCalibrationAutoReloaded(fileName);
                     }
                 };
+                _cameraService.CalibrationUpdated += () => {
+                    UpdateGridFromCalibration();
+                };
             }
+
+            // Tự động khởi tạo lưới Grid từ dữ liệu calib 4 điểm nếu có
+            UpdateGridFromCalibration();
 
             // Handle clean stop when form closes
             this.FormClosing += (s, e) => {
@@ -742,6 +986,8 @@ namespace Test_1.UI
                 lblAutoConfigBadge.Text = $"✔ Auto-Config: Đã nạp {fileName} ({DateTime.Now:HH:mm:ss})";
                 lblAutoConfigBadge.ForeColor = Color.FromArgb(0, 120, 215);
             }
+
+            UpdateGridFromCalibration();
 
             // Nếu đang chọn một điểm trên khung hình camera -> tự động tính lại tọa độ Robot Base với ma trận mới
             if (_selectedPixel.HasValue)
@@ -1197,6 +1443,191 @@ namespace Test_1.UI
             lblCameraRobotStatus.Text = state + " · " + detail;
             lblCameraRobotStatus.ForeColor = state == "LIVE" ? Color.FromArgb(38, 132, 90) :
                 state == "STALE" ? Color.FromArgb(175, 111, 31) : Color.FromArgb(113, 125, 143);
+        }
+
+        private void OpenFourPointCalibrationDialog()
+        {
+            if (_fourPointDialog == null || _fourPointDialog.IsDisposed)
+            {
+                _fourPointDialog = new FourPointCalibrationDialog(_cameraService, _robotService);
+                _fourPointDialog.RequestPickPixelOnCamera += (pointIdx) => {
+                    _logger?.Log($"[Calib 4 Điểm] Bắt đầu chấm Điểm P{pointIdx + 1} trên khung hình camera...");
+                    picCameraLive?.Invalidate();
+                };
+                _fourPointDialog.OverlayVisibilityChanged += (visible) => {
+                    _showCalibOverlay = visible;
+                    picCameraLive?.Invalidate();
+                };
+                _fourPointDialog.CalibrationApplied += () => {
+                    picCameraLive?.Invalidate();
+                    UpdateTargetDisplay();
+                    UpdateGridFromCalibration();
+                    if (lblAutoConfigBadge != null && !lblAutoConfigBadge.IsDisposed)
+                    {
+                        lblAutoConfigBadge.Text = $"✔ Homography: {_cameraService.Config.HomographyRmsErrorMm:F3}mm";
+                        lblAutoConfigBadge.ForeColor = Color.FromArgb(0, 120, 215);
+                    }
+                };
+                _fourPointDialog.FormClosed += (s, e) => {
+                    _fourPointDialog = null;
+                    picCameraLive?.Invalidate();
+                };
+                _fourPointDialog.Show(this);
+            }
+            else
+            {
+                _fourPointDialog.BringToFront();
+            }
+        }
+
+        private void UpdateGridFromCalibration(Bitmap frame = null)
+        {
+            try
+            {
+                var cfg = _cameraService?.Config;
+                if (cfg == null) return;
+
+                PointF[] pixels = _fourPointDialog?.GetCurrentPixelPoints() ?? cfg.CalibPixelPoints;
+                PointF[] robots = _fourPointDialog?.GetCurrentRobotPoints() ?? cfg.CalibRobotPoints;
+
+                if (pixels != null && pixels.Length >= 4 && pixels[0] != PointF.Empty && pixels[1] != PointF.Empty && pixels[2] != PointF.Empty && pixels[3] != PointF.Empty)
+                {
+                    Bitmap currentFrame = frame ?? (picCameraLive?.Image as Bitmap);
+                    _gridService.GenerateGrid(pixels, robots, cfg.H_pixel2robot, cfg.H_robot2pixel, currentFrame);
+                    picCameraLive?.Invalidate();
+                }
+            }
+            catch { }
+        }
+
+        private void ShowGridConfigDialog()
+        {
+            using (Form dlg = new Form())
+            {
+                dlg.Text = "Cấu hình Lưới Grid Ô Vuông & Xử lý ảnh bám nét";
+                dlg.Size = new Size(420, 480);
+                dlg.StartPosition = FormStartPosition.CenterParent;
+                dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
+                dlg.MaximizeBox = false;
+                dlg.MinimizeBox = false;
+                dlg.BackColor = Color.FromArgb(245, 247, 250);
+                dlg.Font = new Font("Segoe UI", 9F);
+
+                Label lblRows = new Label { Text = "Số Hàng (Rows):", Location = new Point(24, 25), AutoSize = true, Font = new Font("Segoe UI", 9F, FontStyle.Bold) };
+                NumericUpDown numRows = new NumericUpDown { Location = new Point(180, 22), Width = 80, Minimum = 1, Maximum = 60, Value = _gridService.Rows };
+
+                Label lblCols = new Label { Text = "Số Cột (Cols):", Location = new Point(24, 62), AutoSize = true, Font = new Font("Segoe UI", 9F, FontStyle.Bold) };
+                NumericUpDown numCols = new NumericUpDown { Location = new Point(180, 59), Width = 80, Minimum = 1, Maximum = 60, Value = _gridService.Cols };
+
+                Label lblSize = new Label { Text = "Kích thước ô (mm):", Location = new Point(24, 99), AutoSize = true, Font = new Font("Segoe UI", 9F, FontStyle.Bold) };
+                NumericUpDown numSize = new NumericUpDown { Location = new Point(180, 96), Width = 80, Minimum = 5, Maximum = 200, DecimalPlaces = 1, Value = (decimal)_gridService.SquareSizeMm };
+
+                Button btnAuto = new Button
+                {
+                    Text = "🔍 Tự động ước lượng (25mm)",
+                    Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
+                    BackColor = Color.FromArgb(232, 234, 246),
+                    ForeColor = Color.FromArgb(40, 53, 147),
+                    FlatStyle = FlatStyle.Flat,
+                    Location = new Point(24, 135),
+                    Size = new Size(240, 28),
+                    Cursor = Cursors.Hand
+                };
+                btnAuto.FlatAppearance.BorderColor = Color.FromArgb(40, 53, 147);
+                btnAuto.Click += (s, e) => {
+                    var robots = _fourPointDialog?.GetCurrentRobotPoints() ?? _cameraService?.Config?.CalibRobotPoints;
+                    _gridService.AutoDetectGridDimensions(robots, (double)numSize.Value);
+                    numRows.Value = Math.Max(numRows.Minimum, Math.Min(numRows.Maximum, _gridService.Rows));
+                    numCols.Value = Math.Max(numCols.Minimum, Math.Min(numCols.Maximum, _gridService.Cols));
+                };
+
+                CheckBox chkLines = new CheckBox
+                {
+                    Text = "Vẽ đường ranh giới ô",
+                    Checked = _gridService.ShowGridLines,
+                    Location = new Point(28, 178),
+                    AutoSize = true
+                };
+
+                CheckBox chkLabels = new CheckBox
+                {
+                    Text = "Hiển thị nhãn chỉ số ô (#1..#N)",
+                    Checked = _gridService.ShowCellLabels,
+                    Location = new Point(28, 208),
+                    AutoSize = true
+                };
+
+                CheckBox chkVisionSnap = new CheckBox
+                {
+                    Text = "⚡ Tự động dùng xử lý ảnh bám sát nét mực (Vision Snapping)",
+                    Checked = _gridService.EnableVisionSnapping,
+                    Location = new Point(28, 240),
+                    AutoSize = true,
+                    Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                    ForeColor = Color.FromArgb(0, 121, 107)
+                };
+
+                CheckBox chkCorners = new CheckBox
+                {
+                    Text = "Hiển thị dấu chữ thập tại giao điểm thật (+)",
+                    Checked = _gridService.ShowCornerIntersections,
+                    Location = new Point(28, 272),
+                    AutoSize = true
+                };
+
+                Label lblRadius = new Label { Text = "Bán kính tìm nét (px):", Location = new Point(28, 306), AutoSize = true };
+                NumericUpDown numRadius = new NumericUpDown { Location = new Point(180, 304), Width = 80, Minimum = 6, Maximum = 40, Value = _gridService.ValleySearchRadiusPx };
+
+                Button btnSave = new Button
+                {
+                    Text = "⚡ TẠO & CẬP NHẬT LƯỚI",
+                    Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                    BackColor = Color.FromArgb(111, 66, 193),
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    Location = new Point(24, 348),
+                    Size = new Size(356, 38),
+                    Cursor = Cursors.Hand
+                };
+                btnSave.FlatAppearance.BorderSize = 0;
+                btnSave.Click += (s, e) => {
+                    _gridService.Rows = (int)numRows.Value;
+                    _gridService.Cols = (int)numCols.Value;
+                    _gridService.SquareSizeMm = (double)numSize.Value;
+                    _gridService.ShowGridLines = chkLines.Checked;
+                    _gridService.ShowCellLabels = chkLabels.Checked;
+                    _gridService.EnableVisionSnapping = chkVisionSnap.Checked;
+                    _gridService.ShowCornerIntersections = chkCorners.Checked;
+                    _gridService.ValleySearchRadiusPx = (int)numRadius.Value;
+                    _gridService.IsGridEnabled = true;
+
+                    if (btnToggleGrid != null)
+                    {
+                        btnToggleGrid.Text = "🔲 LƯỚI GRID: BẬT";
+                        btnToggleGrid.BackColor = Color.FromArgb(111, 66, 193);
+                    }
+
+                    UpdateGridFromCalibration(picCameraLive?.Image as Bitmap);
+                    _logger?.Log($"[Grid] Đã cập nhật lưới: {_gridService.Rows} hàng x {_gridService.Cols} cột ({_gridService.Cells.Count} ô vuông) - {_gridService.SnapStatusMessage}");
+                    dlg.Close();
+                };
+
+                dlg.Controls.Add(lblRows);
+                dlg.Controls.Add(numRows);
+                dlg.Controls.Add(lblCols);
+                dlg.Controls.Add(numCols);
+                dlg.Controls.Add(lblSize);
+                dlg.Controls.Add(numSize);
+                dlg.Controls.Add(btnAuto);
+                dlg.Controls.Add(chkLines);
+                dlg.Controls.Add(chkLabels);
+                dlg.Controls.Add(chkVisionSnap);
+                dlg.Controls.Add(chkCorners);
+                dlg.Controls.Add(lblRadius);
+                dlg.Controls.Add(numRadius);
+                dlg.Controls.Add(btnSave);
+                dlg.ShowDialog(this);
+            }
         }
     }
 }

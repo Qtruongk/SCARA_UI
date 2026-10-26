@@ -179,6 +179,8 @@ namespace Test_1.Services
             return false;
         }
 
+        public bool UseHomography { get; set; } = true;
+
         public void TryLoadDefaultCalibration()
         {
             bool loadedAny = false;
@@ -227,6 +229,29 @@ namespace Test_1.Services
                 }
             }
 
+            // 3. Nạp 4-Point Planar Homography nếu có (độ chính xác cao nhất cho mặt bàn thao tác phẳng)
+            string[] fourPointPaths = new string[]
+            {
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\Tools\CameraCalibration\calib_output\four_point_calibration.json"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Tools\CameraCalibration\calib_output\four_point_calibration.json"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\Tools\CameraCalibration\four_point_calibration.json"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "four_point_calibration.json"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\four_point_calibration.json"),
+                @"C:\Semicon\research\Lane detection_2026\sw\calib_output\four_point_calibration.json"
+            };
+
+            foreach (var p in fourPointPaths)
+            {
+                if (File.Exists(p))
+                {
+                    Config = CameraCalibrationConfig.LoadFromFile(p, Config);
+                    Config.HasHomography = true;
+                    _logger?.Log($"[Camera] ✔ Loaded 4-Point Homography: {p} (RMS = {Config.HomographyRmsErrorMm:F4}mm, Z = {Config.CalibratedWorkZ:F2}mm)");
+                    loadedAny = true;
+                    break;
+                }
+            }
+
             if (!loadedAny)
             {
                 Config.SetDefaultMatrices();
@@ -234,6 +259,42 @@ namespace Test_1.Services
             }
 
             CalibrationUpdated?.Invoke();
+        }
+
+        public void ApplyHomography(double[,] H, double[,] H_inv, System.Drawing.PointF[] pixels, System.Drawing.PointF[] robots, double workZ, double rmsError)
+        {
+            Config.H_pixel2robot = H;
+            Config.H_robot2pixel = H_inv;
+            Config.CalibPixelPoints = pixels;
+            Config.CalibRobotPoints = robots;
+            Config.CalibratedWorkZ = workZ;
+            Config.HomographyRmsErrorMm = rmsError;
+            Config.HasHomography = true;
+            UseHomography = true;
+
+            // Lưu vào file để tự động nạp lại các lần sau
+            string savePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "four_point_calibration.json");
+            try
+            {
+                Config.SaveHomographyCalibration(savePath, H, H_inv, pixels, robots, workZ, rmsError);
+
+                // Đồng thời copy vào thư mục Tools/CameraCalibration nếu có
+                string toolsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\Tools\CameraCalibration\calib_output\four_point_calibration.json");
+                if (Directory.Exists(Path.GetDirectoryName(toolsPath)))
+                {
+                    Config.SaveHomographyCalibration(toolsPath, H, H_inv, pixels, robots, workZ, rmsError);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.Log($"[Camera] Cảnh báo lưu file calib: {ex.Message}");
+            }
+
+            LastReloadTime = DateTime.Now;
+            LastLoadedSource = "4-Point Calibration Dialog";
+            _logger?.Log($"[Camera] ✔ Đã áp dụng bộ ma trận Calib 4 điểm mới (RMS = {rmsError:F4} mm, Z = {workZ:F2} mm)");
+            CalibrationUpdated?.Invoke();
+            CalibrationAutoReloaded?.Invoke("four_point_calibration.json");
         }
 
         public void ReloadCalibration(string customPath = null)
@@ -258,24 +319,39 @@ namespace Test_1.Services
         }
 
         /// <summary>
-        /// Chuyển đổi từ tọa độ Pixel (u, v) trên ảnh Brio 100 sang tọa độ Robot Base (X, Y, Z)
-        /// thông qua khử méo thấu kính và chiếu tia giao với mặt bàn Z = workPlaneZ_mm.
+        /// Chuyển đổi từ tọa độ Pixel (u, v) trên ảnh Brio 100 sang tọa độ Robot Base (X, Y, Z).
+        /// Ưu tiên sử dụng ma trận Planar Homography H (từ 4 điểm calib) nếu có,
+        /// hoặc fallback sang phương pháp chiếu tia giao mặt phẳng 3D (Ray-Plane).
         /// </summary>
         public bool PixelToRobotBase(double u, double v, double workPlaneZ_mm, out double robotX, out double robotY, out double robotZ)
         {
-            robotX = 0; robotY = 0; robotZ = workPlaneZ_mm;
+            double effectiveZ = (workPlaneZ_mm != 0.0) ? workPlaneZ_mm : Config.CalibratedWorkZ;
+            robotX = 0; robotY = 0; robotZ = effectiveZ;
 
             try
             {
-                // 1. Khử méo pixel (u, v) sang tia chuẩn hóa (xn, yn) trên thấu kính lý tưởng
+                // 1. ƯU TIÊN SỐ 1: Sử dụng Ma trận Planar Homography H (Chính xác cao nhất cho mặt phẳng)
+                if (UseHomography && Config.HasHomography && Config.H_pixel2robot != null)
+                {
+                    if (PlanarHomography.TransformPoint(Config.H_pixel2robot, u, v, out double hx, out double hy))
+                    {
+                        robotX = hx;
+                        robotY = hy;
+                        robotZ = effectiveZ;
+                        return true;
+                    }
+                }
+
+                // 2. FALLBACK: Sử dụng phép chiếu tia quang học giao mặt phẳng bàn Z = effectiveZ
+                // Khử méo pixel (u, v) sang tia chuẩn hóa (xn, yn) trên thấu kính lý tưởng
                 UndistortPixel(u, v, out double xn, out double yn);
 
-                // 2. Vector tia quang học trong hệ Camera (X_c, Y_c, Z_c)
+                // Vector tia quang học trong hệ Camera (X_c, Y_c, Z_c)
                 double vx_c = xn;
                 double vy_c = yn;
                 double vz_c = 1.0;
 
-                // 3. Biến đổi vector tia sang hệ Robot Base qua ma trận xoay R_cam2base (3x3)
+                // Biến đổi vector tia sang hệ Robot Base qua ma trận xoay R_cam2base (3x3)
                 double[,] T = Config.T_cam2base;
                 double vx_b = T[0, 0] * vx_c + T[0, 1] * vy_c + T[0, 2] * vz_c;
                 double vy_b = T[1, 0] * vx_c + T[1, 1] * vy_c + T[1, 2] * vz_c;
@@ -286,18 +362,17 @@ namespace Test_1.Services
                 double ty = T[1, 3];
                 double tz = T[2, 3];
 
-                // 4. Tìm giao điểm của tia với mặt phẳng Z_base = workPlaneZ_mm:
-                // Z_base = tz + lambda * vz_b = workPlaneZ_mm => lambda = (workPlaneZ_mm - tz) / vz_b
+                // Tìm giao điểm của tia với mặt phẳng Z_base = effectiveZ:
                 if (Math.Abs(vz_b) < 1e-7)
                 {
                     _logger?.Log("[Camera] Error: Ray is parallel to work plane.");
                     return false;
                 }
 
-                double lambda = (workPlaneZ_mm - tz) / vz_b;
+                double lambda = (effectiveZ - tz) / vz_b;
                 robotX = tx + lambda * vx_b;
                 robotY = ty + lambda * vy_b;
-                robotZ = workPlaneZ_mm;
+                robotZ = effectiveZ;
 
                 return true;
             }
@@ -317,20 +392,33 @@ namespace Test_1.Services
 
             try
             {
+                // 1. ƯU TIÊN SỐ 1: Sử dụng ma trận nghịch đảo Homography H_robot2pixel
+                if (UseHomography && Config.HasHomography && Config.H_robot2pixel != null)
+                {
+                    if (PlanarHomography.TransformPoint(Config.H_robot2pixel, robotX, robotY, out double pu, out double pv))
+                    {
+                        pixelU = pu;
+                        pixelV = pv;
+                        isInFov = (pixelU >= 0 && pixelU <= Config.ImageWidth && pixelV >= 0 && pixelV <= Config.ImageHeight);
+                        return true;
+                    }
+                }
+
+                // 2. FALLBACK: Biến đổi 3D qua T_base2cam và phép chiếu thấu kính
                 double[,] T_b2c = Config.T_base2cam;
 
-                // 1. Chuyển điểm 3D từ Base sang hệ Camera: P_cam = T_base2cam * P_base
+                // Chuyển điểm 3D từ Base sang hệ Camera: P_cam = T_base2cam * P_base
                 double xc = T_b2c[0, 0] * robotX + T_b2c[0, 1] * robotY + T_b2c[0, 2] * robotZ + T_b2c[0, 3];
                 double yc = T_b2c[1, 0] * robotX + T_b2c[1, 1] * robotY + T_b2c[1, 2] * robotZ + T_b2c[1, 3];
                 double zc = T_b2c[2, 0] * robotX + T_b2c[2, 1] * robotY + T_b2c[2, 2] * robotZ + T_b2c[2, 3];
 
                 if (zc <= 0) return false; // Nằm sau ống kính
 
-                // 2. Chiếu phối cảnh chuẩn hóa
+                // Chiếu phối cảnh chuẩn hóa
                 double xn = xc / zc;
                 double yn = yc / zc;
 
-                // 3. Áp dụng hệ số méo thấu kính (Distortion Model)
+                // Áp dụng hệ số méo thấu kính (Distortion Model)
                 double r2 = xn * xn + yn * yn;
                 double r4 = r2 * r2;
                 double r6 = r4 * r2;
@@ -346,7 +434,7 @@ namespace Test_1.Services
                 double xd = xn * radial + 2.0 * p1 * xn * yn + p2 * (r2 + 2.0 * xn * xn);
                 double yd = yn * radial + p1 * (r2 + 2.0 * yn * yn) + 2.0 * p2 * xn * yn;
 
-                // 4. Nhân với tiêu cự Fx, Fy và cộng tâm quang học Cx, Cy
+                // Nhân với tiêu cự Fx, Fy và cộng tâm quang học Cx, Cy
                 pixelU = Config.Fx * xd + Config.Cx;
                 pixelV = Config.Fy * yd + Config.Cy;
 
