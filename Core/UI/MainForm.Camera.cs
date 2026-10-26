@@ -741,6 +741,13 @@ namespace Test_1.UI
             };
             pnlRobotReadout.Resize += (s, e) => arrangeReadout();
 
+            // 3B. Robot Motion Control Bar (Pick Point & Draw X/O Execution)
+            pnlBottomControl = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.White
+            };
+
             // Target Point Coordinates & Status Badge
             Label lblTargetIcon = new Label
             {
