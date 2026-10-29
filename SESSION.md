@@ -1,7 +1,7 @@
-# TIẾN ĐỘ CÔNG VIỆC - PHASE 1
+# TIẾN ĐỘ DỰ ÁN
 
 **Đề tài:** Nghiên cứu, phát triển hệ thống điều khiển và giám sát Robot SCARA gắp chuyển Wafer bán dẫn tích hợp Thị giác máy tính  
-**Cập nhật:** 25/10/2026  
+**Cập nhật:** 29/10/2026  
 
 ---
 
@@ -24,14 +24,23 @@
 
 ---
 
-## Phase 2
+## Phase 2: Chu trình gắp/đặt Wafer thực tế (Pick & Place)
 
-Quá trình triển khai thử nghiệm thực tế cho chu trình gắp/đặt Wafer (Pick & Place) tuân theo trình tự phụ thuộc phần cứng như sau:
+| STT | Hạng mục công việc | Mô tả chi tiết | Trạng thái |
+| :---: | :--- | :--- | :---: |
+| 1 | **Tiếp nhận thiết bị & phôi mẫu** | Đã có hộp chứa **FOUP** (*Front Opening Unified Pod*) và phôi mẫu **Wafer** (phiến silicon bán dẫn) thực tế để phục vụ đo đạc và thử nghiệm. | ✅ Hoàn thành |
+| 2 | **Thiết kế tay gắp khâu cuối (End-Effector / Vacuum Gripper)** | Đã giao nhiệm vụ thiết kế: Đo đạc kích thước khe chứa (*slot clearance*), hành trình ra vào FOUP, biên dạng tiếp xúc và cơ cấu hút chân không/ngàm giữ Wafer. | 🔄 Đang thực hiện |
+| 3 | **Gia công & Lắp ráp tay gắp** | Chế tạo cơ khí/in 3D tay gắp khâu cuối, lắp đặt giác hút chân không và tích hợp lên cụm trục 4 (khâu cuối) của Robot SCARA THL300. | ⏳ Chờ thực hiện |
+| 4 | **Thực nghiệm chu trình Pick & Place Wafer** | Thực hiện chu trình gắp/đặt Wafer tự động vào/ra hộp FOUP. | ⏳ Chờ thực hiện |
 
-1. **Đợi thiết bị & phôi mẫu:**
-   - Đợi hộp chứa **FOUP** (*Front Opening Unified Pod*).
-   - Đợi phôi mẫu **Wafer** (phiến silicon bán dẫn).
-2. **Thiết kế tay gắp khâu cuối (End-Effector / Vacuum Gripper):**
-   - Sau khi nhận hộp FOUP thực tế: tiến hành đo đạc kích thước khe chứa (*slot clearance*), hành trình ra vào và biên dạng tiếp xúc $\to$ bắt đầu **thiết kế tay gắp khâu cuối**.
-3. **Thực nghiệm chu trình Pick & Place Wafer:**
-   - Sau khi thiết kế và lắp đặt tay gắp hoàn chỉnh $\to$ triển khai thử nghiệm quy trình gắp/đặt Wafer tự động (kết hợp nhận diện góc xoay/tâm bằng Thị giác máy tính, chuyển động mượt 7-phase S-Curve và điều khiển hút chân không).
+---
+
+## Phase 3: Tích hợp Thị giác máy tính (Vision-Guided Wafer Handling)
+
+| STT | Hạng mục công việc | Mô tả chi tiết | Trạng thái |
+| :---: | :--- | :--- | :---: |
+| 1 | **Nghiên cứu & Phát triển mô hình AI (Deep Learning)** | Thu thập và gán nhãn tập dữ liệu ảnh Wafer & hộp FOUP trong điều kiện phản xạ quang học thực tế; huấn luyện mô hình AI (YOLO / Segmentation) để phát hiện vị trí phôi, phân loại trạng thái khay và phát hiện lỗi bề mặt (mẻ cạnh, xước vỡ); tối ưu hóa suy luận thời gian thực (ONNX Runtime / TensorRT) tích hợp vào phần mềm C#. | ⏳ Chờ thực hiện |
+| 2 | **Nhận diện tâm và góc định hướng Wafer (Pre-alignment)** | Tự động phát hiện biên dạng tròn phiến Wafer để xác định tâm thực $(X, Y)$ và dò vết khuyết (Notch/Flat) tính góc xoay $\theta$, phục vụ căn chỉnh góc trước khi gắp. | ⏳ Chờ thực hiện |
+| 3 | **Nhận diện vị trí khe & Ánh xạ khay FOUP (Wafer Mapping)** | Ứng dụng Camera nhận diện sự hiện diện của Wafer trong từng slot của FOUP, phát hiện lỗi đặt chéo (*Cross-slot*) hoặc nhầm tầng (*Double-slot*). | ⏳ Chờ thực hiện |
+| 4 | **Bù trừ sai lệch tọa độ tự động (Vision-Guided Offset)** | Tự động tính toán sai lệch vị trí/góc xoay thực tế so với danh định và bù trừ trực tiếp vào quỹ đạo di chuyển của Robot SCARA để gắp/đặt chính xác tuyệt đối. | ⏳ Chờ thực hiện |
+| 5 | **Kiểm định chất lượng & Giám sát an toàn sau gắp** | Kết hợp mô hình AI và xử lý ảnh để kiểm tra phôi sau khi hút (phát hiện mẻ cạnh, trượt phôi, lệch giác hút) và giám sát liên tục quá trình chuyển giao Wafer an toàn. | ⏳ Chờ thực hiện |

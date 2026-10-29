@@ -28,23 +28,43 @@ Hệ thống cung cấp:
 - Hệ thống ghi log tập trung.
 - Digital Twin 3D ngay giữa Home, cập nhật theo vị trí phản hồi thực của robot.
 
-## Digital Twin 3D trên Home
+## Tiến độ dự án 
 
-Khung 3D đọc `GetPsnFbkJoint()` và `GetPsnFbkWorld()` từ controller: J1/J2 quay hai tay đòn, J3 nâng/hạ trục và J4 xoay đầu công cụ. Một lần đọc chạy ở nền với chu kỳ yêu cầu 100 ms; tốc độ cập nhật thực tế phụ thuộc controller và mạng. Các thao tác điều khiển cũng chạy ở nền để cửa sổ tiếp tục vẽ mô hình khi robot đang di chuyển.
+### Phase 1: Nền tảng điều khiển, Digital Twin, Quy hoạch quỹ đạo & Calib Camera
 
-- Vùng giữa Home hiển thị THL300 trên mặt lưới XY mở, phủ toàn bộ nền hình 3D và không có vách hay viền hộp. Lưới căn theo tọa độ thực, có bước 50/100 mm ở góc nhìn mặc định và tự giãn bước khi thu nhỏ để tránh quá dày. Các trục XYZ màu có nhãn theo mm (X/Y ±600, Z -100…800); mặt gá robot là Z=0, mặt lưới ở Z=-100. Camera căn theo vùng robot, độc lập với kích thước mặt lưới; góc nhìn trực giao giữ mặt lưới phủ kín cả khi nhìn ngang thấp.
-- Cụm nút ở góc trên phải xoay trái/phải, nâng/hạ góc nhìn; giữ nút mũi tên để xoay liên tục, nút nhà đặt lại góc nhìn. Kéo chuột để xoay, cuộn để zoom, nhấp đúp cũng đặt lại góc nhìn.
-- Vòng nét đứt bán kính 300 mm là mốc tham chiếu tầm với, không phải biên va chạm hay toàn bộ vùng làm việc. Bảng thông số nằm dưới hình 3D, hiển thị X/Y/Z (mm), C (°) trong frame WORLD của controller và J1/J2/J4 (°), J3 (mm). Các số lấy trực tiếp cùng mẫu phản hồi dùng để cập nhật mô hình, không lấy từ vị trí CAD tính toán. Bảng xếp thành hai hàng trên cửa sổ nhỏ; Home thu gọn chiều cao SYSTEM LOG để giữ chỗ cho hình 3D.
-- Mô hình dùng trực tiếp 4 solid từ `THL300.igs` trong file `THL300.zip` được cung cấp, giữ hình học và màu vật liệu CAD. Mesh được nhúng vào `.exe`; ứng dụng chạy không cần cài thư viện CAD hay tải model qua mạng.
-- Tâm khớp và chiều dài hai tay đòn là 125/175 mm theo CAD và [bản vẽ THL300 của hãng](https://www.shibaura-machine.co.jp/documents/en/product/robot/download/th/pdf_new/S-2GA23-4-THL300-ENG.pdf). Trục J3 tăng theo chiều lên: CAD ở J3=160 mm, nên dịch spindle bằng `J3 − 160`. Gốc hiển thị nằm trên mặt gá robot; gốc controller thấp hơn 48 mm.
-- Trước khi nhận phản hồi, các số hiển thị `—`. Khi mất dữ liệu/ngắt kết nối, tư thế và số đo cuối được giữ nguyên, bảng báo `STALE/OFFLINE` và làm mờ số đo cũ. Kết nối lại báo `WAITING` cho tới mẫu mới; trạng thái `LIVE` chỉ xuất hiện khi có phản hồi hợp lệ. Các trạng thái này cũng có trong API `FeedbackState`.
-- Hiệu chỉnh dấu/offset encoder dùng profile riêng `%LOCALAPPDATA%\SCARA_UI\thl300-digital-twin.xml`; profile SCARA mẫu cũ không được áp dụng. Kích thước CAD cố định và không bị profile thay đổi. J4 dùng góc khớp cục bộ; `UseWorldToolYaw` là tùy chọn khi cấu hình controller cần lấy hướng từ C.
+| STT | Hạng mục công việc | Mô tả chi tiết | Trạng thái |
+| :---: | :--- | :--- | :---: |
+| 1 | **Giao tiếp Robot & Giám sát** | Kết nối TCP, bật/tắt Servo, dừng khẩn cấp an toàn (`ProgramStop` + `ProgramBreak`), Watchdog phản hồi chu kỳ 100ms, hệ thống log tập trung. | ✅ Hoàn thành |
+| 2 | **Mô phỏng 3D Digital Twin** | Dựng 4 khâu CAD gốc từ `THL300.igs`, lưới tọa độ mở theo mm, vòng giới hạn bán kính 300mm, cập nhật chuyển động thực tế theo mẫu phản hồi controller. | ✅ Hoàn thành |
+| 3 | **Quy hoạch quỹ đạo S-Curve** | Giải thuật S-Curve 7 pha, điều khiển Jogging từng trục/tọa độ World (Guide), tự động vẽ biên dạng hình học (Square, Circle). | ✅ Hoàn thành |
+| 4 | **Tối ưu hiển thị & Tỉ lệ DPI** | Cấu hình DPI Unawareness, triệt tiêu lỗi lệch layout và méo khung vẽ 3D trên các màn hình có tỉ lệ hiển thị (scale) khác nhau. | ✅ Hoàn thành |
+| 5 | **Tích hợp Camera Vision (Live)** | Thu phát video trực tiếp từ webcam (Logitech Brio 100), chọn thiết bị, tùy chọn độ phân giải linh hoạt (1280x720,...), quản lý hủy luồng an toàn. | ✅ Hoàn thành |
+| 6 | **Căn chuẩn & Biến đổi Tọa độ** | Nạp thông số nội tại camera, giải ma trận Hand-Eye 4x4 và Homography phẳng chuyển đổi Pixel sang Robot Base (sai số $\le 1\text{mm}$), tích hợp cơ chế **Auto-Config Hot-Reload** và **Giao diện Calib nhanh 4 điểm (Planar Homography)** trực tiếp trên ứng dụng. | ✅ Hoàn thành |
+| 7 | **Bộ công cụ Calib Python** | Bộ script Python thu thập mẫu bàn cờ trên robot, thuật toán giải Hand-Eye Eye-to-Hand và kiểm định sai số còn dư. | ✅ Hoàn thành |
+| 8 | **Tái cấu trúc UI & An toàn hệ thống** | Bố cục 4 tab (Home, Guide, Shapes, Camera Vision), bảng màu Navy Slate, thanh trượt Splitter, cơ chế bắt crash log toàn cục (`crash.log`). | ✅ Hoàn thành |
+| 9 | **Điều khiển Point-and-Click Camera** | Chấm điểm trên camera live, tự động tính tọa độ Robot Base qua ma trận Hand-Eye/Homography, kiểm tra $R \le 300\text{mm}$, bảng đọc tọa độ thực thời gian thực (TCP World & Joints) để so sánh vị trí tức thời, di chuyển trực tiếp tới $(X, Y)$ giữ nguyên cao độ $Z$. | ✅ Hoàn thành |
+| 10 | **Kiểm thử thực tế với phần cứng** | Kết nối trực tiếp robot THL300 và camera Logitech Brio 100 thật, tích hợp tính năng Calib 4 điểm tương ứng triệt tiêu góc nghiêng camera, trực quan hóa tứ giác làm việc trên Camera Live View. | ✅ Hoàn thành |
+| 11 | **Quét ô vuông & Lưới Grid tương tác (Bàn cờ 5x5, Ô 5cm)** | Tự động xác định không gian và khoảng cách đều đặn mỗi ô trong phạm vi 4 điểm calib, **chuẩn hóa bàn cờ 5x5 với kích thước ô 5cm (50.0mm)**. Tự động tính toán bước nhảy metric trong hệ Robot Base và ánh xạ phối cảnh projective lên camera qua $H_{\text{robot}\to\text{pixel}}$, đảm bảo khoảng cách giữa các điểm ô tiếp theo luôn chuẩn xác 50mm. Tích hợp thuật toán Thị giác bám nét mực thật, khóa chặt 4 đỉnh ranh giới ô vuông và tâm ô để Robot THL300 di chuyển chuẩn xác tuyệt đối đến từng tọa độ. | ✅ Hoàn thành |
+| 12 | **Đánh dấu & Vẽ ký hiệu X / O (Virtual & Physical Robot)** | **Chế độ ảo:** Click chuột phải lên ô vuông trên Camera Live để luân phiên đổi ký hiệu `None ➜ X ➜ O ➜ None` (vẽ X màu đỏ coral, O màu xanh lục neon với bo viền). **Chế độ Robot thật:** Nút `[✍ VẼ CHỮ X]` và `[✍ VẼ CHỮ O]` điều khiển Robot THL300 cầm bút vẽ trực tiếp vào ô giấy, tự động nâng bút an toàn $Z_{\text{safe}} = Z_{\text{work}} + 10\text{mm}$, kiểm tra giới hạn $R \le 300\text{mm}$ và hạ bút vẽ nét chéo hoặc quỹ đạo tròn 36 cung trơn tru. | ✅ Hoàn thành |
 
-Khung 3D không gửi lệnh chuyển động và không tự chạy animation khi chưa kết nối. Mô hình đã được kiểm tra bằng dữ liệu phản hồi giả lập; cần đối chiếu lần đầu với robot/controller thực và các frame BASE/TOOL đang sử dụng. Nguồn CAD, hash, quy trình tạo lại mesh và quy ước tọa độ nằm trong `Tools/THL300/README.md`.
+### Phase 2: Chu trình gắp/đặt Wafer thực tế (Pick & Place)
 
-## Kiểm tra Digital Twin không cần robot
+| STT | Hạng mục công việc | Mô tả chi tiết | Trạng thái |
+| :---: | :--- | :--- | :---: |
+| 1 | **Tiếp nhận thiết bị & phôi mẫu** | Đã có hộp chứa **FOUP** (*Front Opening Unified Pod*) và phôi mẫu **Wafer** (phiến silicon bán dẫn) thực tế để phục vụ đo đạc và thử nghiệm. | ✅ Hoàn thành |
+| 2 | **Thiết kế tay gắp khâu cuối (End-Effector / Vacuum Gripper)** | Đã giao nhiệm vụ thiết kế: Đo đạc kích thước khe chứa (*slot clearance*), hành trình ra vào FOUP, biên dạng tiếp xúc và cơ cấu hút chân không/ngàm giữ Wafer. | 🔄 Đang thực hiện |
+| 3 | **Gia công & Lắp ráp tay gắp** | Chế tạo cơ khí/in 3D tay gắp khâu cuối, lắp đặt giác hút chân không và tích hợp lên cụm trục 4 (khâu cuối) của Robot SCARA THL300. | ⏳ Chờ thực hiện |
+| 4 | **Thực nghiệm chu trình Pick & Place Wafer** | Thực hiện chu trình gắp/đặt Wafer tự động vào/ra hộp FOUP. | ⏳ Chờ thực hiện |
 
-Build ứng dụng, sau đó chạy `Tests/RunDigitalTwinChecks.ps1` với `-AppPath` trỏ tới `Test_1.exe` đã build, `-CompilerPath` trỏ tới Roslyn `csc.exe` và `-ReferencePath` trỏ tới thư mục reference assemblies của .NET Framework 4.7.2. Bộ kiểm tra đưa vị trí mẫu vào mô hình, kiểm tra 4 trục, phản hồi lỗi/mất kết nối, chuyển trang và layout ở hai kích thước cửa sổ. Bộ kiểm tra không gọi Connect hoặc gửi lệnh tới robot.
+### Phase 3: Tích hợp Thị giác máy tính (Vision-Guided Wafer Handling)
+
+| STT | Hạng mục công việc | Mô tả chi tiết | Trạng thái |
+| :---: | :--- | :--- | :---: |
+| 1 | **Nghiên cứu & Phát triển mô hình AI (Deep Learning)** | Thu thập và gán nhãn tập dữ liệu ảnh Wafer & hộp FOUP trong điều kiện phản xạ quang học thực tế; huấn luyện mô hình AI (YOLO / Segmentation) để phát hiện vị trí phôi, phân loại trạng thái khay và phát hiện lỗi bề mặt (mẻ cạnh, xước vỡ); tối ưu hóa suy luận thời gian thực (ONNX Runtime / TensorRT) tích hợp vào phần mềm C#. | ⏳ Chờ thực hiện |
+| 2 | **Nhận diện tâm và góc định hướng Wafer (Pre-alignment)** | Tự động phát hiện biên dạng tròn phiến Wafer để xác định tâm thực $(X, Y)$ và dò vết khuyết (Notch/Flat) tính góc xoay $\theta$, phục vụ căn chỉnh góc trước khi gắp. | ⏳ Chờ thực hiện |
+| 3 | **Nhận diện vị trí khe & Ánh xạ khay FOUP (Wafer Mapping)** | Ứng dụng Camera nhận diện sự hiện diện của Wafer trong từng slot của FOUP, phát hiện lỗi đặt chéo (*Cross-slot*) hoặc nhầm tầng (*Double-slot*). | ⏳ Chờ thực hiện |
+| 4 | **Bù trừ sai lệch tọa độ tự động (Vision-Guided Offset)** | Tự động tính toán sai lệch vị trí/góc xoay thực tế so với danh định và bù trừ trực tiếp vào quỹ đạo di chuyển của Robot SCARA để gắp/đặt chính xác tuyệt đối. | ⏳ Chờ thực hiện |
+| 5 | **Kiểm định chất lượng & Giám sát an toàn sau gắp** | Kết hợp mô hình AI và xử lý ảnh để kiểm tra phôi sau khi hút (phát hiện mẻ cạnh, trượt phôi, lệch giác hút) và giám sát liên tục quá trình chuyển giao Wafer an toàn. | ⏳ Chờ thực hiện |
 
 ## Yêu cầu và Cài đặt
 1. Mở project (`Test_1.sln`) bằng Visual Studio.
