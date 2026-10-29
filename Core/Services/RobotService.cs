@@ -541,7 +541,7 @@ namespace Test_1.Services
         /// <summary>
         /// Điều khiển Robot THL300 cầm bút vẽ chữ X thật sự vào ô vuông trên giấy theo 4 đỉnh góc ranh giới.
         /// </summary>
-        public async Task<bool> DrawXInCellAsync(PointF[] cornersRobot, double workZ, double speedPercent = 20.0, double liftHeightMm = 10.0, double marginRatio = 0.20)
+        public async Task<bool> DrawXInCellAsync(PointF[] cornersRobot, double workZ = 0.0, double speedPercent = 20.0, double liftHeightMm = 20.0, double marginRatio = 0.20)
         {
             if (!State.IsConnected || _robot == null)
             {
@@ -594,7 +594,7 @@ namespace Test_1.Services
                 PointF p2Start = new PointF(tr.X + m * (bl.X - tr.X), tr.Y + m * (bl.Y - tr.Y));
                 PointF p2End = new PointF(bl.X - m * (bl.X - tr.X), bl.Y - m * (bl.Y - tr.Y));
 
-                _logger.Log($"[Draw X] Bắt đầu vẽ chữ X (Z_work={zWork:F1}mm, Z_safe={zSafe:F1}mm, Tốc độ: {speedPercent}%)...");
+                _logger.Log($"[Draw X] Bắt đầu vẽ chữ X (Axis 3: Vẽ={zWork:F1}mm / Nhấc={zSafe:F1}mm, Tốc độ: {speedPercent}%)...");
 
                 await Task.Run(async () =>
                 {
@@ -657,7 +657,7 @@ namespace Test_1.Services
                     }
                 });
 
-                _logger.Log("[Draw X] ✔ Đã vẽ xong chữ X thành công!");
+                _logger.Log($"[Draw X] ✔ Đã vẽ xong chữ X thành công! Trục 3 đã nhấc lên {zSafe:F1}mm.");
                 return true;
             }
             catch (Exception ex)
@@ -676,7 +676,7 @@ namespace Test_1.Services
         /// <param name="liftHeightMm">Độ cao nhấc bút an toàn Z_safe = workZ + liftHeightMm (mm)</param>
         /// <param name="diameterMm">Đường kính hình tròn chữ O (mm, mặc định 27.5 mm = 2.75 cm)</param>
         /// <param name="centerRobot">Tọa độ tâm ô mục tiêu (mm, nếu truyền vào sẽ ưu tiên sử dụng)</param>
-        public async Task<bool> DrawOInCellAsync(PointF[] cornersRobot, double workZ, double speedPercent = 20.0, double liftHeightMm = 10.0, double diameterMm = 27.5, PointF? centerRobot = null)
+        public async Task<bool> DrawOInCellAsync(PointF[] cornersRobot, double workZ = 0.0, double speedPercent = 20.0, double liftHeightMm = 20.0, double diameterMm = 27.5, PointF? centerRobot = null)
         {
             if (!State.IsConnected || _robot == null)
             {
@@ -754,7 +754,7 @@ namespace Test_1.Services
                     circlePoints[i] = new PointF((float)px, (float)py);
                 }
 
-                _logger.Log($"[Draw O] Bắt đầu vẽ chữ O tại tâm ({cx:F1}, {cy:F1}), Đường kính {radius * 2.0:F2}mm (2.75cm, R={radius:F2}mm), Z_work={zWork:F1}mm, Tốc độ: {speedPercent}%)...");
+                _logger.Log($"[Draw O] Bắt đầu vẽ chữ O tại tâm ({cx:F1}, {cy:F1}), Đường kính {radius * 2.0:F2}mm (2.75cm, R={radius:F2}mm), Axis 3: Vẽ={zWork:F1}mm / Nhấc={zSafe:F1}mm, Tốc độ: {speedPercent}%)...");
 
                 await Task.Run(async () =>
                 {
@@ -793,10 +793,14 @@ namespace Test_1.Services
                             await WaitUntilReachAsync(pt.X, pt.Y, tol);
                         }
 
-                        // 5. Nhấc bút lên Z_safe kết thúc
+                        // 5. Nhấc bút lên Z_safe kết thúc (20.0 mm)
                         PointF endPt = circlePoints[segments];
                         _robot.Moves(new TsPointS { X = endPt.X, Y = endPt.Y, Z = zSafe, C = cAngle, T = 0 });
                         await WaitUntilReach3DAsync(endPt.X, endPt.Y, zSafe, 2.0);
+
+                        // 6. Đưa đầu bút quay lại tâm ô ở cao độ an toàn Z_safe (20.0 mm)
+                        _robot.Move(new TsPointS { X = (float)cx, Y = (float)cy, Z = zSafe, C = cAngle, T = 0 });
+                        await WaitUntilReach3DAsync(cx, cy, zSafe, 2.0);
                     }
                     finally
                     {
@@ -806,7 +810,7 @@ namespace Test_1.Services
                     }
                 });
 
-                _logger.Log($"[Draw O] ✔ Đã vẽ xong chữ O (Đường kính {radius * 2.0:F2}mm) tại tâm ({cx:F1}, {cy:F1}) thành công!");
+                _logger.Log($"[Draw O] ✔ Đã vẽ xong chữ O (Đường kính {radius * 2.0:F2}mm) tại tâm ({cx:F1}, {cy:F1}), Trục 3 đã nhấc lên {zSafe:F1}mm an toàn!");
                 return true;
             }
             catch (Exception ex)
