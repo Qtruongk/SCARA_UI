@@ -78,6 +78,18 @@ namespace Test_1.UI
 
         private Panel InitializeCameraWorkspace(Color primaryColor, Color darkText, Color borderColor)
         {
+            // Thiết lập hàm khử méo và làm méo liên kết với camera service
+            _gridService.PixelUndistortFunc = pt => {
+                if (_cameraService == null) return pt;
+                _cameraService.UndistortPixel(pt.X, pt.Y, out double u, out double v);
+                return new PointF((float)u, (float)v);
+            };
+            _gridService.PixelDistortFunc = pt => {
+                if (_cameraService == null) return pt;
+                _cameraService.DistortPixel(pt.X, pt.Y, out double u, out double v);
+                return new PointF((float)u, (float)v);
+            };
+
             Panel workspaceCamera = new Panel
             {
                 Dock = DockStyle.Fill,
@@ -559,7 +571,7 @@ namespace Test_1.UI
                                 clickedCell.Symbol = GridCell.CellSymbol.None;
 
                             string symName = clickedCell.Symbol == GridCell.CellSymbol.None ? "(Trống)" : clickedCell.Symbol.ToString();
-                            lblTargetCoords.Text = $"Ô #{clickedCell.Index} (H{clickedCell.Row + 1}, C{clickedCell.Col + 1})  |  Ký hiệu: {symName}  |  Kích thước: {clickedCell.WidthMm:F1}x{clickedCell.HeightMm:F1} mm";
+                            lblTargetCoords.Text = $"Ô #{clickedCell.Index} (H{clickedCell.Row + 1}, C{clickedCell.Col + 1})  |  Ký hiệu: {symName}  |  Robot Tâm: ({clickedCell.CenterRobot.X:F1}, {clickedCell.CenterRobot.Y:F1}) mm  |  Ô: {clickedCell.WidthMm:F1}x{clickedCell.HeightMm:F1} mm";
                             lblTargetCoords.ForeColor = Color.FromArgb(30, 41, 59);
 
                             lblTargetStatus.Text = _isTargetValidRadius ? "Hợp lệ (R ≤ 300 mm)" : "Vượt giới hạn (R > 300 mm)";
@@ -604,7 +616,7 @@ namespace Test_1.UI
                         _isTargetValidRadius = (r <= 300.0);
 
                         string symName = clickedCell.Symbol == GridCell.CellSymbol.None ? "(Trống)" : clickedCell.Symbol.ToString();
-                        lblTargetCoords.Text = $"Ô #{clickedCell.Index} (H{clickedCell.Row + 1}, C{clickedCell.Col + 1})  |  Ký hiệu: {symName}  |  Robot TL: ({clickedCell.CornersRobot[0].X:F1}, {clickedCell.CornersRobot[0].Y:F1}) mm  |  Kích thước: {clickedCell.WidthMm:F1}x{clickedCell.HeightMm:F1} mm";
+                        lblTargetCoords.Text = $"Ô #{clickedCell.Index} (H{clickedCell.Row + 1}, C{clickedCell.Col + 1})  |  Ký hiệu: {symName}  |  Robot Tâm: ({clickedCell.CenterRobot.X:F1}, {clickedCell.CenterRobot.Y:F1}) mm  |  Ô: {clickedCell.WidthMm:F1}x{clickedCell.HeightMm:F1} mm";
                         lblTargetCoords.ForeColor = Color.FromArgb(30, 41, 59);
 
                         lblTargetStatus.Text = _isTargetValidRadius ? "Hợp lệ (R ≤ 300 mm)" : "Vượt giới hạn (R > 300 mm)";
@@ -1796,7 +1808,7 @@ namespace Test_1.UI
             using (Form dlg = new Form())
             {
                 dlg.Text = "Cấu hình Lưới Grid Ô Vuông & Xử lý ảnh bám nét";
-                dlg.Size = new Size(420, 480);
+                dlg.Size = new Size(420, 520);
                 dlg.StartPosition = FormStartPosition.CenterParent;
                 dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
                 dlg.MaximizeBox = false;
@@ -1813,15 +1825,33 @@ namespace Test_1.UI
                 Label lblSize = new Label { Text = "Kích thước ô (mm):", Location = new Point(24, 99), AutoSize = true, Font = new Font("Segoe UI", 9F, FontStyle.Bold) };
                 NumericUpDown numSize = new NumericUpDown { Location = new Point(180, 96), Width = 80, Minimum = 5, Maximum = 200, DecimalPlaces = 1, Value = (decimal)_gridService.SquareSizeMm };
 
+                Button btnPreset5x5 = new Button
+                {
+                    Text = "🎯 Đặt chuẩn Bàn cờ 5x5 (Ô 5cm / 50mm)",
+                    Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                    BackColor = Color.FromArgb(238, 242, 255),
+                    ForeColor = Color.FromArgb(67, 56, 202),
+                    FlatStyle = FlatStyle.Flat,
+                    Location = new Point(24, 133),
+                    Size = new Size(356, 32),
+                    Cursor = Cursors.Hand
+                };
+                btnPreset5x5.FlatAppearance.BorderColor = Color.FromArgb(199, 210, 254);
+                btnPreset5x5.Click += (s, e) => {
+                    numRows.Value = 5;
+                    numCols.Value = 5;
+                    numSize.Value = 50.0m;
+                };
+
                 Button btnAuto = new Button
                 {
-                    Text = "Ước lượng theo kích thước (25mm)",
+                    Text = "📐 Tự ước lượng theo 4 điểm (chuẩn ô 50mm)",
                     Font = new Font("Segoe UI", 8.5F),
                     BackColor = Color.FromArgb(248, 250, 252),
                     ForeColor = Color.FromArgb(30, 41, 59),
                     FlatStyle = FlatStyle.Flat,
-                    Location = new Point(24, 135),
-                    Size = new Size(240, 28),
+                    Location = new Point(24, 172),
+                    Size = new Size(356, 28),
                     Cursor = Cursors.Hand
                 };
                 btnAuto.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
@@ -1836,7 +1866,7 @@ namespace Test_1.UI
                 {
                     Text = "Vẽ đường ranh giới ô",
                     Checked = _gridService.ShowGridLines,
-                    Location = new Point(28, 178),
+                    Location = new Point(28, 212),
                     AutoSize = true
                 };
 
@@ -1844,7 +1874,7 @@ namespace Test_1.UI
                 {
                     Text = "Hiển thị nhãn chỉ số ô (#1..#N)",
                     Checked = _gridService.ShowCellLabels,
-                    Location = new Point(28, 208),
+                    Location = new Point(28, 240),
                     AutoSize = true
                 };
 
@@ -1852,7 +1882,7 @@ namespace Test_1.UI
                 {
                     Text = "Bám sát nét mực bằng thị giác (Vision Snapping)",
                     Checked = _gridService.EnableVisionSnapping,
-                    Location = new Point(28, 240),
+                    Location = new Point(28, 268),
                     AutoSize = true,
                     Font = new Font("Segoe UI", 8.5F),
                     ForeColor = Color.FromArgb(30, 41, 59)
@@ -1862,12 +1892,12 @@ namespace Test_1.UI
                 {
                     Text = "Hiển thị chữ thập tại giao điểm (+)",
                     Checked = _gridService.ShowCornerIntersections,
-                    Location = new Point(28, 272),
+                    Location = new Point(28, 296),
                     AutoSize = true
                 };
 
-                Label lblRadius = new Label { Text = "Bán kính tìm nét (px):", Location = new Point(28, 306), AutoSize = true };
-                NumericUpDown numRadius = new NumericUpDown { Location = new Point(180, 304), Width = 80, Minimum = 6, Maximum = 40, Value = _gridService.ValleySearchRadiusPx };
+                Label lblRadius = new Label { Text = "Bán kính tìm nét (px):", Location = new Point(28, 328), AutoSize = true };
+                NumericUpDown numRadius = new NumericUpDown { Location = new Point(180, 326), Width = 80, Minimum = 6, Maximum = 40, Value = _gridService.ValleySearchRadiusPx };
 
                 Button btnSave = new Button
                 {
@@ -1876,7 +1906,7 @@ namespace Test_1.UI
                     BackColor = Color.FromArgb(30, 41, 59),
                     ForeColor = Color.White,
                     FlatStyle = FlatStyle.Flat,
-                    Location = new Point(24, 348),
+                    Location = new Point(24, 370),
                     Size = new Size(356, 38),
                     Cursor = Cursors.Hand
                 };
@@ -1900,7 +1930,7 @@ namespace Test_1.UI
                     }
 
                     UpdateGridFromCalibration(picCameraLive?.Image as Bitmap);
-                    _logger?.Log($"[Grid] Đã cập nhật lưới: {_gridService.Rows} hàng x {_gridService.Cols} cột ({_gridService.Cells.Count} ô vuông) - {_gridService.SnapStatusMessage}");
+                    _logger?.Log($"[Grid] Đã cập nhật lưới: {_gridService.Rows} hàng x {_gridService.Cols} cột ({_gridService.Cells.Count} ô vuông, chuẩn {_gridService.SquareSizeMm:F0}mm) - {_gridService.SnapStatusMessage}");
                     dlg.Close();
                 };
 
@@ -1910,6 +1940,7 @@ namespace Test_1.UI
                 dlg.Controls.Add(numCols);
                 dlg.Controls.Add(lblSize);
                 dlg.Controls.Add(numSize);
+                dlg.Controls.Add(btnPreset5x5);
                 dlg.Controls.Add(btnAuto);
                 dlg.Controls.Add(chkLines);
                 dlg.Controls.Add(chkLabels);

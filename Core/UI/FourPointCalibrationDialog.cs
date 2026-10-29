@@ -508,6 +508,7 @@ namespace Test_1.UI
         {
             PointF[] pixelPts = new PointF[4];
             PointF[] robotPts = new PointF[4];
+            PointF[] undistortedPixelPts = new PointF[4];
 
             for (int i = 0; i < 4; i++)
             {
@@ -527,9 +528,21 @@ namespace Test_1.UI
 
                 pixelPts[i] = new PointF((float)u, (float)v);
                 robotPts[i] = new PointF((float)rx, (float)ry);
+
+                // Khử méo thấu kính pixel thô sang pixel lý tưởng trước khi khớp ma trận Homography
+                if (_cameraService != null)
+                {
+                    _cameraService.UndistortPixel(u, v, out double uUndist, out double vUndist);
+                    undistortedPixelPts[i] = new PointF((float)uUndist, (float)vUndist);
+                }
+                else
+                {
+                    undistortedPixelPts[i] = pixelPts[i];
+                }
             }
 
-            if (!PlanarHomography.ComputeHomography(pixelPts, robotPts, out double[,] H, out double rms))
+            // Khớp ma trận Homography giữa Pixel lý tưởng (đã khử méo) và Tọa độ Robot Base
+            if (!PlanarHomography.ComputeHomography(undistortedPixelPts, robotPts, out double[,] H, out double rms))
             {
                 MessageBox.Show("Không thể tính ma trận Homography! Các điểm chọn có thể bị trùng nhau hoặc thẳng hàng.", "Lỗi tính toán", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;

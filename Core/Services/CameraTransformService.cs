@@ -278,11 +278,29 @@ namespace Test_1.Services
             {
                 Config.SaveHomographyCalibration(savePath, H, H_inv, pixels, robots, workZ, rmsError);
 
-                // Đồng thời copy vào thư mục Tools/CameraCalibration nếu có
-                string toolsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\Tools\CameraCalibration\calib_output\four_point_calibration.json");
-                if (Directory.Exists(Path.GetDirectoryName(toolsPath)))
+                // Đồng bộ lưu file vào các thư mục liên quan để tránh lệch dữ liệu giữa các nền tảng build (x86/Any CPU) và root
+                string[] additionalSavePaths = new string[]
                 {
-                    Config.SaveHomographyCalibration(toolsPath, H, H_inv, pixels, robots, workZ, rmsError);
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\four_point_calibration.json"),
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\four_point_calibration.json"),
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\Debug\four_point_calibration.json"),
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\bin\x86\Debug\four_point_calibration.json"),
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\bin\Debug\four_point_calibration.json"),
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\Tools\CameraCalibration\calib_output\four_point_calibration.json"),
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\Tools\CameraCalibration\calib_output\four_point_calibration.json")
+                };
+
+                foreach (var extraPath in additionalSavePaths)
+                {
+                    try
+                    {
+                        string dir = Path.GetDirectoryName(extraPath);
+                        if (Directory.Exists(dir))
+                        {
+                            Config.SaveHomographyCalibration(extraPath, H, H_inv, pixels, robots, workZ, rmsError);
+                        }
+                    }
+                    catch { }
                 }
             }
             catch (Exception ex)
@@ -320,8 +338,10 @@ namespace Test_1.Services
 
         /// <summary>
         /// Chuyển đổi từ tọa độ Pixel (u, v) trên ảnh Brio 100 sang tọa độ Robot Base (X, Y, Z).
-        /// Ưu tiên sử dụng ma trận Planar Homography H (từ 4 điểm calib) nếu có,
-        /// hoặc fallback sang phương pháp chiếu tia giao mặt phẳng 3D (Ray-Plane).
+        /// Quy trình:
+        /// 1. Khử méo pixel (u, v) qua ma trận K và hệ số méo (k1, k2, p1, p2, k3) về pixel lý tưởng (u_undist, v_undist).
+        /// 2. Áp dụng ma trận Planar Homography H (từ các điểm calib đã khử méo) trên mặt phẳng bàn Z = effectiveZ.
+        /// 3. Fallback: Chiếu tia quang học giao mặt phẳng bàn 3D (Ray-Plane).
         /// </summary>
         public bool PixelToRobotBase(double u, double v, double workPlaneZ_mm, out double robotX, out double robotY, out double robotZ)
         {
@@ -330,10 +350,13 @@ namespace Test_1.Services
 
             try
             {
-                // 1. ƯU TIÊN SỐ 1: Sử dụng Ma trận Planar Homography H (Chính xác cao nhất cho mặt phẳng)
+                // 1. Khử méo quang học của thấu kính: Pixel thô (u, v) -> Pixel lý tưởng Pinhole (u_undist, v_undist)
+                UndistortPixel(u, v, out double u_undist, out double v_undist);
+
+                // 2. ƯU TIÊN SỐ 1: Sử dụng Ma trận Planar Homography H với pixel đã khử méo
                 if (UseHomography && Config.HasHomography && Config.H_pixel2robot != null)
                 {
-                    if (PlanarHomography.TransformPoint(Config.H_pixel2robot, u, v, out double hx, out double hy))
+                    if (PlanarHomography.TransformPoint(Config.H_pixel2robot, u_undist, v_undist, out double hx, out double hy))
                     {
                         robotX = hx;
                         robotY = hy;
@@ -342,9 +365,9 @@ namespace Test_1.Services
                     }
                 }
 
-                // 2. FALLBACK: Sử dụng phép chiếu tia quang học giao mặt phẳng bàn Z = effectiveZ
+                // 3. FALLBACK: Sử dụng phép chiếu tia quang học giao mặt phẳng bàn Z = effectiveZ
                 // Khử méo pixel (u, v) sang tia chuẩn hóa (xn, yn) trên thấu kính lý tưởng
-                UndistortPixel(u, v, out double xn, out double yn);
+                UndistortPixelNormalized(u, v, out double xn, out double yn);
 
                 // Vector tia quang học trong hệ Camera (X_c, Y_c, Z_c)
                 double vx_c = xn;
@@ -385,6 +408,7 @@ namespace Test_1.Services
 
         /// <summary>
         /// Chuyển đổi ngược từ tọa độ Robot Base (X, Y, Z) sang tọa độ Pixel (u, v) trên camera.
+        /// Sử dụng Homography nghịch đảo H_robot2pixel và áp dụng Forward Distortion để khớp chính xác lên khung camera thực tế.
         /// </summary>
         public bool RobotBaseToPixel(double robotX, double robotY, double robotZ, out double pixelU, out double pixelV, out bool isInFov)
         {
@@ -395,10 +419,14 @@ namespace Test_1.Services
                 // 1. ƯU TIÊN SỐ 1: Sử dụng ma trận nghịch đảo Homography H_robot2pixel
                 if (UseHomography && Config.HasHomography && Config.H_robot2pixel != null)
                 {
-                    if (PlanarHomography.TransformPoint(Config.H_robot2pixel, robotX, robotY, out double pu, out double pv))
+                    if (PlanarHomography.TransformPoint(Config.H_robot2pixel, robotX, robotY, out double pu_undist, out double pv_undist))
                     {
-                        pixelU = pu;
-                        pixelV = pv;
+                        // pu_undist, pv_undist là pixel lý tưởng trên ảnh phẳng chưa méo.
+                        // Áp dụng forward distortion để chiếu chính xác lên khung hình camera thực tế
+                        DistortPixel(pu_undist, pv_undist, out double pu_dist, out double pv_dist);
+
+                        pixelU = pu_dist;
+                        pixelV = pv_dist;
                         isInFov = (pixelU >= 0 && pixelU <= Config.ImageWidth && pixelV >= 0 && pixelV <= Config.ImageHeight);
                         return true;
                     }
@@ -448,15 +476,82 @@ namespace Test_1.Services
         }
 
         /// <summary>
-        /// Khử méo pixel lặp (Newton-Raphson inverse distortion).
+        /// Khử méo pixel (u, v) về tọa độ pixel lý tưởng (u_undist, v_undist) theo mô hình Pinhole
+        /// bằng ma trận nội tại K (Fx, Fy, Cx, Cy) và hệ số méo thấu kính (k1, k2, p1, p2, k3).
         /// </summary>
-        private void UndistortPixel(double u, double v, out double xn, out double yn)
+        public void UndistortPixel(double u, double v, out double u_undist, out double v_undist)
         {
+            if (Config.Fx <= 1e-6 || Config.Fy <= 1e-6 || Config.Distortion == null || Config.Distortion.Length == 0)
+            {
+                u_undist = u;
+                v_undist = v;
+                return;
+            }
+
+            UndistortPixelNormalized(u, v, out double xn, out double yn);
+            u_undist = Config.Fx * xn + Config.Cx;
+            v_undist = Config.Fy * yn + Config.Cy;
+        }
+
+        /// <summary>
+        /// Áp dụng mô hình biến dạng thấu kính (Forward Distortion)
+        /// chuyển đổi từ pixel lý tưởng (u_undist, v_undist) sang pixel thực tế có méo trên cảm biến (u_dist, v_dist).
+        /// </summary>
+        public void DistortPixel(double u_undist, double v_undist, out double u_dist, out double v_dist)
+        {
+            if (Config.Fx <= 1e-6 || Config.Fy <= 1e-6 || Config.Distortion == null || Config.Distortion.Length == 0)
+            {
+                u_dist = u_undist;
+                v_dist = v_undist;
+                return;
+            }
+
+            double xn = (u_undist - Config.Cx) / Config.Fx;
+            double yn = (v_undist - Config.Cy) / Config.Fy;
+
+            double r2 = xn * xn + yn * yn;
+            double r4 = r2 * r2;
+            double r6 = r4 * r2;
+
+            double[] d = Config.Distortion;
+            double k1 = d.Length > 0 ? d[0] : 0;
+            double k2 = d.Length > 1 ? d[1] : 0;
+            double p1 = d.Length > 2 ? d[2] : 0;
+            double p2 = d.Length > 3 ? d[3] : 0;
+            double k3 = d.Length > 4 ? d[4] : 0;
+
+            double radial = 1.0 + k1 * r2 + k2 * r4 + k3 * r6;
+            double xd = xn * radial + 2.0 * p1 * xn * yn + p2 * (r2 + 2.0 * xn * xn);
+            double yd = yn * radial + p1 * (r2 + 2.0 * yn * yn) + 2.0 * p2 * xn * yn;
+
+            u_dist = Config.Fx * xd + Config.Cx;
+            v_dist = Config.Fy * yd + Config.Cy;
+        }
+
+        /// <summary>
+        /// Khử méo pixel lặp sang tọa độ chuẩn hóa xn = Xc/Zc, yn = Yc/Zc (Sub-pixel Newton-Raphson inverse distortion).
+        /// </summary>
+        public void UndistortPixelNormalized(double u, double v, out double xn, out double yn)
+        {
+            if (Config.Fx <= 1e-6 || Config.Fy <= 1e-6)
+            {
+                xn = 0;
+                yn = 0;
+                return;
+            }
+
             // Tọa độ chuẩn hóa có méo ban đầu
             double xd = (u - Config.Cx) / Config.Fx;
             double yd = (v - Config.Cy) / Config.Fy;
 
             double[] d = Config.Distortion;
+            if (d == null || d.Length == 0)
+            {
+                xn = xd;
+                yn = yd;
+                return;
+            }
+
             double k1 = d.Length > 0 ? d[0] : 0;
             double k2 = d.Length > 1 ? d[1] : 0;
             double p1 = d.Length > 2 ? d[2] : 0;
@@ -467,14 +562,16 @@ namespace Test_1.Services
             double x = xd;
             double y = yd;
 
-            // Lặp 5 bước Newton-Raphson để giải x, y không méo
-            for (int iter = 0; iter < 5; iter++)
+            // Lặp 10 bước để triệt tiêu hoàn toàn sai số nghịch đảo biến dạng (đạt độ chính xác < 1e-5 px)
+            for (int iter = 0; iter < 10; iter++)
             {
                 double r2 = x * x + y * y;
                 double r4 = r2 * r2;
                 double r6 = r4 * r2;
 
                 double radial = 1.0 + k1 * r2 + k2 * r4 + k3 * r6;
+                if (Math.Abs(radial) < 1e-7) break;
+
                 double deltaX = 2.0 * p1 * x * y + p2 * (r2 + 2.0 * x * x);
                 double deltaY = p1 * (r2 + 2.0 * y * y) + 2.0 * p2 * x * y;
 

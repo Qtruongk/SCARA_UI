@@ -94,9 +94,9 @@ namespace Test_1.Services
     /// </summary>
     public class GridScannerService
     {
-        public int Rows { get; set; } = 6;                   // Số hàng ô vuông (Mặc định 6x6 như mẫu giấy thật)
-        public int Cols { get; set; } = 6;                   // Số cột ô vuông
-        public double SquareSizeMm { get; set; } = 25.0;     // Kích thước ô vuông thực tế (mm)
+        public int Rows { get; set; } = 5;                   // Số hàng ô vuông (Mặc định bàn cờ 5x5)
+        public int Cols { get; set; } = 5;                   // Số cột ô vuông (Mặc định bàn cờ 5x5)
+        public double SquareSizeMm { get; set; } = 50.0;     // Kích thước ô vuông thực tế (5cm = 50.0mm)
         public bool IsGridEnabled { get; set; } = true;      // Bật / Tắt vẽ Grid
         public bool ShowCellLabels { get; set; } = true;     // Hiển thị nhãn chỉ số ô (#1..#N)
         public bool ShowGridLines { get; set; } = true;      // Vẽ đường ranh giới ô
@@ -120,24 +120,30 @@ namespace Test_1.Services
         public List<GridCell> Cells { get; } = new List<GridCell>();
         public GridCell HoveredCell { get; set; } = null;
         public GridCell SelectedCell { get; set; } = null;
+        // Delegate khử méo / làm méo đồng bộ với CameraTransformService
+        public Func<PointF, PointF> PixelUndistortFunc { get; set; }
+        public Func<PointF, PointF> PixelDistortFunc { get; set; }
 
         public event Action GridUpdated;
 
         /// <summary>
-        /// Tự động ước lượng số hàng và số cột dựa trên khoảng cách mm giữa 4 điểm calib và kích thước ô.
+        /// Tự động ước lượng số hàng và số cột dựa trên khoảng cách mm giữa 4 điểm calib và kích thước ô chuẩn 50mm (5cm).
         /// </summary>
-        public void AutoDetectGridDimensions(PointF[] calibRobots, double squareMm = 25.0)
+        public void AutoDetectGridDimensions(PointF[] calibRobots, double squareMm = 50.0)
         {
             if (calibRobots == null || calibRobots.Length < 4) return;
-            SquareSizeMm = (squareMm > 0) ? squareMm : 25.0;
+            SquareSizeMm = (squareMm > 0) ? squareMm : 50.0;
 
-            double heightLeft = Distance(calibRobots[0], calibRobots[1]);
-            double heightRight = Distance(calibRobots[2], calibRobots[3]);
-            double widthTop = Distance(calibRobots[0], calibRobots[2]);
-            double widthBottom = Distance(calibRobots[1], calibRobots[3]);
+            // Sắp xếp 4 điểm trước để lấy đúng thứ tự TL, TR, BR, BL
+            SortQuadrilateralPoints(calibRobots, null, out PointF[] sorted, out _);
 
-            double avgHeightMm = (heightLeft + heightRight) / 2.0;
+            double widthTop = Distance(sorted[0], sorted[1]);
+            double widthBottom = Distance(sorted[3], sorted[2]);
+            double heightLeft = Distance(sorted[0], sorted[3]);
+            double heightRight = Distance(sorted[1], sorted[2]);
+
             double avgWidthMm = (widthTop + widthBottom) / 2.0;
+            double avgHeightMm = (heightLeft + heightRight) / 2.0;
 
             Rows = Math.Max(1, (int)Math.Round(avgHeightMm / SquareSizeMm));
             Cols = Math.Max(1, (int)Math.Round(avgWidthMm / SquareSizeMm));
@@ -208,15 +214,20 @@ namespace Test_1.Services
         /// </summary>
         public void GenerateGrid(PointF[] calibPixels, PointF[] calibRobots, double[,] H_pixel2robot, double[,] H_robot2pixel, Bitmap currentFrame = null)
         {
-            GenerateGridCore(calibPixels, calibRobots, H_pixel2robot, currentFrame);
+            GenerateGridCore(calibPixels, calibRobots, H_pixel2robot, H_robot2pixel, currentFrame);
         }
 
         public void GenerateGrid(PointF[] calibPixels, PointF[] calibRobots, double[,] H_pixel2robot, Bitmap currentFrame = null)
         {
-            GenerateGridCore(calibPixels, calibRobots, H_pixel2robot, currentFrame);
+            double[,] H_robot2pixel = null;
+            if (H_pixel2robot != null)
+            {
+                PlanarHomography.InvertHomography(H_pixel2robot, out H_robot2pixel);
+            }
+            GenerateGridCore(calibPixels, calibRobots, H_pixel2robot, H_robot2pixel, currentFrame);
         }
 
-        private void GenerateGridCore(PointF[] calibPixels, PointF[] calibRobots, double[,] H_pixel2robot, Bitmap currentFrame)
+        private void GenerateGridCore(PointF[] calibPixels, PointF[] calibRobots, double[,] H_pixel2robot, double[,] H_robot2pixel, Bitmap currentFrame)
         {
             Cells.Clear();
             HoveredCell = null;
@@ -237,12 +248,13 @@ namespace Test_1.Services
             PointF pBR_pix = sortedPixels[2]; // Bottom-Right
             PointF pBL_pix = sortedPixels[3]; // Bottom-Left
 
-            int totalH = Rows + 1;
-            int totalV = Cols + 1;
+            int totalH = Rows + 1; // Số đường ngang
+            int totalV = Cols + 1; // Số đường dọc
             TotalLineCount = totalH + totalV;
             SnappedLineCount = 0;
 
-            PointF[,] vertices = new PointF[totalH, totalV];
+            PointF[,] verticesPixel = new PointF[totalH, totalV];
+            PointF[,] verticesRobot = new PointF[totalH, totalV];
             bool snapSuccess = false;
 
             // 2. Áp dụng thuật toán Thị giác máy tính bám nét mực nếu có hình ảnh camera và bật chế độ Snapping
@@ -250,7 +262,7 @@ namespace Test_1.Services
             {
                 try
                 {
-                    snapSuccess = ExecuteVisionLineSnapping(currentFrame, pTL_pix, pTR_pix, pBR_pix, pBL_pix, vertices);
+                    snapSuccess = ExecuteVisionLineSnapping(currentFrame, pTL_pix, pTR_pix, pBR_pix, pBL_pix, verticesPixel);
                 }
                 catch (Exception ex)
                 {
@@ -259,25 +271,88 @@ namespace Test_1.Services
                 }
             }
 
-            // 3. Nếu không bám nét được (hoặc tắt snapping / không có ảnh), dùng nội suy phối cảnh hai chiều Bilinear làm dự phòng
-            if (!snapSuccess)
+            // 3. Tính toán tọa độ không gian các giao điểm (Vertices)
+            bool hasValidRobots = (sortedRobots != null && sortedRobots.Length >= 4 &&
+                                   sortedRobots[0] != PointF.Empty && sortedRobots[1] != PointF.Empty &&
+                                   sortedRobots[2] != PointF.Empty && sortedRobots[3] != PointF.Empty);
+
+            if (snapSuccess)
             {
+                IsVisionSnapped = true;
+                _snappedVertices = verticesPixel;
+
+                // Nếu thị giác bám nét mực thành công, quy đổi ngược từng giao điểm sang tọa độ Robot Base
                 for (int r = 0; r < totalH; r++)
                 {
-                    double v = (double)r / Rows;
                     for (int c = 0; c < totalV; c++)
                     {
-                        double u = (double)c / Cols;
-                        vertices[r, c] = BilinearInterpolate(pTL_pix, pTR_pix, pBL_pix, pBR_pix, u, v);
+                        PointF pUndist = PixelUndistortFunc != null ? PixelUndistortFunc(verticesPixel[r, c]) : verticesPixel[r, c];
+                        if (H_pixel2robot != null && PlanarHomography.TransformPoint(H_pixel2robot, pUndist.X, pUndist.Y, out double rx, out double ry))
+                        {
+                            verticesRobot[r, c] = new PointF((float)rx, (float)ry);
+                        }
+                        else if (hasValidRobots)
+                        {
+                            double u = (double)c / Cols;
+                            double v = (double)r / Rows;
+                            verticesRobot[r, c] = BilinearInterpolate(sortedRobots[0], sortedRobots[1], sortedRobots[3], sortedRobots[2], u, v);
+                        }
                     }
                 }
-                IsVisionSnapped = false;
-                SnapStatusMessage = "Đang dùng lưới nội suy phối cảnh hình học (chưa bám nét mực thật).";
             }
             else
             {
-                IsVisionSnapped = true;
-                _snappedVertices = vertices;
+                IsVisionSnapped = false;
+                SnapStatusMessage = $"Đang dùng lưới chia đều hình học chuẩn {SquareSizeMm:F0}mm ({SquareSizeMm / 10.0:F0}cm/ô).";
+
+                // NGUYÊN LÝ CHUẨN: Tự xác định không gian và khoảng cách đều đặn mỗi ô (5cm)
+                // Ưu tiên nội suy trực tiếp trong không gian Metric Robot Base để đảm bảo khoảng cách giữa các ô luôn đúng tuyệt đối.
+                if (hasValidRobots)
+                {
+                    for (int r = 0; r < totalH; r++)
+                    {
+                        double v = (double)r / Rows;
+                        for (int c = 0; c < totalV; c++)
+                        {
+                            double u = (double)c / Cols;
+                            // Tọa độ đỉnh trong hệ Robot Base (Bước nhảy chính xác từng ô)
+                            PointF ptRob = BilinearInterpolate(sortedRobots[0], sortedRobots[1], sortedRobots[3], sortedRobots[2], u, v);
+                            verticesRobot[r, c] = ptRob;
+
+                            // Chiếu phối cảnh điểm Robot thực lên màn hình Camera qua ma trận H_robot2pixel và áp dụng méo thấu kính
+                            if (H_robot2pixel != null && PlanarHomography.TransformPoint(H_robot2pixel, ptRob.X, ptRob.Y, out double px, out double py))
+                            {
+                                PointF pDist = PixelDistortFunc != null ? PixelDistortFunc(new PointF((float)px, (float)py)) : new PointF((float)px, (float)py);
+                                verticesPixel[r, c] = pDist;
+                            }
+                            else
+                            {
+                                verticesPixel[r, c] = BilinearInterpolate(pTL_pix, pTR_pix, pBL_pix, pBR_pix, u, v);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // Fallback: Khi chưa có dữ liệu tọa độ Robot, nội suy theo góc pixel
+                    for (int r = 0; r < totalH; r++)
+                    {
+                        double v = (double)r / Rows;
+                        for (int c = 0; c < totalV; c++)
+                        {
+                            double u = (double)c / Cols;
+                            verticesPixel[r, c] = BilinearInterpolate(pTL_pix, pTR_pix, pBL_pix, pBR_pix, u, v);
+
+                            PointF pUndist = PixelUndistortFunc != null ? PixelUndistortFunc(verticesPixel[r, c]) : verticesPixel[r, c];
+                            if (H_pixel2robot != null && PlanarHomography.TransformPoint(H_pixel2robot, pUndist.X, pUndist.Y, out double rx, out double ry))
+                            {
+                                verticesRobot[r, c] = new PointF((float)rx, (float)ry);
+                            }
+                        }
+                    }
+                }
+
+                _snappedVertices = verticesPixel;
             }
 
             // 4. Khởi tạo các ô vuông GridCell từ các giao điểm thực tế
@@ -293,45 +368,56 @@ namespace Test_1.Services
                         Index = cellCounter++
                     };
 
-                    // 4 đỉnh pixel của ô vuông (lấy trực tiếp từ các giao điểm nét mực thực tế)
-                    cell.CornersPixel[0] = vertices[r, c];         // Top-Left
-                    cell.CornersPixel[1] = vertices[r, c + 1];     // Top-Right
-                    cell.CornersPixel[2] = vertices[r + 1, c + 1]; // Bottom-Right
-                    cell.CornersPixel[3] = vertices[r + 1, c];     // Bottom-Left
+                    // 4 đỉnh pixel của ô vuông
+                    cell.CornersPixel[0] = verticesPixel[r, c];         // Top-Left
+                    cell.CornersPixel[1] = verticesPixel[r, c + 1];     // Top-Right
+                    cell.CornersPixel[2] = verticesPixel[r + 1, c + 1]; // Bottom-Right
+                    cell.CornersPixel[3] = verticesPixel[r + 1, c];     // Bottom-Left
 
-                    // Tâm ô vuông pixel (trung bình cộng 4 đỉnh thật)
-                    float cx = (cell.CornersPixel[0].X + cell.CornersPixel[1].X + cell.CornersPixel[2].X + cell.CornersPixel[3].X) / 4.0f;
-                    float cy = (cell.CornersPixel[0].Y + cell.CornersPixel[1].Y + cell.CornersPixel[2].Y + cell.CornersPixel[3].Y) / 4.0f;
-                    cell.CenterPixel = new PointF(cx, cy);
+                    // 4 đỉnh robot của ô vuông (mm)
+                    cell.CornersRobot[0] = verticesRobot[r, c];         // Top-Left
+                    cell.CornersRobot[1] = verticesRobot[r, c + 1];     // Top-Right
+                    cell.CornersRobot[2] = verticesRobot[r + 1, c + 1]; // Bottom-Right
+                    cell.CornersRobot[3] = verticesRobot[r + 1, c];     // Bottom-Left
 
-                    // Chuyển đổi tọa độ Robot Base qua ma trận Homography phẳng
-                    if (H_pixel2robot != null)
-                    {
-                        if (PlanarHomography.TransformPoint(H_pixel2robot, cx, cy, out double rx, out double ry))
-                        {
-                            cell.CenterRobot = new PointF((float)rx, (float)ry);
-                        }
-
-                        for (int k = 0; k < 4; k++)
-                        {
-                            if (PlanarHomography.TransformPoint(H_pixel2robot, cell.CornersPixel[k].X, cell.CornersPixel[k].Y, out double corX, out double corY))
-                            {
-                                cell.CornersRobot[k] = new PointF((float)corX, (float)corY);
-                            }
-                        }
-                    }
-                    else if (sortedRobots != null && sortedRobots.Length >= 4)
+                    // Tâm ô vuông trong hệ Robot (Mỗi bước nhảy cách nhau đúng 5cm = 50mm)
+                    if (hasValidRobots)
                     {
                         double uMid = (c + 0.5) / Cols;
                         double vMid = (r + 0.5) / Rows;
                         cell.CenterRobot = BilinearInterpolate(sortedRobots[0], sortedRobots[1], sortedRobots[3], sortedRobots[2], uMid, vMid);
+
+                        // Tọa độ tâm ô trên khung hình Camera (áp dụng forward distortion để khớp thực tế)
+                        if (H_robot2pixel != null && PlanarHomography.TransformPoint(H_robot2pixel, cell.CenterRobot.X, cell.CenterRobot.Y, out double cpx, out double cpy))
+                        {
+                            PointF pDist = PixelDistortFunc != null ? PixelDistortFunc(new PointF((float)cpx, (float)cpy)) : new PointF((float)cpx, (float)cpy);
+                            cell.CenterPixel = pDist;
+                        }
+                        else
+                        {
+                            float cx = (cell.CornersPixel[0].X + cell.CornersPixel[1].X + cell.CornersPixel[2].X + cell.CornersPixel[3].X) / 4.0f;
+                            float cy = (cell.CornersPixel[0].Y + cell.CornersPixel[1].Y + cell.CornersPixel[2].Y + cell.CornersPixel[3].Y) / 4.0f;
+                            cell.CenterPixel = new PointF(cx, cy);
+                        }
+                    }
+                    else
+                    {
+                        float cx = (cell.CornersPixel[0].X + cell.CornersPixel[1].X + cell.CornersPixel[2].X + cell.CornersPixel[3].X) / 4.0f;
+                        float cy = (cell.CornersPixel[0].Y + cell.CornersPixel[1].Y + cell.CornersPixel[2].Y + cell.CornersPixel[3].Y) / 4.0f;
+                        cell.CenterPixel = new PointF(cx, cy);
+
+                        PointF cUndist = PixelUndistortFunc != null ? PixelUndistortFunc(new PointF(cx, cy)) : new PointF(cx, cy);
+                        if (H_pixel2robot != null && PlanarHomography.TransformPoint(H_pixel2robot, cUndist.X, cUndist.Y, out double rx, out double ry))
+                        {
+                            cell.CenterRobot = new PointF((float)rx, (float)ry);
+                        }
                     }
 
                     // Đọc độ sáng thực tế tại tâm ô từ camera
                     if (currentFrame != null)
                     {
-                        int pxX = (int)Math.Round(cx);
-                        int pxY = (int)Math.Round(cy);
+                        int pxX = (int)Math.Round(cell.CenterPixel.X);
+                        int pxY = (int)Math.Round(cell.CenterPixel.Y);
                         if (pxX >= 0 && pxX < currentFrame.Width && pxY >= 0 && pxY < currentFrame.Height)
                         {
                             try

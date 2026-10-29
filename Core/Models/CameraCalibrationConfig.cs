@@ -150,6 +150,18 @@ namespace Test_1.Models
                 config.CalibratedWorkZ = ExtractDouble(json, "work_plane_z_mm", config.CalibratedWorkZ);
                 config.HomographyRmsErrorMm = ExtractDouble(json, "homography_rms_error_mm", config.HomographyRmsErrorMm);
 
+                var pxPts = ExtractPointFPairs(json, "pixel_points", "u", "v");
+                if (pxPts != null && pxPts.Length >= 4)
+                {
+                    config.CalibPixelPoints = pxPts;
+                }
+
+                var rbPts = ExtractPointFPairs(json, "robot_points", "x", "y");
+                if (rbPts != null && rbPts.Length >= 4)
+                {
+                    config.CalibRobotPoints = rbPts;
+                }
+
                 config.RmsErrorMm = ExtractDouble(json, "rms_translation_error_mm", config.RmsErrorMm);
                 config.MaxErrorMm = ExtractDouble(json, "max_translation_error_mm", config.MaxErrorMm);
                 config.IsWithin1MmSpec = (config.RmsErrorMm <= 1.0 && config.MaxErrorMm <= 1.5);
@@ -321,6 +333,38 @@ namespace Test_1.Models
                         }
                     }
                     return mat;
+                }
+            }
+            catch { }
+            return null;
+        }
+
+        private static System.Drawing.PointF[] ExtractPointFPairs(string text, string key, string xProp, string yProp)
+        {
+            try
+            {
+                int keyIdx = text.IndexOf("\"" + key + "\"");
+                if (keyIdx < 0) return null;
+
+                int arrStart = text.IndexOf('[', keyIdx);
+                if (arrStart < 0) return null;
+
+                int arrEnd = text.IndexOf(']', arrStart);
+                if (arrEnd < 0) return null;
+
+                string sub = text.Substring(arrStart, arrEnd - arrStart + 1);
+                string pattern = "\"" + xProp + "\"\\s*:\\s*([-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?)[^}]*\"" + yProp + "\"\\s*:\\s*([-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?)";
+                MatchCollection matches = Regex.Matches(sub, pattern);
+                if (matches.Count >= 4)
+                {
+                    var pts = new System.Drawing.PointF[matches.Count];
+                    for (int i = 0; i < matches.Count; i++)
+                    {
+                        float x = float.Parse(matches[i].Groups[1].Value, CultureInfo.InvariantCulture);
+                        float y = float.Parse(matches[i].Groups[3].Value, CultureInfo.InvariantCulture);
+                        pts[i] = new System.Drawing.PointF(x, y);
+                    }
+                    return pts;
                 }
             }
             catch { }
