@@ -570,7 +570,7 @@ namespace Test_1.UI
                             else
                                 clickedCell.Symbol = GridCell.CellSymbol.None;
 
-                            string symName = clickedCell.Symbol == GridCell.CellSymbol.None ? "(Trống)" : clickedCell.Symbol.ToString();
+                            string symName = clickedCell.Symbol == GridCell.CellSymbol.None ? "(Trống)" : (clickedCell.Symbol == GridCell.CellSymbol.O ? "O (Ø2.75cm)" : clickedCell.Symbol.ToString());
                             lblTargetCoords.Text = $"Ô #{clickedCell.Index} (H{clickedCell.Row + 1}, C{clickedCell.Col + 1})  |  Ký hiệu: {symName}  |  Robot Tâm: ({clickedCell.CenterRobot.X:F1}, {clickedCell.CenterRobot.Y:F1}) mm  |  Ô: {clickedCell.WidthMm:F1}x{clickedCell.HeightMm:F1} mm";
                             lblTargetCoords.ForeColor = Color.FromArgb(30, 41, 59);
 
@@ -615,7 +615,7 @@ namespace Test_1.UI
                         _targetRobotRadius = r;
                         _isTargetValidRadius = (r <= 300.0);
 
-                        string symName = clickedCell.Symbol == GridCell.CellSymbol.None ? "(Trống)" : clickedCell.Symbol.ToString();
+                        string symName = clickedCell.Symbol == GridCell.CellSymbol.None ? "(Trống)" : (clickedCell.Symbol == GridCell.CellSymbol.O ? "O (Ø2.75cm)" : clickedCell.Symbol.ToString());
                         lblTargetCoords.Text = $"Ô #{clickedCell.Index} (H{clickedCell.Row + 1}, C{clickedCell.Col + 1})  |  Ký hiệu: {symName}  |  Robot Tâm: ({clickedCell.CenterRobot.X:F1}, {clickedCell.CenterRobot.Y:F1}) mm  |  Ô: {clickedCell.WidthMm:F1}x{clickedCell.HeightMm:F1} mm";
                         lblTargetCoords.ForeColor = Color.FromArgb(30, 41, 59);
 
@@ -958,15 +958,15 @@ namespace Test_1.UI
                     }
                 }
 
-                double workZ = _cameraService?.Config?.CalibratedWorkZ ?? 0.0;
-                var curPos = _robotService.GetCurrentPosition()?.WorldPosition;
-                if (curPos != null && Math.Abs(workZ) < 0.001) workZ = curPos.Z;
+                double workZ = 0.0;  // Chuẩn: Axis 3 khi vẽ = 0.0 mm
+                double safeZ = 20.0; // Chuẩn: Axis 3 khi nhấc lên = 20.0 mm
+                double liftHeight = safeZ - workZ; // 20.0 mm
 
                 int speed = tbCameraMoveSpeed.Value;
                 string confirmMsg = $"Xác nhận điều khiển Robot THL300 vẽ ký hiệu X vào ô #{cell.Index}:\n\n" +
                                    $" • Kích thước ô: {cell.WidthMm:F1} x {cell.HeightMm:F1} mm\n" +
-                                   $" • Cao độ vẽ (Z_work): {workZ:F1} mm\n" +
-                                   $" • Cao độ an toàn (Z_safe): {workZ + 10.0:F1} mm\n" +
+                                   $" • Trục 3 khi vẽ (Axis 3 / Z_work): {workZ:F1} mm\n" +
+                                   $" • Trục 3 khi nhấc lên (Axis 3 / Z_safe): {safeZ:F1} mm\n" +
                                    $" • Tốc độ: {speed} %\n\n" +
                                    $"Thực hiện chu trình vẽ nét?";
 
@@ -981,8 +981,8 @@ namespace Test_1.UI
                     btnClearSymbol.Enabled = false;
                     btnMoveRobotToTarget.Enabled = false;
 
-                    _logger?.Log($"[Robot Draw] Bắt đầu vẽ chữ X vào ô #{cell.Index} (Tốc độ: {speed}%)...");
-                    bool ok = await _robotService.DrawXInCellAsync(cell.CornersRobot, workZ, speed);
+                    _logger?.Log($"[Robot Draw] Bắt đầu vẽ chữ X vào ô #{cell.Index} (Axis 3: Vẽ={workZ:F1}mm / Nhấc={safeZ:F1}mm, Tốc độ: {speed}%)...");
+                    bool ok = await _robotService.DrawXInCellAsync(cell.CornersRobot, workZ, speed, liftHeight);
                     if (ok)
                     {
                         _logger?.Log($"[Robot Draw] Hoàn thành vẽ chữ X vào ô #{cell.Index}.");
@@ -1017,14 +1017,14 @@ namespace Test_1.UI
                 }
 
                 cell.Symbol = GridCell.CellSymbol.O;
-                lblTargetCoords.Text = $"Ô #{cell.Index} (H{cell.Row + 1}, C{cell.Col + 1})  |  Ký hiệu: O  |  Kích thước: {cell.WidthMm:F1}x{cell.HeightMm:F1} mm";
+                lblTargetCoords.Text = $"Ô #{cell.Index} (H{cell.Row + 1}, C{cell.Col + 1})  |  Ký hiệu: O (Ø2.75cm)  |  Robot Tâm: ({cell.CenterRobot.X:F1}, {cell.CenterRobot.Y:F1}) mm  |  Ô: {cell.WidthMm:F1}x{cell.HeightMm:F1} mm";
                 lblTargetCoords.ForeColor = Color.FromArgb(30, 41, 59);
                 picCameraLive.Invalidate();
 
                 if (_robotService == null || !_robotService.State.IsConnected || !_robotService.State.IsServoOn)
                 {
-                    _logger?.Log($"[Grid] Đã đánh dấu ký hiệu O tại ô #{cell.Index} (Robot chưa sẵn sàng vẽ thực tế)");
-                    MessageBox.Show($"Đã đánh dấu ký hiệu O tại ô #{cell.Index}.\nĐể Robot thực hiện vẽ thực tế, vui lòng kết nối Robot và kích hoạt Servo.", "Ký hiệu O", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    _logger?.Log($"[Grid] Đã đánh dấu ký hiệu O (Ø2.75cm) tại ô #{cell.Index} (Robot chưa sẵn sàng vẽ thực tế)");
+                    MessageBox.Show($"Đã đánh dấu ký hiệu O (Ø2.75cm) tại ô #{cell.Index}.\nĐể Robot thực hiện vẽ thực tế, vui lòng kết nối Robot và kích hoạt Servo.", "Ký hiệu O", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
 
@@ -1044,15 +1044,20 @@ namespace Test_1.UI
                     }
                 }
 
-                double workZ = _cameraService?.Config?.CalibratedWorkZ ?? 0.0;
-                var curPos = _robotService.GetCurrentPosition()?.WorldPosition;
-                if (curPos != null && Math.Abs(workZ) < 0.001) workZ = curPos.Z;
+                double workZ = 0.0;  // Chuẩn: Axis 3 khi vẽ = 0.0 mm
+                double safeZ = 20.0; // Chuẩn: Axis 3 khi nhấc lên = 20.0 mm
+                double liftHeight = safeZ - workZ; // 20.0 mm
 
                 int speed = tbCameraMoveSpeed.Value;
+                double circleDiameterMm = 27.5; // Đường kính 2.75 cm
+                double circleRadiusMm = circleDiameterMm / 2.0; // Bán kính 13.75 mm
+
                 string confirmMsg = $"Xác nhận điều khiển Robot THL300 vẽ ký hiệu O vào ô #{cell.Index}:\n\n" +
+                                   $" • Vị trí: Đúng tâm ô cờ (X = {cell.CenterRobot.X:F1}, Y = {cell.CenterRobot.Y:F1}) mm\n" +
+                                   $" • Ký hiệu: Chữ O đường kính 2.75 cm (27.5 mm, Bán kính R = {circleRadiusMm:F2} mm)\n" +
                                    $" • Kích thước ô: {cell.WidthMm:F1} x {cell.HeightMm:F1} mm\n" +
-                                   $" • Cao độ vẽ (Z_work): {workZ:F1} mm\n" +
-                                   $" • Cao độ an toàn (Z_safe): {workZ + 10.0:F1} mm\n" +
+                                   $" • Trục 3 khi vẽ (Axis 3 / Z_work): {workZ:F1} mm\n" +
+                                   $" • Trục 3 khi nhấc lên (Axis 3 / Z_safe): {safeZ:F1} mm\n" +
                                    $" • Tốc độ: {speed} %\n\n" +
                                    $"Thực hiện chu trình vẽ cung tròn?";
 
@@ -1067,12 +1072,12 @@ namespace Test_1.UI
                     btnClearSymbol.Enabled = false;
                     btnMoveRobotToTarget.Enabled = false;
 
-                    _logger?.Log($"[Robot Draw] Bắt đầu vẽ chữ O vào ô #{cell.Index} (Tốc độ: {speed}%)...");
-                    bool ok = await _robotService.DrawOInCellAsync(cell.CornersRobot, workZ, speed);
+                    _logger?.Log($"[Robot Draw] Bắt đầu vẽ chữ O (Đường kính 2.75cm, Tâm: {cell.CenterRobot.X:F1}, {cell.CenterRobot.Y:F1} mm, Axis 3: Vẽ={workZ:F1}mm / Nhấc={safeZ:F1}mm, Tốc độ: {speed}%)...");
+                    bool ok = await _robotService.DrawOInCellAsync(cell.CornersRobot, workZ, speed, liftHeight, circleDiameterMm, cell.CenterRobot);
                     if (ok)
                     {
-                        _logger?.Log($"[Robot Draw] Hoàn thành vẽ chữ O vào ô #{cell.Index}.");
-                        MessageBox.Show($"Robot THL300 đã hoàn thành vẽ chữ O vào ô #{cell.Index}.", "Hoàn thành", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        _logger?.Log($"[Robot Draw] Hoàn thành vẽ chữ O đường kính 2.75cm vào ô #{cell.Index}.");
+                        MessageBox.Show($"Robot THL300 đã hoàn thành vẽ chữ O (đường kính 2.75 cm) vào đúng tâm ô #{cell.Index}.", "Hoàn thành", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
                 catch (Exception ex)

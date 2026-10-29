@@ -942,15 +942,22 @@ namespace Test_1.Services
                     {
                         using (Pen pO = new Pen(Color.FromArgb(0, 230, 118), 3.0f))
                         {
+                            // Tính toán tâm ô chính xác trên màn hình hiển thị
+                            float cx = (screenCorners[0].X + screenCorners[1].X + screenCorners[2].X + screenCorners[3].X) / 4f;
+                            float cy = (screenCorners[0].Y + screenCorners[1].Y + screenCorners[2].Y + screenCorners[3].Y) / 4f;
+
                             float minX = Math.Min(Math.Min(screenCorners[0].X, screenCorners[1].X), Math.Min(screenCorners[2].X, screenCorners[3].X));
                             float maxX = Math.Max(Math.Max(screenCorners[0].X, screenCorners[1].X), Math.Max(screenCorners[2].X, screenCorners[3].X));
                             float minY = Math.Min(Math.Min(screenCorners[0].Y, screenCorners[1].Y), Math.Min(screenCorners[2].Y, screenCorners[3].Y));
                             float maxY = Math.Max(Math.Max(screenCorners[0].Y, screenCorners[1].Y), Math.Max(screenCorners[2].Y, screenCorners[3].Y));
 
-                            float padX = (maxX - minX) * 0.18f;
-                            float padY = (maxY - minY) * 0.18f;
+                            // Tỉ lệ đường kính 2.75 cm (27.5 mm) trên ô chuẩn 50 mm (5 cm) = 27.5 / 50.0 = 0.55
+                            float cellWidthPx = maxX - minX;
+                            float cellHeightPx = maxY - minY;
+                            float dX = cellWidthPx * 0.55f;
+                            float dY = cellHeightPx * 0.55f;
 
-                            g.DrawEllipse(pO, minX + padX, minY + padY, (maxX - minX) - 2 * padX, (maxY - minY) - 2 * padY);
+                            g.DrawEllipse(pO, cx - dX / 2f, cy - dY / 2f, dX, dY);
                         }
                     }
 
