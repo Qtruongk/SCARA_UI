@@ -155,6 +155,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Assets\THL300\THL300.mesh">
       <LogicalName>Test_1.Assets.THL300.THL300.mesh</LogicalName>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <None Include="Assets\THL300\THL300.igs" />
     <None Include="Assets\THL300\THL300.metadata.json" />

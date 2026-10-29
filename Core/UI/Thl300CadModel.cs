@@ -21,12 +21,39 @@ namespace Test_1.UI
         public int TriangleCount { get; private set; }
         public Rect3D Bounds { get; private set; }
 
+        private static Stream GetMeshStream()
+        {
+            Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ResourceName);
+            if (stream != null) return stream;
+
+            string[] candidatePaths = {
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "THL300", "THL300.mesh"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "Assets", "THL300", "THL300.mesh"),
+                Path.Combine(Directory.GetCurrentDirectory(), "Assets", "THL300", "THL300.mesh"),
+                @"D:\LAB\ROBOT\SCARA_UI\Assets\THL300\THL300.mesh"
+            };
+
+            foreach (string candidate in candidatePaths)
+            {
+                try
+                {
+                    if (File.Exists(candidate))
+                    {
+                        return File.OpenRead(candidate);
+                    }
+                }
+                catch { }
+            }
+
+            return null;
+        }
+
         public static Thl300CadModel Load()
         {
             Thl300CadModel model = new Thl300CadModel();
             Model3DGroup[] parts = { new Model3DGroup(), new Model3DGroup(), new Model3DGroup(), new Model3DGroup() };
             Dictionary<Color, Material> materials = new Dictionary<Color, Material>();
-            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ResourceName))
+            using (Stream stream = GetMeshStream())
             {
                 if (stream == null) throw new InvalidDataException("Embedded THL300 CAD mesh is missing. Rebuild with Assets/THL300/THL300.mesh.");
                 using (BinaryReader reader = new BinaryReader(stream, Encoding.UTF8))
