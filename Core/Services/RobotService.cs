@@ -668,9 +668,15 @@ namespace Test_1.Services
         }
 
         /// <summary>
-        /// Điều khiển Robot THL300 cầm bút vẽ chữ O thật sự vào ô vuông trên giấy theo 4 đỉnh góc ranh giới.
+        /// Điều khiển Robot THL300 cầm bút vẽ chữ O chuẩn xác vào tâm ô vuông trên giấy với đường kính 2.75 cm (27.5 mm).
         /// </summary>
-        public async Task<bool> DrawOInCellAsync(PointF[] cornersRobot, double workZ, double speedPercent = 20.0, double liftHeightMm = 10.0, double radiusRatio = 0.32)
+        /// <param name="cornersRobot">4 đỉnh ranh giới của ô vuông trong hệ Robot Base (mm)</param>
+        /// <param name="workZ">Cao độ Z tiếp xúc mặt giấy để vẽ nét (mm)</param>
+        /// <param name="speedPercent">Tốc độ di chuyển robot (%)</param>
+        /// <param name="liftHeightMm">Độ cao nhấc bút an toàn Z_safe = workZ + liftHeightMm (mm)</param>
+        /// <param name="diameterMm">Đường kính hình tròn chữ O (mm, mặc định 27.5 mm = 2.75 cm)</param>
+        /// <param name="centerRobot">Tọa độ tâm ô mục tiêu (mm, nếu truyền vào sẽ ưu tiên sử dụng)</param>
+        public async Task<bool> DrawOInCellAsync(PointF[] cornersRobot, double workZ, double speedPercent = 20.0, double liftHeightMm = 10.0, double diameterMm = 27.5, PointF? centerRobot = null)
         {
             if (!State.IsConnected || _robot == null)
             {
@@ -713,32 +719,42 @@ namespace Test_1.Services
                 PointF br = cornersRobot[2];
                 PointF bl = cornersRobot[3];
 
-                // Tâm ô
-                double cx = (tl.X + tr.X + br.X + bl.X) / 4.0;
-                double cy = (tl.Y + tr.Y + br.Y + bl.Y) / 4.0;
+                // Xác định tọa độ tâm ô (ưu tiên centerRobot truyền vào, fallback trung bình 4 đỉnh)
+                double cx = centerRobot.HasValue ? centerRobot.Value.X : ((tl.X + tr.X + br.X + bl.X) / 4.0);
+                double cy = centerRobot.HasValue ? centerRobot.Value.Y : ((tl.Y + tr.Y + br.Y + bl.Y) / 4.0);
 
-                // Kích thước cạnh ô
+                // Kích thước cạnh ô để kiểm tra bao an toàn
                 double w = Math.Sqrt(Math.Pow(tr.X - tl.X, 2) + Math.Pow(tr.Y - tl.Y, 2));
                 double h = Math.Sqrt(Math.Pow(bl.X - tl.X, 2) + Math.Pow(bl.Y - tl.Y, 2));
-                double radius = Math.Min(w, h) * Math.Max(0.15, Math.Min(0.45, radiusRatio));
 
-                // Vector trực chuẩn hệ ô
-                double ux = (tr.X - tl.X) / (w + 1e-12);
-                double uy = (tr.Y - tl.Y) / (w + 1e-12);
-                double vx = (bl.X - tl.X) / (h + 1e-12);
-                double vy = (bl.Y - tl.Y) / (h + 1e-12);
+                // Bán kính hình tròn chữ O (chuẩn: đường kính 2.75 cm = 27.5 mm => Bán kính R = 13.75 mm)
+                double radius = (diameterMm > 0) ? (diameterMm / 2.0) : 13.75;
+                double maxSafeRadius = Math.Min(w, h) * 0.48;
+                if (w > 10.0 && h > 10.0 && radius > maxSafeRadius)
+                {
+                    radius = maxSafeRadius;
+                }
 
+                // Kiểm tra an toàn: Tâm và toàn bộ đường tròn phải nằm trọn trong bán kính làm việc 300mm của THL300
+                double centerDist = Math.Sqrt(cx * cx + cy * cy);
+                if (centerDist + radius > 300.0)
+                {
+                    _logger.Log($"[Draw O] Hủy lệnh: Điểm xa nhất của đường tròn ({centerDist + radius:F1}mm) vượt quá bán kính làm việc 300.0mm!");
+                    return false;
+                }
+
+                // Sinh quỹ đạo 36 cung tròn hoàn hảo trong hệ Robot Base
                 int segments = 36;
                 var circlePoints = new PointF[segments + 1];
                 for (int i = 0; i <= segments; i++)
                 {
                     double angle = i * 2.0 * Math.PI / segments;
-                    double px = cx + radius * Math.Cos(angle) * ux + radius * Math.Sin(angle) * vx;
-                    double py = cy + radius * Math.Cos(angle) * uy + radius * Math.Sin(angle) * vy;
+                    double px = cx + radius * Math.Cos(angle);
+                    double py = cy + radius * Math.Sin(angle);
                     circlePoints[i] = new PointF((float)px, (float)py);
                 }
 
-                _logger.Log($"[Draw O] Bắt đầu vẽ chữ O (Tâm: ({cx:F1}, {cy:F1}), Bán kính: {radius:F1}mm, Tốc độ: {speedPercent}%)...");
+                _logger.Log($"[Draw O] Bắt đầu vẽ chữ O tại tâm ({cx:F1}, {cy:F1}), Đường kính {radius * 2.0:F2}mm (2.75cm, R={radius:F2}mm), Z_work={zWork:F1}mm, Tốc độ: {speedPercent}%)...");
 
                 await Task.Run(async () =>
                 {
@@ -773,7 +789,8 @@ namespace Test_1.Services
                         {
                             PointF pt = circlePoints[i];
                             _robot.Moves(new TsPointS { X = pt.X, Y = pt.Y, Z = zWork, C = cAngle, T = 0 });
-                            await WaitUntilReachAsync(pt.X, pt.Y, 2.5);
+                            double tol = (i == segments) ? 1.0 : 1.2;
+                            await WaitUntilReachAsync(pt.X, pt.Y, tol);
                         }
 
                         // 5. Nhấc bút lên Z_safe kết thúc
@@ -789,7 +806,7 @@ namespace Test_1.Services
                     }
                 });
 
-                _logger.Log("[Draw O] ✔ Đã vẽ xong chữ O thành công!");
+                _logger.Log($"[Draw O] ✔ Đã vẽ xong chữ O (Đường kính {radius * 2.0:F2}mm) tại tâm ({cx:F1}, {cy:F1}) thành công!");
                 return true;
             }
             catch (Exception ex)
