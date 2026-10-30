@@ -798,9 +798,10 @@ namespace Test_1.Services
                         _robot.Moves(new TsPointS { X = endPt.X, Y = endPt.Y, Z = zSafe, C = cAngle, T = 0 });
                         await WaitUntilReach3DAsync(endPt.X, endPt.Y, zSafe, 2.0);
 
-                        // 6. Đưa đầu bút quay lại tâm ô ở cao độ an toàn Z_safe (20.0 mm)
-                        _robot.Move(new TsPointS { X = (float)cx, Y = (float)cy, Z = zSafe, C = cAngle, T = 0 });
-                        await WaitUntilReach3DAsync(cx, cy, zSafe, 2.0);
+                        // 6. Đưa Robot lui về vị trí quan sát Camera (X=158.16, Y=-130.73, Z=20.00, C=-302.25)
+                        // để cánh tay không che khuất bàn cờ, giúp camera nhận diện rõ toàn bộ các ô cờ.
+                        _robot.Move(new TsPointS { X = GomokuVisionService.CameraHomeX, Y = GomokuVisionService.CameraHomeY, Z = zSafe, C = GomokuVisionService.CameraHomeC, T = 0 });
+                        await WaitUntilReach3DAsync(GomokuVisionService.CameraHomeX, GomokuVisionService.CameraHomeY, zSafe, 3.0);
                     }
                     finally
                     {
@@ -810,12 +811,56 @@ namespace Test_1.Services
                     }
                 });
 
-                _logger.Log($"[Draw O] ✔ Đã vẽ xong chữ O (Đường kính {radius * 2.0:F2}mm) tại tâm ({cx:F1}, {cy:F1}), Trục 3 đã nhấc lên {zSafe:F1}mm an toàn!");
+                _logger.Log($"[Draw O] ✔ Đã vẽ xong chữ O (Đường kính {radius * 2.0:F2}mm) và lùi về vị trí quan sát Camera (X={GomokuVisionService.CameraHomeX:F1}, Y={GomokuVisionService.CameraHomeY:F1}, Z={zSafe:F1}mm) an toàn!");
                 return true;
             }
             catch (Exception ex)
             {
                 _logger.Log($"[Draw O] Lỗi thực thi: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Di chuyển Robot THL300 về vị trí quan sát Camera (X=158.16, Y=-130.73, Z=20.00, C=-302.25).
+        /// Giúp cánh tay lùi ra khỏi bàn cờ để Camera có tầm nhìn trọn vẹn 100% 9 ô cờ.
+        /// </summary>
+        public async Task<bool> MoveToObservationPositionAsync(double speed = 25.0)
+        {
+            if (!State.IsConnected || _robot == null) return false;
+            try
+            {
+                var curPos = GetCurrentPosition()?.WorldPosition;
+                double zSafe = GomokuVisionService.CameraHomeZ;
+                await Task.Run(async () =>
+                {
+                    double oldSpeed = _robot.MvSpeed;
+                    _robot.MvSpeed = Math.Max(5, Math.Min(40, speed));
+                    try
+                    {
+                        // 1. Nhấc trục Z lên cao độ an toàn 20.0mm trước nếu đang ở thấp
+                        if (curPos != null && curPos.Z < zSafe - 1.0)
+                        {
+                            _robot.Move(new TsPointS { X = curPos.X, Y = curPos.Y, Z = zSafe, C = curPos.C, T = 0 });
+                            await WaitUntilReach3DAsync(curPos.X, curPos.Y, zSafe, 2.0);
+                        }
+
+                        // 2. Di chuyển tới tọa độ quan sát
+                        _robot.Move(new TsPointS { X = GomokuVisionService.CameraHomeX, Y = GomokuVisionService.CameraHomeY, Z = zSafe, C = GomokuVisionService.CameraHomeC, T = 0 });
+                        await WaitUntilReach3DAsync(GomokuVisionService.CameraHomeX, GomokuVisionService.CameraHomeY, zSafe, 3.0);
+                    }
+                    finally
+                    {
+                        _robot.MvSpeed = oldSpeed;
+                    }
+                });
+
+                _logger.Log($"[Robot] ✔ Đã đưa Robot về vị trí quan sát Camera (X={GomokuVisionService.CameraHomeX:F2}, Y={GomokuVisionService.CameraHomeY:F2}, Z={zSafe:F2} mm).");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Log($"[Robot] Lỗi di chuyển về vị trí quan sát: {ex.Message}");
                 return false;
             }
         }

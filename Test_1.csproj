@@ -98,6 +98,8 @@
     <Compile Include="Core\Services\CameraTransformService.cs" />
     <Compile Include="Core\Services\PlanarHomography.cs" />
     <Compile Include="Core\Services\GridScannerService.cs" />
+    <Compile Include="Core\Services\GomokuAiService.cs" />
+    <Compile Include="Core\Services\GomokuVisionService.cs" />
     <Compile Include="Core\Utilities\Constants.cs" />
     <Compile Include="Core\UI\FourPointCalibrationDialog.cs">
       <SubType>Form</SubType>

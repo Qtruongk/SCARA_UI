@@ -103,7 +103,7 @@ namespace Test_1.Services
         public bool ShowCornerIntersections { get; set; } = true; // Hiển thị các điểm giao nhau thật (Crosshairs)
 
         // Các thông số thuật toán Xử lý ảnh (Vision Snapping)
-        public bool EnableVisionSnapping { get; set; } = true;    // Bật thuật toán bám nét mực thật
+        public bool EnableVisionSnapping { get; set; } = false;   // Mặc định tắt bám nét mực (dùng lưới phân bố hình học metric chuẩn)
         public int ValleySearchRadiusPx { get; set; } = 18;        // Bán kính tìm kiếm rãnh tối theo phương pháp tuyến (±18 pixel)
         public float MinContrastThreshold { get; set; } = 16.0f;  // Độ sâu tối thiểu của nét mực so với nền giấy trắng
 

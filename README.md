@@ -60,7 +60,7 @@ Hệ thống cung cấp:
 
 | STT | Hạng mục công việc | Mô tả chi tiết | Trạng thái |
 | :---: | :--- | :--- | :---: |
-| 1 | **Nghiên cứu & Phát triển mô hình AI (Deep Learning)** | Thu thập và gán nhãn tập dữ liệu ảnh Wafer & hộp FOUP trong điều kiện phản xạ quang học thực tế; huấn luyện mô hình AI (YOLO / Segmentation) để phát hiện vị trí phôi, phân loại trạng thái khay và phát hiện lỗi bề mặt (mẻ cạnh, xước vỡ); tối ưu hóa suy luận thời gian thực (ONNX Runtime / TensorRT) tích hợp vào phần mềm C#. | ⏳ Chờ thực hiện |
+| 1 | **Nghiên cứu & Phát triển mô hình AI (Deep Learning)** | Thu thập và gán nhãn tập dữ liệu ảnh Wafer & hộp FOUP trong điều kiện phản xạ quang học thực tế; huấn luyện mô hình AI (YOLO / Segmentation) để phát hiện vị trí phôi, phân loại trạng thái khay và phát hiện lỗi bề mặt (mẻ cạnh, xước vỡ); tối ưu hóa suy luận thời gian thực (ONNX Runtime / TensorRT) tích hợp vào phần mềm C#. | ✅ Hoàn thành |
 | 2 | **Nhận diện tâm và góc định hướng Wafer (Pre-alignment)** | Tự động phát hiện biên dạng tròn phiến Wafer để xác định tâm thực $(X, Y)$ và dò vết khuyết (Notch/Flat) tính góc xoay $\theta$, phục vụ căn chỉnh góc trước khi gắp. | ⏳ Chờ thực hiện |
 | 3 | **Nhận diện vị trí khe & Ánh xạ khay FOUP (Wafer Mapping)** | Ứng dụng Camera nhận diện sự hiện diện của Wafer trong từng slot của FOUP, phát hiện lỗi đặt chéo (*Cross-slot*) hoặc nhầm tầng (*Double-slot*). | ⏳ Chờ thực hiện |
 | 4 | **Bù trừ sai lệch tọa độ tự động (Vision-Guided Offset)** | Tự động tính toán sai lệch vị trí/góc xoay thực tế so với danh định và bù trừ trực tiếp vào quỹ đạo di chuyển của Robot SCARA để gắp/đặt chính xác tuyệt đối. | ⏳ Chờ thực hiện |

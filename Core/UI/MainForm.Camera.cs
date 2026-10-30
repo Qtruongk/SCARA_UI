@@ -55,9 +55,15 @@ namespace Test_1.UI
 
         // Grid Scanner Controls
         private readonly GridScannerService _gridService = new GridScannerService();
-        private Button btnToggleGrid;
         private Button btnGridSettings;
-        private Button btnSnapGrid;
+
+        // Gomoku / Caro AI Controls & Vision Service
+        private readonly GomokuVisionService _visionService = new GomokuVisionService();
+        private Button btnScanPlayerMove;
+        private Button btnMoveToHome;
+        private Button btnAiMove;
+        private Button btnResetGame;
+        private CheckBox chkAiAutoPlay;
 
         // Current Robot Position Readout controls for Camera Tab
         private Panel pnlRobotReadout;
@@ -190,25 +196,6 @@ namespace Test_1.UI
                 OpenFourPointCalibrationDialog();
             };
 
-            btnToggleGrid = new Button
-            {
-                Text = _gridService.IsGridEnabled ? "Lưới: BẬT" : "Lưới: TẮT",
-                Font = new Font("Segoe UI", 9F),
-                BackColor = _gridService.IsGridEnabled ? Color.FromArgb(241, 245, 249) : Color.FromArgb(248, 250, 252),
-                ForeColor = Color.FromArgb(30, 41, 59),
-                FlatStyle = FlatStyle.Flat,
-                Location = new Point(158, 50),
-                Size = new Size(95, 30),
-                Cursor = Cursors.Hand
-            };
-            btnToggleGrid.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
-            btnToggleGrid.Click += (s, e) => {
-                _gridService.IsGridEnabled = !_gridService.IsGridEnabled;
-                btnToggleGrid.Text = _gridService.IsGridEnabled ? "Lưới: BẬT" : "Lưới: TẮT";
-                btnToggleGrid.BackColor = _gridService.IsGridEnabled ? Color.FromArgb(241, 245, 249) : Color.FromArgb(248, 250, 252);
-                picCameraLive?.Invalidate();
-            };
-
             btnGridSettings = new Button
             {
                 Text = "Cài đặt lưới",
@@ -216,8 +203,8 @@ namespace Test_1.UI
                 BackColor = Color.FromArgb(248, 250, 252),
                 ForeColor = Color.FromArgb(51, 65, 85),
                 FlatStyle = FlatStyle.Flat,
-                Location = new Point(259, 50),
-                Size = new Size(95, 30),
+                Location = new Point(158, 50),
+                Size = new Size(110, 30),
                 Cursor = Cursors.Hand
             };
             btnGridSettings.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
@@ -225,50 +212,12 @@ namespace Test_1.UI
                 ShowGridConfigDialog();
             };
 
-            btnSnapGrid = new Button
-            {
-                Text = "Khớp nét ô",
-                Font = new Font("Segoe UI", 9F),
-                BackColor = Color.FromArgb(248, 250, 252),
-                ForeColor = Color.FromArgb(51, 65, 85),
-                FlatStyle = FlatStyle.Flat,
-                Location = new Point(360, 50),
-                Size = new Size(100, 30),
-                Cursor = Cursors.Hand
-            };
-            btnSnapGrid.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
-            btnSnapGrid.Click += (s, e) => {
-                Bitmap frame = picCameraLive?.Image as Bitmap;
-                UpdateGridFromCalibration(frame);
-                if (_gridService.IsVisionSnapped)
-                {
-                    btnSnapGrid.Text = "Đã khớp nét";
-                    btnSnapGrid.ForeColor = Color.FromArgb(22, 101, 52);
-                    btnSnapGrid.FlatAppearance.BorderColor = Color.FromArgb(187, 247, 208);
-                    _logger?.Log($"[Vision Grid] {_gridService.SnapStatusMessage}");
-                    MessageBox.Show($"Xác định biên thành công:\n\n" +
-                                    $"• Số đường khớp: {_gridService.SnappedLineCount}/{_gridService.TotalLineCount}\n" +
-                                    $"• Sai số trung bình: {_gridService.AverageResidualPx:F2} px\n" +
-                                    $"• Đã khóa biên các ô theo nét kẻ thực tế.",
-                                    "Khớp nét ô", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                else
-                {
-                    btnSnapGrid.Text = "Khớp nét ô";
-                    btnSnapGrid.ForeColor = Color.FromArgb(51, 65, 85);
-                    btnSnapGrid.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
-                    _logger?.Log($"[Vision Grid] {_gridService.SnapStatusMessage}");
-                    MessageBox.Show($"Không nhận diện được nét kẻ rõ ràng.\nTiếp tục sử dụng lưới nội suy hình học.",
-                                    "Khớp nét ô", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
-            };
-
             Label lblSpeed = new Label
             {
                 Text = "Tốc độ:",
                 Font = new Font("Segoe UI", 9F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(51, 65, 85),
-                Location = new Point(475, 56),
+                Location = new Point(285, 56),
                 AutoSize = true
             };
 
@@ -279,7 +228,7 @@ namespace Test_1.UI
                 Value = 10,
                 Width = 110,
                 TickStyle = TickStyle.None,
-                Location = new Point(528, 51)
+                Location = new Point(340, 51)
             };
 
             lblCameraMoveSpeedVal = new Label
@@ -287,7 +236,7 @@ namespace Test_1.UI
                 Text = "10%",
                 Font = new Font("Segoe UI", 9F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(30, 41, 59),
-                Location = new Point(642, 56),
+                Location = new Point(455, 56),
                 AutoSize = true
             };
             tbCameraMoveSpeed.Scroll += (s, e) => {
@@ -301,9 +250,7 @@ namespace Test_1.UI
             pnlTopBar.Controls.Add(btnToggleCamera);
             pnlTopBar.Controls.Add(lblAutoConfigBadge);
             pnlTopBar.Controls.Add(btnFourPointCalib);
-            pnlTopBar.Controls.Add(btnToggleGrid);
             pnlTopBar.Controls.Add(btnGridSettings);
-            pnlTopBar.Controls.Add(btnSnapGrid);
             pnlTopBar.Controls.Add(lblSpeed);
             pnlTopBar.Controls.Add(tbCameraMoveSpeed);
             pnlTopBar.Controls.Add(lblCameraMoveSpeedVal);
@@ -585,6 +532,28 @@ namespace Test_1.UI
 
                             _logger?.Log($"[Grid] Đổi ký hiệu Ô #{clickedCell.Index} thành: {clickedCell.Symbol}");
                             picCameraLive.Invalidate();
+
+                            if (clickedCell.Symbol == GridCell.CellSymbol.X && chkAiAutoPlay != null && chkAiAutoPlay.Checked && _gridService.Rows == 3 && _gridService.Cols == 3)
+                            {
+                                char[,] b = GetCurrentBoard3x3();
+                                if (GomokuAiService.GetWinner(b) == GomokuAiService.Human)
+                                {
+                                    _logger?.Log("[AI Caro] 🎉 Chúc mừng! Bạn (X) đã thắng ván cờ này!");
+                                    MessageBox.Show("🎉 Chúc mừng! Bạn (X) đã hoàn thành 3 quân liên tiếp và CHIẾN THẮNG!", "Chiến thắng", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                }
+                                else if (GomokuAiService.IsFull(b))
+                                {
+                                    _logger?.Log("[AI Caro] 🤝 Bàn cờ đã đầy! Ván cờ HÒA.");
+                                    MessageBox.Show("🤝 Bàn cờ đã đầy! Ván cờ HÒA.", "Hòa cờ", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                }
+                                else
+                                {
+                                    _ = Task.Run(async () => {
+                                        await Task.Delay(350);
+                                        BeginInvoke(new Action(async () => await ExecuteAiTurnAsync()));
+                                    });
+                                }
+                            }
                             return;
                         }
                     }
@@ -890,6 +859,203 @@ namespace Test_1.UI
             };
             btnClearSymbol.FlatAppearance.BorderColor = Color.FromArgb(226, 232, 240);
 
+            // Khởi tạo các nút Thị giác & AI Caro 3x3
+            btnScanPlayerMove = new Button
+            {
+                Text = "🔍 QUÉT NƯỚC ĐI (X)",
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                BackColor = Color.FromArgb(16, 185, 129), // Emerald Green
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(146, 30),
+                Cursor = Cursors.Hand,
+                Enabled = true
+            };
+            btnScanPlayerMove.FlatAppearance.BorderSize = 0;
+            btnScanPlayerMove.Click += async (s, e) => {
+                if (_isCameraMoving)
+                {
+                    MessageBox.Show("Robot đang di chuyển, vui lòng đợi!", "Đang di chuyển", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                if (picCameraLive == null || picCameraLive.Image == null)
+                {
+                    MessageBox.Show("Camera chưa hoạt động hoặc chưa có khung hình!", "Lỗi Camera", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                if (_gridService.Rows != 3 || _gridService.Cols != 3)
+                {
+                    MessageBox.Show("Chế độ AI cờ Caro hiện áp dụng cho bàn cờ 3x3 ô.\nVui lòng vào 'Cài đặt lưới' và chọn '🎮 Bàn cờ AI Caro 3x3'.", "Cần lưới 3x3", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                Bitmap currentBmp;
+                lock (_frameLock)
+                {
+                    currentBmp = picCameraLive.Image != null ? new Bitmap(picCameraLive.Image) : null;
+                }
+
+                if (currentBmp == null) return;
+
+                try
+                {
+                    bool detected = _visionService.DetectPlayerMoveX(currentBmp, _gridService.Cells, out GridCell cellX, out string msg);
+                    if (detected && cellX != null)
+                    {
+                        cellX.Symbol = GridCell.CellSymbol.X;
+                        _gridService.SelectedCell = cellX;
+                        _selectedPixel = cellX.CenterPixel;
+                        _targetRobotX = cellX.CenterRobot.X;
+                        _targetRobotY = cellX.CenterRobot.Y;
+                        double r = Math.Sqrt(_targetRobotX.Value * _targetRobotX.Value + _targetRobotY.Value * _targetRobotY.Value);
+                        _targetRobotRadius = r;
+                        _isTargetValidRadius = (r <= 300.0);
+
+                        lblTargetCoords.Text = $"👁️ [Thị giác] Phát hiện bạn vừa đánh X vào Ô #{cellX.Index} (H{cellX.Row + 1}, C{cellX.Col + 1}) | Tâm: ({cellX.CenterRobot.X:F1}, {cellX.CenterRobot.Y:F1}) mm";
+                        lblTargetCoords.ForeColor = Color.FromArgb(22, 101, 52);
+
+                        _logger?.Log($"[AI Vision] 👁️ {msg}");
+                        picCameraLive.Invalidate();
+
+                        char[,] b = GetCurrentBoard3x3();
+                        if (GomokuAiService.GetWinner(b) == GomokuAiService.Human)
+                        {
+                            _logger?.Log("[AI Caro] 🎉 Chúc mừng! Bạn (X) đã hoàn thành 3 quân liên tiếp và CHIẾN THẮNG!");
+                            MessageBox.Show("🎉 Chúc mừng! Bạn (X) đã hoàn thành 3 quân liên tiếp và CHIẾN THẮNG!", "Chiến thắng", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else if (GomokuAiService.IsFull(b))
+                        {
+                            _logger?.Log("[AI Caro] 🤝 Bàn cờ đã đầy! Ván cờ HÒA.");
+                            MessageBox.Show("🤝 Bàn cờ đã đầy! Ván cờ HÒA.", "Hòa cờ", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else if (chkAiAutoPlay != null && chkAiAutoPlay.Checked)
+                        {
+                            await Task.Delay(400);
+                            await ExecuteAiTurnAsync();
+                        }
+                    }
+                    else
+                    {
+                        _logger?.Log($"[AI Vision] ⚠️ {msg}");
+                        MessageBox.Show($"{msg}\n\n💡 Hướng dẫn nhận diện nét vẽ:\n • Hãy dùng bút vẽ rõ nét 2 đường chéo chữ X vào ô bạn chọn.\n • Rút tay ra khỏi vùng nhìn camera trước khi nhấn nút Quét.", "Chưa nhận diện được", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+                finally
+                {
+                    currentBmp.Dispose();
+                }
+            };
+
+            btnMoveToHome = new Button
+            {
+                Text = "📷 Vị trí nhìn",
+                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
+                BackColor = Color.FromArgb(241, 245, 249),
+                ForeColor = Color.FromArgb(51, 65, 85),
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(95, 30),
+                Cursor = Cursors.Hand,
+                Enabled = true
+            };
+            btnMoveToHome.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
+            btnMoveToHome.Click += async (s, e) => {
+                if (_isCameraMoving) return;
+                if (_robotService == null || !_robotService.State.IsConnected || !_robotService.State.IsServoOn)
+                {
+                    MessageBox.Show("Robot chưa kết nối hoặc Servo đang TẮT!", "Robot chưa sẵn sàng", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                try
+                {
+                    _isCameraMoving = true;
+                    SetActionButtonsEnabled(false);
+                    int speed = tbCameraMoveSpeed != null ? tbCameraMoveSpeed.Value : 25;
+                    _logger?.Log($"[Robot] Đang di chuyển về vị trí quan sát Camera (X={GomokuVisionService.CameraHomeX}, Y={GomokuVisionService.CameraHomeY}, Z={GomokuVisionService.CameraHomeZ})...");
+                    bool ok = await _robotService.MoveToObservationPositionAsync(speed);
+                    if (ok)
+                    {
+                        _logger?.Log("[Robot] ✔ Robot đã ở vị trí quan sát Camera. Khung nhìn bàn cờ đã thông thoáng.");
+                        if (picCameraLive?.Image != null)
+                        {
+                            _visionService.UpdateBaseline(picCameraLive.Image as Bitmap);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger?.Log($"[Robot] Lỗi: {ex.Message}");
+                }
+                finally
+                {
+                    _isCameraMoving = false;
+                    SetActionButtonsEnabled(true);
+                }
+            };
+
+            btnAiMove = new Button
+            {
+                Text = "🤖 AI ĐÁNH (O)",
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                BackColor = Color.FromArgb(67, 56, 202),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(116, 30),
+                Cursor = Cursors.Hand,
+                Enabled = true
+            };
+            btnAiMove.FlatAppearance.BorderSize = 0;
+            btnAiMove.Click += async (s, e) => {
+                await ExecuteAiTurnAsync();
+            };
+
+            btnResetGame = new Button
+            {
+                Text = "🔄 Ván mới",
+                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
+                BackColor = Color.FromArgb(248, 250, 252),
+                ForeColor = Color.FromArgb(51, 65, 85),
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(88, 30),
+                Cursor = Cursors.Hand,
+                Enabled = true
+            };
+            btnResetGame.FlatAppearance.BorderColor = Color.FromArgb(226, 232, 240);
+            btnResetGame.Click += async (s, e) => {
+                foreach (var c in _gridService.Cells)
+                {
+                    c.Symbol = GridCell.CellSymbol.None;
+                }
+                _gridService.SelectedCell = null;
+                _visionService.ResetBaseline();
+                lblTargetCoords.Text = "Ván cờ mới (Caro 3x3): Bạn (X) hãy vẽ trên giấy rồi nhấn '🔍 QUÉT NƯỚC ĐI (X)' hoặc click ô!";
+                lblTargetCoords.ForeColor = Color.FromArgb(30, 41, 59);
+                picCameraLive?.Invalidate();
+                _logger?.Log("[AI Caro] 🔄 Đã đặt lại bàn cờ mới. Bạn (X) hãy đánh nước đầu tiên!");
+
+                if (_robotService != null && _robotService.State.IsConnected && _robotService.State.IsServoOn && !_isCameraMoving)
+                {
+                    int speed = tbCameraMoveSpeed != null ? tbCameraMoveSpeed.Value : 25;
+                    await _robotService.MoveToObservationPositionAsync(speed);
+                    if (picCameraLive?.Image != null)
+                    {
+                        _visionService.UpdateBaseline(picCameraLive.Image as Bitmap);
+                    }
+                }
+            };
+
+            chkAiAutoPlay = new CheckBox
+            {
+                Text = "Tự động phản công",
+                Font = new Font("Segoe UI", 8.5F),
+                ForeColor = Color.FromArgb(71, 85, 105),
+                Checked = true,
+                AutoSize = true,
+                Cursor = Cursors.Hand
+            };
+
             btnMoveRobotToTarget = new Button
             {
                 Text = "Di chuyển Robot",
@@ -938,7 +1104,29 @@ namespace Test_1.UI
                 if (_robotService == null || !_robotService.State.IsConnected || !_robotService.State.IsServoOn)
                 {
                     _logger?.Log($"[Grid] Đã đánh dấu ký hiệu X tại ô #{cell.Index} (Robot chưa sẵn sàng vẽ thực tế)");
-                    MessageBox.Show($"Đã đánh dấu ký hiệu X tại ô #{cell.Index}.\nĐể Robot thực hiện vẽ thực tế, vui lòng kết nối Robot và kích hoạt Servo.", "Ký hiệu X", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    if (chkAiAutoPlay != null && chkAiAutoPlay.Checked && _gridService.Rows == 3 && _gridService.Cols == 3)
+                    {
+                        char[,] b = GetCurrentBoard3x3();
+                        if (GomokuAiService.GetWinner(b) == GomokuAiService.Human)
+                        {
+                            _logger?.Log("[AI Caro] 🎉 Chúc mừng! Bạn (X) đã thắng ván cờ này!");
+                            MessageBox.Show("🎉 Chúc mừng! Bạn (X) đã hoàn thành 3 quân liên tiếp và CHIẾN THẮNG!", "Chiến thắng", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else if (GomokuAiService.IsFull(b))
+                        {
+                            _logger?.Log("[AI Caro] 🤝 Bàn cờ đã đầy! Ván cờ HÒA.");
+                            MessageBox.Show("🤝 Bàn cờ đã đầy! Ván cờ HÒA.", "Hòa cờ", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else
+                        {
+                            await Task.Delay(300);
+                            await ExecuteAiTurnAsync();
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Đã đánh dấu ký hiệu X tại ô #{cell.Index}.\nĐể Robot thực hiện vẽ thực tế, vui lòng kết nối Robot và kích hoạt Servo.", "Ký hiệu X", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
                     return;
                 }
 
@@ -986,7 +1174,29 @@ namespace Test_1.UI
                     if (ok)
                     {
                         _logger?.Log($"[Robot Draw] Hoàn thành vẽ chữ X vào ô #{cell.Index}.");
-                        MessageBox.Show($"Robot THL300 đã hoàn thành vẽ chữ X vào ô #{cell.Index}.", "Hoàn thành", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        if (chkAiAutoPlay != null && chkAiAutoPlay.Checked && _gridService.Rows == 3 && _gridService.Cols == 3)
+                        {
+                            char[,] b = GetCurrentBoard3x3();
+                            if (GomokuAiService.GetWinner(b) == GomokuAiService.Human)
+                            {
+                                _logger?.Log("[AI Caro] 🎉 Chúc mừng! Bạn (X) đã thắng ván cờ này!");
+                                MessageBox.Show("🎉 Chúc mừng! Bạn (X) đã hoàn thành 3 quân liên tiếp và CHIẾN THẮNG!", "Chiến thắng", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            }
+                            else if (GomokuAiService.IsFull(b))
+                            {
+                                _logger?.Log("[AI Caro] 🤝 Bàn cờ đã đầy! Ván cờ HÒA.");
+                                MessageBox.Show("🤝 Bàn cờ đã đầy! Ván cờ HÒA.", "Hòa cờ", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            }
+                            else
+                            {
+                                await Task.Delay(400);
+                                await ExecuteAiTurnAsync();
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Robot THL300 đã hoàn thành vẽ chữ X vào ô #{cell.Index}.", "Hoàn thành", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -1126,10 +1336,17 @@ namespace Test_1.UI
                 btnClearTarget.Location = new Point(w - rightMargin - btnClearTarget.Width, 8);
                 lblTargetStatus.Location = new Point(btnClearTarget.Left - 10 - lblTargetStatus.Width, 10);
 
-                // --- HÀNG 2: THAO TÁC KÝ HIỆU & CHUYỂN ĐỘNG ROBOT ---
+                // --- HÀNG 2: THAO TÁC KÝ HIỆU, THỊ GIÁC AI CARO & CHUYỂN ĐỘNG ROBOT ---
                 btnDrawX.Location = new Point(12, 42);
-                btnDrawO.Location = new Point(btnDrawX.Right + 8, 42);
-                btnClearSymbol.Location = new Point(btnDrawO.Right + 8, 42);
+                btnDrawO.Location = new Point(btnDrawX.Right + 6, 42);
+                btnClearSymbol.Location = new Point(btnDrawO.Right + 6, 42);
+
+                btnScanPlayerMove.Location = new Point(btnClearSymbol.Right + 10, 42);
+                btnMoveToHome.Location = new Point(btnScanPlayerMove.Right + 6, 42);
+
+                btnAiMove.Location = new Point(btnMoveToHome.Right + 6, 42);
+                btnResetGame.Location = new Point(btnAiMove.Right + 6, 42);
+                chkAiAutoPlay.Location = new Point(btnResetGame.Right + 8, 48);
 
                 btnStopCameraMove.Location = new Point(w - rightMargin - btnStopCameraMove.Width, 42);
                 btnMoveRobotToTarget.Location = new Point(btnStopCameraMove.Left - 8 - btnMoveRobotToTarget.Width, 42);
@@ -1225,6 +1442,13 @@ namespace Test_1.UI
             pnlBottomControl.Controls.Add(btnDrawX);
             pnlBottomControl.Controls.Add(btnDrawO);
             pnlBottomControl.Controls.Add(btnClearSymbol);
+
+            pnlBottomControl.Controls.Add(btnScanPlayerMove);
+            pnlBottomControl.Controls.Add(btnMoveToHome);
+
+            pnlBottomControl.Controls.Add(btnAiMove);
+            pnlBottomControl.Controls.Add(btnResetGame);
+            pnlBottomControl.Controls.Add(chkAiAutoPlay);
 
             pnlBottomControl.Controls.Add(btnMoveRobotToTarget);
             pnlBottomControl.Controls.Add(btnStopCameraMove);
@@ -1346,6 +1570,196 @@ namespace Test_1.UI
                 lblTargetStatus.BackColor = Color.FromArgb(254, 242, 242);
                 lblTargetStatus.ForeColor = Color.FromArgb(185, 28, 28);
                 btnMoveRobotToTarget.Enabled = false;
+            }
+        }
+
+        private char[,] GetCurrentBoard3x3()
+        {
+            char[,] board = GomokuAiService.CreateBoard();
+            if (_gridService == null || _gridService.Cells == null) return board;
+
+            foreach (var c in _gridService.Cells)
+            {
+                if (c.Row >= 0 && c.Row < 3 && c.Col >= 0 && c.Col < 3)
+                {
+                    if (c.Symbol == GridCell.CellSymbol.X)
+                        board[c.Row, c.Col] = GomokuAiService.Human;
+                    else if (c.Symbol == GridCell.CellSymbol.O)
+                        board[c.Row, c.Col] = GomokuAiService.Robot;
+                    else
+                        board[c.Row, c.Col] = GomokuAiService.Empty;
+                }
+            }
+            return board;
+        }
+
+        private void SetActionButtonsEnabled(bool enabled)
+        {
+            if (IsDisposed || Disposing) return;
+            if (btnDrawX != null) btnDrawX.Enabled = enabled && (_gridService.SelectedCell != null);
+            if (btnDrawO != null) btnDrawO.Enabled = enabled && (_gridService.SelectedCell != null);
+            if (btnClearSymbol != null) btnClearSymbol.Enabled = enabled && (_gridService.SelectedCell != null);
+            if (btnScanPlayerMove != null) btnScanPlayerMove.Enabled = enabled;
+            if (btnMoveToHome != null) btnMoveToHome.Enabled = enabled;
+            if (btnAiMove != null) btnAiMove.Enabled = enabled;
+            if (btnResetGame != null) btnResetGame.Enabled = enabled;
+            if (btnMoveRobotToTarget != null) btnMoveRobotToTarget.Enabled = enabled && _isTargetValidRadius;
+        }
+
+        private async Task ExecuteAiTurnAsync()
+        {
+            if (_isCameraMoving) return;
+
+            if (_gridService.Rows != 3 || _gridService.Cols != 3)
+            {
+                MessageBox.Show("Chế độ AI cờ Caro 3x3 hiện chỉ áp dụng cho lưới 3x3 ô.\nVui lòng vào 'Cài đặt lưới' và chọn kích thước 3x3.", "Cần lưới 3x3", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            char[,] board = GetCurrentBoard3x3();
+            char? currentWinner = GomokuAiService.GetWinner(board);
+            if (currentWinner == GomokuAiService.Human)
+            {
+                _logger?.Log("[AI Caro] 🎉 Chúc mừng! Bạn (X) đã thắng ván cờ này!");
+                MessageBox.Show("🎉 Chúc mừng! Bạn (X) đã hoàn thành 3 quân liên tiếp và CHIẾN THẮNG!", "Chiến thắng", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            if (currentWinner == GomokuAiService.Robot)
+            {
+                _logger?.Log("[AI Caro] 🤖 Robot (O) đã thắng ván cờ!");
+                MessageBox.Show("🤖 Robot (O) đã hoàn thành 3 quân liên tiếp và CHIẾN THẮNG!", "AI Thắng", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            if (GomokuAiService.IsFull(board))
+            {
+                _logger?.Log("[AI Caro] 🤝 Bàn cờ đã đầy! Ván cờ HÒA.");
+                MessageBox.Show("🤝 Bàn cờ đã đầy! Ván cờ HÒA.", "Hòa cờ", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // AI tính toán nước đi tối ưu (Minimax kết hợp Alpha-Beta và heuristic ưu tiên thắng / chặn)
+            _logger?.Log("[AI Caro] 🧠 Robot đang tính toán nước cờ tối ưu (Minimax Alpha-Beta)...");
+            var bestMove = GomokuAiService.FindBestMove(board);
+            if (!bestMove.HasValue)
+            {
+                _logger?.Log("[AI Caro] 🤝 Bàn cờ đã kín ô, không còn nước đi hợp lệ!");
+                MessageBox.Show("Bàn cờ đã kín ô, ván cờ HÒA!", "Hòa cờ", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            int targetRow = bestMove.Value.r;
+            int targetCol = bestMove.Value.c;
+
+            GridCell targetCell = null;
+            foreach (var c in _gridService.Cells)
+            {
+                if (c.Row == targetRow && c.Col == targetCol)
+                {
+                    targetCell = c;
+                    break;
+                }
+            }
+
+            if (targetCell == null)
+            {
+                _logger?.Log($"[AI Caro] ⚠️ Không tìm thấy ô GridCell tương ứng tại H{targetRow + 1}, C{targetCol + 1}!");
+                return;
+            }
+
+            // Đánh dấu ô O trên giao diện
+            targetCell.Symbol = GridCell.CellSymbol.O;
+            _gridService.SelectedCell = targetCell;
+            _selectedPixel = targetCell.CenterPixel;
+            _targetRobotX = targetCell.CenterRobot.X;
+            _targetRobotY = targetCell.CenterRobot.Y;
+            double r = Math.Sqrt(_targetRobotX.Value * _targetRobotX.Value + _targetRobotY.Value * _targetRobotY.Value);
+            _targetRobotRadius = r;
+            _isTargetValidRadius = (r <= 300.0);
+
+            lblTargetCoords.Text = $"🤖 AI (O) chọn Ô #{targetCell.Index} (H{targetRow + 1}, C{targetCol + 1}) | Robot Tâm: ({targetCell.CenterRobot.X:F1}, {targetCell.CenterRobot.Y:F1}) mm | Ô: {targetCell.WidthMm:F1}x{targetCell.HeightMm:F1} mm";
+            lblTargetCoords.ForeColor = Color.FromArgb(67, 56, 202);
+
+            lblTargetStatus.Text = _isTargetValidRadius ? "Hợp lệ (R ≤ 300 mm)" : "Vượt giới hạn (R > 300 mm)";
+            lblTargetStatus.BackColor = _isTargetValidRadius ? Color.FromArgb(240, 253, 244) : Color.FromArgb(254, 242, 242);
+            lblTargetStatus.ForeColor = _isTargetValidRadius ? Color.FromArgb(22, 101, 52) : Color.FromArgb(185, 28, 28);
+
+            picCameraLive?.Invalidate();
+            _logger?.Log($"[AI Caro] 🎯 Robot (O) đã chọn đánh ô #{targetCell.Index} (H{targetRow + 1}, C{targetCol + 1}) tại tọa độ Robot ({targetCell.CenterRobot.X:F1}, {targetCell.CenterRobot.Y:F1}) mm.");
+
+            // Kiểm tra nếu Robot đang kết nối và Servo ON thì thực hiện vẽ thực tế chữ O
+            if (_robotService != null && _robotService.State.IsConnected && _robotService.State.IsServoOn)
+            {
+                if (targetCell.CornersRobot == null || targetCell.CornersRobot.Length < 4)
+                {
+                    _logger?.Log($"[AI Caro] ⚠️ Ô #{targetCell.Index} chưa có dữ liệu 4 đỉnh tọa độ Robot hợp lệ để vẽ.");
+                    return;
+                }
+
+                for (int i = 0; i < 4; i++)
+                {
+                    double cr = Math.Sqrt(targetCell.CornersRobot[i].X * targetCell.CornersRobot[i].X + targetCell.CornersRobot[i].Y * targetCell.CornersRobot[i].Y);
+                    if (cr > 300.0)
+                    {
+                        _logger?.Log($"[AI Caro] ⚠️ Đỉnh #{i + 1} của ô #{targetCell.Index} có R = {cr:F1} mm vượt giới hạn 300mm.");
+                        MessageBox.Show($"Đỉnh #{i + 1} của ô #{targetCell.Index} vượt giới hạn an toàn 300mm của Robot THL300.", "Vượt bán kính an toàn", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                }
+
+                double workZ = 0.0;
+                double safeZ = 20.0;
+                double liftHeight = safeZ - workZ; // 20.0 mm
+                int speed = tbCameraMoveSpeed != null ? tbCameraMoveSpeed.Value : 20;
+                double circleDiameterMm = 27.5;
+
+                try
+                {
+                    _isCameraMoving = true;
+                    SetActionButtonsEnabled(false);
+
+                    _logger?.Log($"[Robot Draw] 🤖 Robot THL300 bắt đầu vẽ chữ O vào ô #{targetCell.Index} (Tâm: {targetCell.CenterRobot.X:F1}, {targetCell.CenterRobot.Y:F1} mm, Ø2.75cm, Tốc độ: {speed}%)...");
+                    bool ok = await _robotService.DrawOInCellAsync(targetCell.CornersRobot, workZ, speed, liftHeight, circleDiameterMm, targetCell.CenterRobot);
+                    if (ok)
+                    {
+                        _logger?.Log($"[Robot Draw] ✅ Robot đã vẽ xong chữ O vào ô #{targetCell.Index} và lùi về vị trí quan sát Camera.");
+                        if (picCameraLive?.Image != null)
+                        {
+                            _visionService.UpdateBaseline(picCameraLive.Image as Bitmap);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger?.Log($"[Robot Draw] ❌ Lỗi vẽ chữ O: {ex.Message}");
+                }
+                finally
+                {
+                    _isCameraMoving = false;
+                    SetActionButtonsEnabled(true);
+                }
+            }
+            else
+            {
+                _logger?.Log($"[AI Caro] ℹ️ Robot chưa kết nối / Servo OFF: Đã đánh dấu ô #{targetCell.Index} trên màn hình (chế độ mô phỏng).");
+            }
+
+            // Kiểm tra kết quả ván cờ sau nước đi của AI
+            char[,] afterBoard = GetCurrentBoard3x3();
+            char? endWinner = GomokuAiService.GetWinner(afterBoard);
+            if (endWinner == GomokuAiService.Robot)
+            {
+                _logger?.Log("[AI Caro] 🤖 Robot (O) đã hoàn thành 3 quân liên tiếp và CHIẾN THẮNG!");
+                MessageBox.Show("🤖 Robot (O) đã hoàn thành 3 quân liên tiếp và CHIẾN THẮNG!\nBạn hãy cố gắng hơn ở ván sau nhé!", "AI Thắng", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else if (GomokuAiService.IsFull(afterBoard))
+            {
+                _logger?.Log("[AI Caro] 🤝 Bàn cờ đã đầy! Ván cờ HÒA.");
+                MessageBox.Show("🤝 Bàn cờ đã đầy! Ván cờ HÒA (Hòa cờ trí tuệ).", "Hòa cờ", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                lblTargetCoords.Text = "🤖 Robot đã đánh O & lùi về góc nhìn. Mời bạn vẽ chữ X trên giấy rồi nhấn '🔍 QUÉT NƯỚC ĐI (X)'!";
+                lblTargetCoords.ForeColor = Color.FromArgb(67, 56, 202);
             }
         }
 
@@ -1812,8 +2226,8 @@ namespace Test_1.UI
         {
             using (Form dlg = new Form())
             {
-                dlg.Text = "Cấu hình Lưới Grid Ô Vuông & Xử lý ảnh bám nét";
-                dlg.Size = new Size(420, 520);
+                dlg.Text = "Cấu hình Lưới Grid Ô Vuông";
+                dlg.Size = new Size(420, 410);
                 dlg.StartPosition = FormStartPosition.CenterParent;
                 dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
                 dlg.MaximizeBox = false;
@@ -1830,18 +2244,36 @@ namespace Test_1.UI
                 Label lblSize = new Label { Text = "Kích thước ô (mm):", Location = new Point(24, 99), AutoSize = true, Font = new Font("Segoe UI", 9F, FontStyle.Bold) };
                 NumericUpDown numSize = new NumericUpDown { Location = new Point(180, 96), Width = 80, Minimum = 5, Maximum = 200, DecimalPlaces = 1, Value = (decimal)_gridService.SquareSizeMm };
 
-                Button btnPreset5x5 = new Button
+                Button btnPreset3x3 = new Button
                 {
-                    Text = "🎯 Đặt chuẩn Bàn cờ 5x5 (Ô 5cm / 50mm)",
+                    Text = "🎮 Bàn cờ AI Caro 3x3",
                     Font = new Font("Segoe UI", 9F, FontStyle.Bold),
                     BackColor = Color.FromArgb(238, 242, 255),
                     ForeColor = Color.FromArgb(67, 56, 202),
                     FlatStyle = FlatStyle.Flat,
                     Location = new Point(24, 133),
-                    Size = new Size(356, 32),
+                    Size = new Size(174, 32),
                     Cursor = Cursors.Hand
                 };
-                btnPreset5x5.FlatAppearance.BorderColor = Color.FromArgb(199, 210, 254);
+                btnPreset3x3.FlatAppearance.BorderColor = Color.FromArgb(199, 210, 254);
+                btnPreset3x3.Click += (s, e) => {
+                    numRows.Value = 3;
+                    numCols.Value = 3;
+                    numSize.Value = 50.0m;
+                };
+
+                Button btnPreset5x5 = new Button
+                {
+                    Text = "🎯 Bàn cờ Chuẩn 5x5",
+                    Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                    BackColor = Color.FromArgb(241, 245, 249),
+                    ForeColor = Color.FromArgb(51, 65, 85),
+                    FlatStyle = FlatStyle.Flat,
+                    Location = new Point(206, 133),
+                    Size = new Size(174, 32),
+                    Cursor = Cursors.Hand
+                };
+                btnPreset5x5.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
                 btnPreset5x5.Click += (s, e) => {
                     numRows.Value = 5;
                     numCols.Value = 5;
@@ -1883,26 +2315,13 @@ namespace Test_1.UI
                     AutoSize = true
                 };
 
-                CheckBox chkVisionSnap = new CheckBox
-                {
-                    Text = "Bám sát nét mực bằng thị giác (Vision Snapping)",
-                    Checked = _gridService.EnableVisionSnapping,
-                    Location = new Point(28, 268),
-                    AutoSize = true,
-                    Font = new Font("Segoe UI", 8.5F),
-                    ForeColor = Color.FromArgb(30, 41, 59)
-                };
-
                 CheckBox chkCorners = new CheckBox
                 {
                     Text = "Hiển thị chữ thập tại giao điểm (+)",
                     Checked = _gridService.ShowCornerIntersections,
-                    Location = new Point(28, 296),
+                    Location = new Point(28, 268),
                     AutoSize = true
                 };
-
-                Label lblRadius = new Label { Text = "Bán kính tìm nét (px):", Location = new Point(28, 328), AutoSize = true };
-                NumericUpDown numRadius = new NumericUpDown { Location = new Point(180, 326), Width = 80, Minimum = 6, Maximum = 40, Value = _gridService.ValleySearchRadiusPx };
 
                 Button btnSave = new Button
                 {
@@ -1911,7 +2330,7 @@ namespace Test_1.UI
                     BackColor = Color.FromArgb(30, 41, 59),
                     ForeColor = Color.White,
                     FlatStyle = FlatStyle.Flat,
-                    Location = new Point(24, 370),
+                    Location = new Point(24, 310),
                     Size = new Size(356, 38),
                     Cursor = Cursors.Hand
                 };
@@ -1922,20 +2341,12 @@ namespace Test_1.UI
                     _gridService.SquareSizeMm = (double)numSize.Value;
                     _gridService.ShowGridLines = chkLines.Checked;
                     _gridService.ShowCellLabels = chkLabels.Checked;
-                    _gridService.EnableVisionSnapping = chkVisionSnap.Checked;
+                    _gridService.EnableVisionSnapping = false;
                     _gridService.ShowCornerIntersections = chkCorners.Checked;
-                    _gridService.ValleySearchRadiusPx = (int)numRadius.Value;
                     _gridService.IsGridEnabled = true;
 
-                    if (btnToggleGrid != null)
-                    {
-                        btnToggleGrid.Text = "Lưới: BẬT";
-                        btnToggleGrid.BackColor = Color.FromArgb(241, 245, 249);
-                        btnToggleGrid.ForeColor = Color.FromArgb(30, 41, 59);
-                    }
-
                     UpdateGridFromCalibration(picCameraLive?.Image as Bitmap);
-                    _logger?.Log($"[Grid] Đã cập nhật lưới: {_gridService.Rows} hàng x {_gridService.Cols} cột ({_gridService.Cells.Count} ô vuông, chuẩn {_gridService.SquareSizeMm:F0}mm) - {_gridService.SnapStatusMessage}");
+                    _logger?.Log($"[Grid] Đã cập nhật lưới: {_gridService.Rows} hàng x {_gridService.Cols} cột ({_gridService.Cells.Count} ô vuông, chuẩn {_gridService.SquareSizeMm:F0}mm)");
                     dlg.Close();
                 };
 
@@ -1945,14 +2356,12 @@ namespace Test_1.UI
                 dlg.Controls.Add(numCols);
                 dlg.Controls.Add(lblSize);
                 dlg.Controls.Add(numSize);
+                dlg.Controls.Add(btnPreset3x3);
                 dlg.Controls.Add(btnPreset5x5);
                 dlg.Controls.Add(btnAuto);
                 dlg.Controls.Add(chkLines);
                 dlg.Controls.Add(chkLabels);
-                dlg.Controls.Add(chkVisionSnap);
                 dlg.Controls.Add(chkCorners);
-                dlg.Controls.Add(lblRadius);
-                dlg.Controls.Add(numRadius);
                 dlg.Controls.Add(btnSave);
                 dlg.ShowDialog(this);
             }
